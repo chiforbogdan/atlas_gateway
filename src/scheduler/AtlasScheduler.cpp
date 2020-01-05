@@ -3,6 +3,13 @@
 
 namespace atlas {
 
+AtlasScheduler &AtlasScheduler::getInstance()
+{
+    static AtlasScheduler scheduler;
+
+    return scheduler;
+}
+
 AtlasScheduler::AtlasScheduler() : work_(ioService_) {}
 
 void AtlasScheduler::addFdEntry(int fd, std::function<void()> cb)

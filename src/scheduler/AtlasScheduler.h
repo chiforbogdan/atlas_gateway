@@ -11,11 +11,7 @@ class AtlasScheduler {
 
 public:
 
-    /**
-    * @brief Ctor for scheduler
-    * @return none
-    */
-    AtlasScheduler();
+    static AtlasScheduler &getInstance();
 
     /*
     * @brief Run scheduler main loop
@@ -39,6 +35,12 @@ public:
     void delFdEntry(int fd);
 
 private:
+    /**
+     * @brief Ctor for scheduler
+     * @return none
+     */
+    AtlasScheduler();
+
     /* Map to store the file descriptor entries */
     std::unordered_map<int, std::unique_ptr<AtlasSchedulerFdEntry>> entries_;
     
