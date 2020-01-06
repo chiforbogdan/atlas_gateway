@@ -7,6 +7,7 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/expressions/formatters/date_time.hpp>
+#include <boost/log/sinks/text_file_backend.hpp>
 #include <fstream>
 #include "AtlasLogger.h"
 
@@ -30,20 +31,18 @@ void initLog()
     // add attributes
     logger.add_attribute("TimeStamp", attrs::local_clock());
 
-    // Create a backend and attach a couple of streams to it
-    boost::shared_ptr< logging::sinks::text_ostream_backend > backend =
-        boost::make_shared< logging::sinks::text_ostream_backend >();
-    backend->add_stream(
-        boost::shared_ptr< std::ostream >(&std::clog, boost::null_deleter()));
-    backend->add_stream(
-        boost::shared_ptr< std::ostream >(new std::ofstream(ATLAS_GATEWAY_LOG_FILE)));
+    boost::shared_ptr< logging::sinks::text_file_backend > backend =
+        boost::make_shared< logging::sinks::text_file_backend >(
+            logging::keywords::file_name = ATLAS_GATEWAY_LOG_FILE,
+            logging::keywords::open_mode = std::ios_base::out | std::ios_base::app
+        );
 
     // Enable auto-flushing after each log record written
     backend->auto_flush(true);
 
     // Wrap it into the frontend and register in the core.
     // The backend requires synchronization in the frontend.
-    typedef logging::sinks::synchronous_sink< logging::sinks::text_ostream_backend > sink_t;
+    typedef logging::sinks::synchronous_sink< logging::sinks::text_file_backend > sink_t;
     boost::shared_ptr< sink_t > sink(new sink_t(backend));
 
      // specify the format of the log message
