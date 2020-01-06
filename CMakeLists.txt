@@ -6,14 +6,17 @@ include(FindPkgConfig)
 # CoAP dependency
 pkg_check_modules(COAP libcoap-2-openssl REQUIRED)
 
-find_package(Boost 1.65.0 REQUIRED system)
+# Link with dynamic version of Boost (for logging)
+ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
+
+find_package(Boost 1.65.0 REQUIRED system log)
 
 include_directories(include)
 # Add CoAP headers
 include_directories(${COAP_INCLUDE_DIRS})
 
 # Atlas client files
-file(GLOB SOURCES "src/*.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp")
+file(GLOB SOURCES "src/*.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp")
 
 link_directories(${COAP_LIBRARY_DIRS})
 add_executable(${PROJECT_NAME} ${SOURCES})
