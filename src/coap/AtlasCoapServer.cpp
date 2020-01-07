@@ -20,6 +20,96 @@ namespace atlas {
 
 const std::string DEFAULT_INDEX = "ATLAS CoAP gateway";
 
+void AtlasCoapServer::getHandler(coap_context_t *ctx, struct coap_resource_t *resource, coap_session_t *session, coap_pdu_t *request,
+                                 coap_binary_t *token, coap_string_t *query, coap_pdu_t *response)
+{
+    ATLAS_LOGGER_DEBUG("Handling CoAP GET request...");
+
+    AtlasCoapServer::getInstance().incomingHandler(ctx, resource, session,
+                                                   request, token, query, response,
+                                                   ATLAS_COAP_METHOD_GET);
+}
+
+void AtlasCoapServer::postHandler(coap_context_t *ctx, struct coap_resource_t *resource, coap_session_t *session, coap_pdu_t *request,
+                                 coap_binary_t *token, coap_string_t *query, coap_pdu_t *response)
+{
+    ATLAS_LOGGER_DEBUG("Handling CoAP POST request...");
+
+    AtlasCoapServer::getInstance().incomingHandler(ctx, resource, session,
+                                                   request, token, query, response,
+                                                   ATLAS_COAP_METHOD_POST);
+}
+
+void AtlasCoapServer::putHandler(coap_context_t *ctx, struct coap_resource_t *resource, coap_session_t *session, coap_pdu_t *request,
+                                 coap_binary_t *token, coap_string_t *query, coap_pdu_t *response)
+{
+    ATLAS_LOGGER_DEBUG("Handling CoAP PUT request...");
+
+    AtlasCoapServer::getInstance().incomingHandler(ctx, resource, session,
+                                                   request, token, query, response,
+                                                   ATLAS_COAP_METHOD_PUT);
+}
+
+void AtlasCoapServer::deleteHandler(coap_context_t *ctx, struct coap_resource_t *resource, coap_session_t *session, coap_pdu_t *request,
+                                 coap_binary_t *token, coap_string_t *query, coap_pdu_t *response)
+{
+    ATLAS_LOGGER_DEBUG("Handling CoAP DELETE request...");
+
+    AtlasCoapServer::getInstance().incomingHandler(ctx, resource, session,
+                                                   request, token, query, response,
+                                                   ATLAS_COAP_METHOD_DELETE);
+}
+
+void AtlasCoapServer::incomingHandler(coap_context_t *ctx, struct coap_resource_t *resource, coap_session_t *session, coap_pdu_t *request,
+                                      coap_binary_t *token, coap_string_t *query, coap_pdu_t *response, AtlasCoapMethod method)
+{
+    coap_string_t *coapUriPath;
+    char *uriPath;
+    uint8_t *reqPayload = NULL;
+    size_t reqPayloadLen = 0;
+    uint8_t *respPayload = NULL;
+    size_t respPayloadLen = 0;
+    AtlasCoapResource coapResource;
+    AtlasCoapResponse respCode;
+
+    ATLAS_LOGGER_DEBUG("Handling incoming CoAP request...");
+    
+    /* Get request payload if any */
+    coap_get_data(request, &reqPayloadLen, &reqPayload);
+
+    coapUriPath = coap_get_uri_path(request);
+    if (!coapUriPath) {
+        ATLAS_LOGGER_ERROR("Drop CoAP request: cannot get URI path!");
+        return;
+    }
+
+    uriPath = new char[coapUriPath->length + 1];
+    memset(uriPath, 0, coapUriPath->length + 1);
+    memcpy(uriPath, coapUriPath->s, coapUriPath->length);
+
+    coapResource = this->resources_[uriPath];
+    if (!coapResource.getCallback()) {
+        ATLAS_LOGGER_DEBUG("No callback registered. Dropping request...");
+	goto RET;
+    }
+
+    respCode = coapResource.getCallback()(uriPath, method, reqPayload, reqPayloadLen, &respPayload, &respPayloadLen);
+
+    response->code = COAP_RESPONSE_CODE(respCode);
+
+    /* Add payload if required */
+    if (respCode == ATLAS_COAP_RESP_OK && respPayload && respPayloadLen)
+        coap_add_data_blocked_response(resource, session, request, response, token,
+                                       COAP_MEDIATYPE_TEXT_PLAIN, 0x2ffff,
+                                       respPayloadLen, respPayload);
+
+    ATLAS_LOGGER_DEBUG("CoAP server response is sent");
+
+RET:
+    delete[] uriPath;
+    delete[] respPayload;
+}
+
 AtlasCoapServer& AtlasCoapServer::getInstance()
 {
     static AtlasCoapServer instance;
@@ -196,6 +286,40 @@ coap_context_t* AtlasCoapServer::getContext(const std::string &hostname, const s
 
     /* Schedule CoAP server */
     AtlasScheduler::getInstance().addFdEntry(fd, std::bind(&AtlasCoapServer::schedulerCallback, this));
+}
+
+void AtlasCoapServer::addResource(const AtlasCoapResource &resource)
+{
+    coap_resource_t *coapResource;
+
+    if (!this->ctx_) {
+        ATLAS_LOGGER_ERROR("Invalid CoAP context. Probably the server is not started");
+	throw AtlasCoapException("Invalid CoAP context");
+    }
+
+    coapResource = coap_resource_init(coap_make_str_const(resource.getUri().c_str()), 0);
+    if (!coapResource) {
+        ATLAS_LOGGER_ERROR("CoAP server: error when creating CoAP resource");
+        throw AtlasCoapException("Cannot create CoAP server resource");
+    }
+
+    if (resource.getCoapMethod() == ATLAS_COAP_METHOD_GET)
+        coap_register_handler(coapResource, COAP_REQUEST_GET, &AtlasCoapServer::getHandler);
+    else if (resource.getCoapMethod() == ATLAS_COAP_METHOD_POST)
+        coap_register_handler(coapResource, COAP_REQUEST_POST, &AtlasCoapServer::postHandler);
+    else if (resource.getCoapMethod() == ATLAS_COAP_METHOD_PUT)
+        coap_register_handler(coapResource, COAP_REQUEST_PUT, &AtlasCoapServer::putHandler);
+    else if (resource.getCoapMethod() == ATLAS_COAP_METHOD_DELETE)
+        coap_register_handler(coapResource, COAP_REQUEST_DELETE, &AtlasCoapServer::deleteHandler);
+
+    coap_add_resource(this->ctx_, coapResource);
+
+    this->resources_[resource.getUri()] = resource;
+}
+
+void AtlasCoapServer::delResource(const AtlasCoapResource &resource)
+{
+    this->resources_.erase(resource.getUri());
 }
 
 } // namespace atlas
