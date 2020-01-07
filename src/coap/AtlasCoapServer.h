@@ -22,10 +22,18 @@ enum AtlasCoapServerMode {
 class AtlasCoapServer {
 
 public:
-    AtlasCoapServer(const std::string &hostname, const std::string &port,
+    static AtlasCoapServer& getInstance();
+
+    void start(const std::string &hostname, const std::string &port,
                     AtlasCoapServerMode mode, const std::string &psk);
 
+    AtlasCoapServer(const AtlasCoapServer&) = delete;
+    AtlasCoapServer &operator=(const AtlasCoapServer& ) = delete;
+
 private:
+
+    AtlasCoapServer();
+
     coap_context_t *getContext(const std::string &hostname, const std::string &port,
                                 AtlasCoapServerMode mode, const std::string &psk);
     

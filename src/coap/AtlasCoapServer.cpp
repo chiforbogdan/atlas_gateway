@@ -11,6 +11,7 @@
 #include "AtlasCoapServer.h"
 #include "AtlasCoapException.h"
 #include "../scheduler/AtlasScheduler.h"
+#include "../logger/AtlasLogger.h"
 
 #define ATLAS_COAP_SERVER_IS_UDP(MODE) ((MODE) & ATLAS_COAP_SERVER_MODE_UDP)
 #define ATLAS_COAP_SERVER_IS_DTLS(MODE) ((MODE) & ATLAS_COAP_SERVER_MODE_DTLS_PSK)
@@ -18,6 +19,18 @@
 namespace atlas {
 
 const std::string DEFAULT_INDEX = "ATLAS CoAP gateway";
+
+AtlasCoapServer& AtlasCoapServer::getInstance()
+{
+    static AtlasCoapServer instance;
+
+    return instance;
+}
+
+AtlasCoapServer::AtlasCoapServer() : ctx_(nullptr)
+{
+    memset(key_, 0, sizeof(key_));
+}
 
 void AtlasCoapServer::schedulerCallback()
 {
@@ -30,9 +43,12 @@ void AtlasCoapServer::getDefaultIndexHandler(coap_context_t *ctx,
                                              coap_pdu_t *request,
                                              coap_binary_t *token,
                                              coap_string_t *query,
-                                             coap_pdu_t *response) {
+                                             coap_pdu_t *response)
+{
 
     const char *INDEX = DEFAULT_INDEX.c_str();
+
+    ATLAS_LOGGER_DEBUG("Serving CoAP default index...");
 
     coap_add_data_blocked_response(resource, session, request, response, token,
                                    COAP_MEDIATYPE_TEXT_PLAIN, 0x2ffff,
@@ -57,6 +73,8 @@ void AtlasCoapServer::setDtlsPsk(coap_context_t *ctx, const std::string &pskVal)
         throw AtlasCoapException("CoAP DTLS is not supported");
  
     memset(&psk, 0, sizeof(psk));
+    memset(key_, 0, sizeof(key_));
+
     psk.version = COAP_DTLS_SPSK_SETUP_VERSION;
  
     strncpy((char *) key_, pskVal.c_str(), ATLAS_MAX_PSK_KEY_BYTES);
@@ -93,7 +111,7 @@ coap_context_t* AtlasCoapServer::getContext(const std::string &hostname, const s
     hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST;
  
     if (getaddrinfo(hostname.c_str(), port.c_str(), &hints, &res) != 0) {
-        //ATLAS_LOGGER_ERROR("Cannot start CoAP server");
+        ATLAS_LOGGER_ERROR("Cannot start CoAP server");
         coap_free_context(ctx);
         return NULL;
     }
@@ -120,22 +138,22 @@ coap_context_t* AtlasCoapServer::getContext(const std::string &hostname, const s
         if (ATLAS_COAP_SERVER_IS_UDP(mode)) {
             ep = coap_new_endpoint(ctx, &addr, COAP_PROTO_UDP);
             if (!ep) {
-                //ATLAS_LOGGER_ERROR("Cannot open COAP UDP");
+                ATLAS_LOGGER_ERROR("Cannot open COAP UDP");
                 continue;
             }
         }
 
         if (ATLAS_COAP_SERVER_IS_DTLS(mode)) {
             eps = coap_new_endpoint(ctx, &addrs, COAP_PROTO_DTLS);
-            //if (!eps)
-            //    ATLAS_LOGGER_ERROR("Cannot open COAP DTLS");
+            if (!eps)
+                ATLAS_LOGGER_ERROR("Cannot open COAP DTLS");
         }
 
         break;
     }
 
     if (!r) {
-        //ATLAS_LOGGER_ERROR("Cannot start CoAP server");
+        ATLAS_LOGGER_ERROR("Cannot start CoAP server");
         coap_free_context(ctx);
         return NULL;
     }
@@ -145,8 +163,8 @@ coap_context_t* AtlasCoapServer::getContext(const std::string &hostname, const s
     return ctx;
 }
 
-AtlasCoapServer::AtlasCoapServer(const std::string &hostname, const std::string &port,
-                                 AtlasCoapServerMode mode, const std::string &psk)
+ void AtlasCoapServer::start(const std::string &hostname, const std::string &port,
+                             AtlasCoapServerMode mode, const std::string &psk)
 {
     int fd;
 
@@ -160,20 +178,24 @@ AtlasCoapServer::AtlasCoapServer(const std::string &hostname, const std::string 
 
     /* Get CoAP context */
     ctx_ = this->getContext(hostname, port, mode, psk);
+    if (!ctx_) {
+        ATLAS_LOGGER_DEBUG("Cannot create CoAP context");
+        throw AtlasCoapException("Invalid CoAP context");
+    }
 
     /* Init default resources */
     this->initDefaultResources(ctx_);
 
     fd = coap_context_get_coap_fd(ctx_);
     if (fd == -1) {
-        //ATLAS_LOGGER_INFO("Cannot get CoAP file descriptor");
+        ATLAS_LOGGER_INFO("Cannot get CoAP file descriptor");
         coap_free_context(ctx_);
         ctx_ = NULL;
         throw AtlasCoapException("Cannot get file descriptor for CoAP server");
     }
 
+    /* Schedule CoAP server */
     AtlasScheduler::getInstance().addFdEntry(fd, std::bind(&AtlasCoapServer::schedulerCallback, this));
-
 }
 
 } // namespace atlas
