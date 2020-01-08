@@ -13,11 +13,11 @@ void AtlasAlarm::timerHandler(const boost::system::error_code& ec)
         this->callback_();
 
         /* Start timer again */
-        if (!this->once_) {
-            this->timer_->expires_at(timer_->expires_at() + boost::posix_time::millisec(this->periodMs_));
-            this->timer_->async_wait(boost::bind(&AtlasAlarm::timerHandler, this, _1));
+        if (!once_) {
+            timer_->expires_at(timer_->expires_at() + boost::posix_time::millisec(this->periodMs_));
+            timer_->async_wait(boost::bind(&AtlasAlarm::timerHandler, this, _1));
         } else
-            this->cancel();
+            cancel();
     } else
         ATLAS_LOGGER_ERROR("Timer handler called with error");
         
@@ -25,16 +25,16 @@ void AtlasAlarm::timerHandler(const boost::system::error_code& ec)
 
 AtlasAlarm::AtlasAlarm(uint32_t periodMs, bool once, std::function<void()> callback)
 {
-    this->periodMs_ = periodMs;
-    this->once_ = once;
-    this->callback_ = callback;
+    periodMs_ = periodMs;
+    once_ = once;
+    callback_ = callback;
 }
 
 void AtlasAlarm::start()
 {
     
     /* If timer is already started, there is nothing to do */
-    if (this->timer_)
+    if (timer_)
         return;
 
     timer_ = AtlasScheduler::getInstance().getTimer(this->periodMs_);
@@ -45,7 +45,7 @@ void AtlasAlarm::start()
 
 void AtlasAlarm::cancel()
 {
-    if (this->timer_) {
+    if (timer_) {
         timer_->cancel();
 	delete timer_;
     }
@@ -53,7 +53,7 @@ void AtlasAlarm::cancel()
 
 AtlasAlarm::~AtlasAlarm()
 {
-    this->cancel();
+    cancel();
 }
 
 } // namespace atlas
