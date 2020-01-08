@@ -3,6 +3,11 @@
 
 namespace atlas {
 
+boost::asio::deadline_timer * AtlasScheduler::getTimer(uint32_t periodMs)
+{
+    return new boost::asio::deadline_timer(this->ioService_, boost::posix_time::millisec(periodMs));
+}
+
 AtlasScheduler &AtlasScheduler::getInstance()
 {
     static AtlasScheduler scheduler;

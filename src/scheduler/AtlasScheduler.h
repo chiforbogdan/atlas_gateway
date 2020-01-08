@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <boost/asio.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include "AtlasSchedulerFdEntry.h"
 
 namespace atlas {
@@ -11,6 +12,10 @@ class AtlasScheduler {
 
 public:
 
+    /**
+     * @brief Get singleton instance for scheduler
+     * @return Scheduler instance
+     */
     static AtlasScheduler &getInstance();
 
     /*
@@ -33,6 +38,13 @@ public:
     * @return none
     */ 
     void delFdEntry(int fd);
+
+    /**
+     * @Create a timer which expires in <periodMs> ms
+     * @param[in] periodMs Timer interval in ms
+     * @return timer
+     */
+    boost::asio::deadline_timer *getTimer(uint32_t periodMs);
 
 private:
     /**
