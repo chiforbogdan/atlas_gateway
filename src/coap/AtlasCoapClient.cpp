@@ -61,6 +61,66 @@ coap_session_t* AtlasCoapClient::getSession(coap_context_t *ctx, coap_proto_t pr
 }
 
 
+
+int AtlasCoapClient::eventHandler(coap_context_t *ctx, coap_event_t event,
+                                  struct coap_session_t *session)
+{
+    ATLAS_LOGGER_INFO("CoAP client event handler");
+
+    switch(event) {
+        case COAP_EVENT_DTLS_CLOSED:
+            ATLAS_LOGGER_INFO("CoAP client request event: DTLS CLOSED");
+            break;
+        case COAP_EVENT_TCP_CLOSED:
+            ATLAS_LOGGER_INFO("CoAP client request event: TCP CLOSED");
+            break;
+        case COAP_EVENT_SESSION_CLOSED:
+            ATLAS_LOGGER_INFO("CoAP client request event: SESSION CLOSED");
+            break;
+        default:
+            break;
+    }
+
+     return 0;
+}
+
+
+void AtlasCoapClient::nackHandler(coap_context_t *context, coap_session_t *session,
+                                  coap_pdu_t *sent, coap_nack_reason_t reason,
+                                  const coap_tid_t id) {
+
+    ATLAS_LOGGER_INFO("CoAP client nack handler");
+
+    switch(reason) {
+        case COAP_NACK_TOO_MANY_RETRIES:
+            ATLAS_LOGGER_INFO("Coap client NACK: TOO MANY RETRIES");
+            break;
+        case COAP_NACK_NOT_DELIVERABLE:
+            ATLAS_LOGGER_INFO("Coap client NACK: NOT DELIVERABLE");
+            break;
+        case COAP_NACK_RST:
+            ATLAS_LOGGER_INFO("Coap client NACK: RST");
+            break;
+        case COAP_NACK_TLS_FAILED:
+            ATLAS_LOGGER_INFO("Coap client NACK: TLS FAILED");
+            break;
+        case COAP_NACK_ICMP_ISSUE:
+            ATLAS_LOGGER_INFO("Coap client NACK: ICMP ISSUE");
+            break;
+        default:
+             break;
+    }
+}
+
+void AtlasCoapClient::messageHandler(struct coap_context_t *ctx,
+                                     coap_session_t *session,
+                                     coap_pdu_t *sent,
+                                     coap_pdu_t *received,
+                                     const coap_tid_t id)
+{
+}
+
+
 void AtlasCoapClient::sendRequest(const std::string &uri, AtlasCoapMethod method, const uint8_t *reqPayload,
                  size_t reqPayloadLen, uint32_t timeout, coap_request_callback_t callback)
 {
@@ -97,6 +157,9 @@ void AtlasCoapClient::sendRequest(const std::string &uri, AtlasCoapMethod method
             throw "Cannot create CoAP context for client request";
 
         /* Register handlers */
+	coap_register_response_handler(ctx, &AtlasCoapClient::messageHandler);
+        coap_register_event_handler(ctx, &AtlasCoapClient::eventHandler);
+        coap_register_nack_handler(ctx, &AtlasCoapClient::nackHandler);
 
         dst.size = res;
         dst.addr.sin.sin_port = htons(coapUri.port);

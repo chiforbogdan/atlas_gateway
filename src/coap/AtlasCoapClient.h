@@ -8,12 +8,12 @@
 #include <string>
 #include <coap2/coap.h>
 #include <functional>
+#include <unordered_map>
 #include "AtlasCoapMethod.h"
 #include "AtlasCoapResponse.h"
+#include "AtlasCoapRequest.h"
 
 namespace atlas {
-
-typedef std::function<void(AtlasCoapResponse respStatus, const uint8_t *resp_payload, size_t resp_payload_len)> coap_request_callback_t;
 
 class AtlasCoapClient
 {
@@ -60,13 +60,25 @@ private:
     */
     coap_session_t *getSession(coap_context_t *ctx, coap_proto_t proto, coap_address_t *dst);
 
+    static int eventHandler(coap_context_t *ctx, coap_event_t event, struct coap_session_t *session);
+
+    static void nackHandler(coap_context_t *context, coap_session_t *session,
+                     coap_pdu_t *sent, coap_nack_reason_t reason,
+                     const coap_tid_t id);
+
+    static void messageHandler(struct coap_context_t *ctx,
+                               coap_session_t *session,
+                               coap_pdu_t *sent,
+                               coap_pdu_t *received,
+                               const coap_tid_t id);
+
     /**
     * @brief Get CoAP request unique token
     * @return token
     */
     static uint32_t getToken();
 
-    /* DTLS identity*/
+    /* DTLS identity */
     std::string dtlsIdentity_;
 
     /* DTLS key */
@@ -80,6 +92,8 @@ private:
 
     /* CoAP request unique token */
     static uint32_t token_;
+
+    std::unordered_map<coap_context_t*, AtlasCoapRequest> requests_;
 };
 
 } // namespace atlas
