@@ -20,6 +20,7 @@ class AtlasCoapClient
 
 public:
 
+    static AtlasCoapClient &getInstance();
     /**
     * @brief Send CoAP client request
     * @param[in] uri CoAP URI
@@ -42,7 +43,11 @@ public:
     */
     void setDtlsInfo(const std::string &identity, const std::string &psk);
 
+    AtlasCoapClient(const AtlasCoapClient &) = delete;
+
+    AtlasCoapClient & operator=(const AtlasCoapClient &) = delete;
 private:
+    AtlasCoapClient();
     /**
     * @brief Resolve CoAP hostname
     * @param[in] hostname CoAP hostname
@@ -72,11 +77,25 @@ private:
                                coap_pdu_t *received,
                                const coap_tid_t id);
 
+    void addRequest(coap_context_t *ctx, coap_session_t *session,
+                    uint32_t token, uint32_t timeout,
+                    coap_request_callback_t callback);
+
+
+    void scheduleCallback(coap_context_t *ctx, int fd);
+    
+    void messageProcess(struct coap_context_t *ctx,
+                        coap_session_t *session,
+                        coap_pdu_t *sent,
+                        coap_pdu_t *received,
+                        const coap_tid_t id);
+   
+    bool validateToken(coap_pdu_t *received, uint32_t token);
     /**
     * @brief Get CoAP request unique token
     * @return token
     */
-    static uint32_t getToken();
+    uint32_t getToken();
 
     /* DTLS identity */
     std::string dtlsIdentity_;
@@ -91,7 +110,7 @@ private:
     coap_request_callback_t callback_;
 
     /* CoAP request unique token */
-    static uint32_t token_;
+    uint32_t token_;
 
     std::unordered_map<coap_context_t*, AtlasCoapRequest> requests_;
 };

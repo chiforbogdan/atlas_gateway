@@ -21,7 +21,7 @@ public:
      * @param[in] callback Request callback
      * @return none
      */
-    AtlasCoapRequest(coap_context_t *context, coap_session_t *session,
+    AtlasCoapRequest(coap_context_t *context, coap_session_t *session, uint32_t token,
                      coap_request_callback_t callback);
     
     /**
@@ -48,6 +48,7 @@ public:
      */
     coap_request_callback_t getCallback() const { return callback_; }
 
+    uint32_t getToken() const { return token_; }
 private:
     /* CoAP context */
     coap_context_t *context_;
@@ -57,8 +58,12 @@ private:
     
     /* CoAP request callback */
     coap_request_callback_t callback_;
+
+    /* CoAP request token */
+    uint32_t token_;
 };
 
 } // namespace atlas
 
 #endif /* __ATLAS_COAP_REQUEST_H__ */
+

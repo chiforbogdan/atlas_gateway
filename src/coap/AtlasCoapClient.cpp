@@ -1,12 +1,21 @@
 #include "AtlasCoapClient.h"
 #include "AtlasCoapException.h"
 #include "../logger/AtlasLogger.h"
+#include "../scheduler/AtlasScheduler.h"
+#include <boost/bind.hpp>
 
 #define ATLAS_COAP_CLIENT_TMP_BUF_LEN (128)
 
 namespace atlas {
 
-uint32_t AtlasCoapClient::token_ = 0;
+AtlasCoapClient &AtlasCoapClient::getInstance()
+{
+    static AtlasCoapClient instance;
+
+    return instance;
+}
+
+AtlasCoapClient::AtlasCoapClient() : token_(0) {}
 
 uint32_t AtlasCoapClient::getToken()
 {
@@ -112,17 +121,112 @@ void AtlasCoapClient::nackHandler(coap_context_t *context, coap_session_t *sessi
     }
 }
 
+bool AtlasCoapClient::validateToken(coap_pdu_t *received, uint32_t token)
+{
+    if (received->token_length != sizeof(token))
+        return false;
+
+    if (memcmp(received->token, (uint8_t*) &token, sizeof(token)) != 0)
+        return false;
+
+    return true;
+}
+
+
+void AtlasCoapClient::messageProcess(struct coap_context_t *ctx,
+                                     coap_session_t *session,
+                                     coap_pdu_t *sent,
+                                     coap_pdu_t *received,
+                                     const coap_tid_t id)
+{
+    uint8_t *respPayload = NULL;
+    size_t respPayloadLen = 0;
+
+    ATLAS_LOGGER_DEBUG("Process CoAP response");
+
+    AtlasCoapRequest &req = requests_[ctx];
+    if (req.getContext() != ctx || req.getSession() != session) {
+        ATLAS_LOGGER_DEBUG("Invalid CoAP context or session. Dropping the CoAP response");
+    }
+
+    /* Validate token */
+    if (!validateToken(received, req.getToken())) {
+        ATLAS_LOGGER_INFO("Invalid CoAP client response token");
+	
+        if ((received->type == COAP_MESSAGE_CON || received->type == COAP_MESSAGE_NON) &&
+            !sent)
+            coap_send_rst(session, received);
+	
+	return;
+    }
+
+    if (received->type == COAP_MESSAGE_RST) {
+        ATLAS_LOGGER_INFO("CoAP client: got RST as response");
+        req.getCallback()(ATLAS_COAP_RESP_RESET, NULL, 0);
+        return;
+    }
+
+    /* If response is SUCCESS */
+    if (COAP_RESPONSE_CLASS(received->code) == 2) {
+        ATLAS_LOGGER_DEBUG("CoAP client: Response code is 200");
+        /* Returns 0 on error*/
+        if (!coap_get_data(received, &respPayloadLen, &respPayload)) {
+            ATLAS_LOGGER_ERROR("CoAP client: cannot get CoAP response payload");
+            return;
+        }
+        /* Call the higher layer application callback */
+        req.getCallback()(ATLAS_COAP_RESP_OK, respPayload, respPayloadLen);
+    } else if (COAP_RESPONSE_CLASS(received->code) == 4) {
+        ATLAS_LOGGER_DEBUG("CoAP client: Response code is 4XX");
+        req.getCallback()(ATLAS_COAP_RESP_NOT_FOUND, NULL, 0);
+    } else {
+        ATLAS_LOGGER_DEBUG("CoAP client: Response code is UNKNOWN");
+        req.getCallback()(ATLAS_COAP_RESP_UNKNOWN, NULL, 0);
+    }
+
+}
+
 void AtlasCoapClient::messageHandler(struct coap_context_t *ctx,
                                      coap_session_t *session,
                                      coap_pdu_t *sent,
                                      coap_pdu_t *received,
                                      const coap_tid_t id)
 {
+    ATLAS_LOGGER_DEBUG("Message handler for CoAP response");
+
+    AtlasCoapClient::getInstance().messageProcess(ctx, session, sent,
+                                                  received, id);
 }
 
+void AtlasCoapClient::scheduleCallback(coap_context_t *ctx, int fd)
+{
+    ATLAS_LOGGER_DEBUG("CoAP request scheduler called");
+
+    coap_run_once(ctx, COAP_RUN_NONBLOCK);
+
+    /* Cancel scheduling entry */
+     AtlasScheduler::getInstance().delFdEntry(fd);
+}
+
+void AtlasCoapClient::addRequest(coap_context_t *ctx, coap_session_t *session,
+                                 uint32_t token, uint32_t timeout,
+                                 coap_request_callback_t callback)
+{
+    int fd;
+
+    fd = coap_context_get_coap_fd(ctx);
+    if (fd < 0)
+        throw "Cannot get CoAP file descriptor";
+
+    requests_[ctx] = AtlasCoapRequest(ctx, session, token, callback);
+
+    /* Add CoAP request file descriptor to the scheduler */
+    AtlasScheduler::getInstance().addFdEntry(fd,
+                                             boost::bind(&AtlasCoapClient::scheduleCallback, this, ctx, fd));
+}
 
 void AtlasCoapClient::sendRequest(const std::string &uri, AtlasCoapMethod method, const uint8_t *reqPayload,
-                 size_t reqPayloadLen, uint32_t timeout, coap_request_callback_t callback)
+                                  size_t reqPayloadLen, uint32_t timeout, coap_request_callback_t callback)
 {
 
     coap_uri_t coapUri;
@@ -246,6 +350,9 @@ void AtlasCoapClient::sendRequest(const std::string &uri, AtlasCoapMethod method
         /* Add request payload */
         if (reqPayload && reqPayloadLen)
             coap_add_data(reqPdu, reqPayloadLen, reqPayload);
+
+        /* Add request */
+        addRequest(ctx, session, token, timeout, callback); 
 
         /* Send request */
         ATLAS_LOGGER_DEBUG("Sending CoAP client request...");
