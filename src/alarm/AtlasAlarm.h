@@ -13,6 +13,12 @@ class AtlasAlarm
 
 public:
     /**
+    * @brief Ctor for alarm
+    * @return none
+    */
+    AtlasAlarm();
+
+    /**
      * @brief Ctor for alarm
      * @param[in] periodMs Timer period in ms
      * @param[in] once Indicates if the timer should run only once

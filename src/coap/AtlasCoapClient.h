@@ -12,6 +12,7 @@
 #include "AtlasCoapMethod.h"
 #include "AtlasCoapResponse.h"
 #include "AtlasCoapRequest.h"
+#include "../alarm/AtlasAlarm.h"
 
 namespace atlas {
 
@@ -91,6 +92,9 @@ private:
                         const coap_tid_t id);
    
     bool validateToken(coap_pdu_t *received, uint32_t token);
+    
+    void alarmCallback(coap_context_t *ctx);
+    
     /**
     * @brief Get CoAP request unique token
     * @return token
@@ -113,6 +117,8 @@ private:
     uint32_t token_;
 
     std::unordered_map<coap_context_t*, AtlasCoapRequest> requests_;
+
+    std::unordered_map<coap_context_t*, std::unique_ptr<AtlasAlarm> > timeouts_;
 };
 
 } // namespace atlas
