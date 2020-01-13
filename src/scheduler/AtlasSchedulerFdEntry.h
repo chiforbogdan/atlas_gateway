@@ -18,6 +18,12 @@ public:
     */
     AtlasSchedulerFdEntry(boost::asio::io_service &ioService, int fd, std::function<void()> cb);
 
+    /**
+    * @brief Dtor for scheduler entry
+    * @return none
+    */
+    ~AtlasSchedulerFdEntry();
+
 private:
     /**
     * @brief Handle file descriptor event

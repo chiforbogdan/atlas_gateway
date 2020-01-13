@@ -6,12 +6,13 @@ namespace atlas {
 
 void AtlasSchedulerFdEntry::handleFdEvent(boost::system::error_code ec, size_t xferLen)
 {
-    if (!ec)
-        this->callback_();
+    if (!ec) {
+        /* Schedule another read */
+        desc_.async_read_some(boost::asio::null_buffers(),
+                              boost::bind(&AtlasSchedulerFdEntry::handleFdEvent, this, _1, _2));
 
-    /* Schedule another read */
-    desc_.async_read_some(boost::asio::null_buffers(),
-                          boost::bind(&AtlasSchedulerFdEntry::handleFdEvent, this, _1, _2));
+        this->callback_();
+    }
 } 
 
 AtlasSchedulerFdEntry::AtlasSchedulerFdEntry(boost::asio::io_service &ioService,
@@ -24,6 +25,13 @@ AtlasSchedulerFdEntry::AtlasSchedulerFdEntry(boost::asio::io_service &ioService,
 
     desc_.async_read_some(boost::asio::null_buffers(),
                           boost::bind(&AtlasSchedulerFdEntry::handleFdEvent, this, _1, _2));
+}
+
+AtlasSchedulerFdEntry::~AtlasSchedulerFdEntry()
+{
+    this->desc_.cancel();
+    this->desc_.release();
+    this->desc_.close();
 }
 
 } // namespace atlas

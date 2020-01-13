@@ -93,7 +93,7 @@ private:
    
     bool validateToken(coap_pdu_t *received, uint32_t token);
     
-    void alarmCallback(coap_context_t *ctx);
+    void alarmCallback(coap_context_t *ctx, int coapFd);
     
     /**
     * @brief Get CoAP request unique token
