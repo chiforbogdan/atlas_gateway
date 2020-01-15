@@ -117,10 +117,7 @@ AtlasCoapServer& AtlasCoapServer::getInstance()
     return instance;
 }
 
-AtlasCoapServer::AtlasCoapServer() : ctx_(nullptr)
-{
-    memset(key_, 0, sizeof(key_));
-}
+AtlasCoapServer::AtlasCoapServer() : ctx_(nullptr) {}
 
 void AtlasCoapServer::schedulerCallback()
 {
@@ -155,7 +152,36 @@ void AtlasCoapServer::initDefaultResources(coap_context_t *ctx)
     coap_add_resource(ctx, resource);
 }
 
-void AtlasCoapServer::setDtlsPsk(coap_context_t *ctx, const std::string &pskVal)
+const coap_bin_const_t *AtlasCoapServer::getPskForIdentity(coap_bin_const_t *identity)
+{
+    ATLAS_LOGGER_DEBUG("Getting PSK for client...");
+
+    /* This code is just an example, it should be replaced with a query in
+     * the SQLite DB */
+    if (!strncmp((char*)identity->s, "test1", identity->length)) {
+        identityPsk_.s = (uint8_t *) "12345678";
+        identityPsk_.length = 8;
+    } else if (!strncmp((char *)identity->s, "test2", identity->length)) {
+        identityPsk_.s = (uint8_t *) "1234567";
+        identityPsk_.length = 7;
+    } else {
+        identityPsk_.s = nullptr;
+        identityPsk_.length = 0;
+    }
+
+    return &identityPsk_;
+}
+
+const coap_bin_const_t *AtlasCoapServer::verifyIdentity(coap_bin_const_t *identity,
+                                                        coap_session_t *c_session,
+                                                        void *arg)
+{
+    ATLAS_LOGGER_DEBUG("Verify PSK identity - choosing the PSK for the client identity");
+
+    return AtlasCoapServer::getInstance().getPskForIdentity(identity);
+}
+
+void AtlasCoapServer::setDtlsPsk(coap_context_t *ctx)
 {
     coap_dtls_spsk_t psk;
 
@@ -163,21 +189,23 @@ void AtlasCoapServer::setDtlsPsk(coap_context_t *ctx, const std::string &pskVal)
         throw AtlasCoapException("CoAP DTLS is not supported");
  
     memset(&psk, 0, sizeof(psk));
-    memset(key_, 0, sizeof(key_));
 
     psk.version = COAP_DTLS_SPSK_SETUP_VERSION;
- 
-    strncpy((char *) key_, pskVal.c_str(), ATLAS_MAX_PSK_KEY_BYTES);
-    psk.psk_info.key.s = key_;
-    psk.psk_info.key.length = strlen((char *) key_);
- 
+
+    /* Key will be set when the session is established (based on the client identity) */ 
+    psk.psk_info.key.s = nullptr;
+    psk.psk_info.key.length = 0;
+
+    /* SNI for virtual host callback */
+    psk.validate_id_call_back = &AtlasCoapServer::verifyIdentity;
+
     /* Set PSK */
     coap_context_set_psk2(ctx, &psk);
  }
 
 
 coap_context_t* AtlasCoapServer::getContext(const std::string &hostname, const std::string &port,
-            AtlasCoapServerMode mode, const std::string &psk)
+                                            AtlasCoapServerMode mode)
 {
     struct addrinfo hints;
     struct addrinfo *res, *r;
@@ -192,7 +220,7 @@ coap_context_t* AtlasCoapServer::getContext(const std::string &hostname, const s
  
     /* Set DTLS PSK */
     if (ATLAS_COAP_SERVER_IS_DTLS(mode))
-        this->setDtlsPsk(ctx, psk);
+        this->setDtlsPsk(ctx);
  
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_UNSPEC;
@@ -254,7 +282,7 @@ coap_context_t* AtlasCoapServer::getContext(const std::string &hostname, const s
 }
 
  void AtlasCoapServer::start(const std::string &hostname, const std::string &port,
-                             AtlasCoapServerMode mode, const std::string &psk)
+                             AtlasCoapServerMode mode)
 {
     int fd;
 
@@ -267,7 +295,7 @@ coap_context_t* AtlasCoapServer::getContext(const std::string &hostname, const s
     coap_startup();
 
     /* Get CoAP context */
-    ctx_ = this->getContext(hostname, port, mode, psk);
+    ctx_ = this->getContext(hostname, port, mode);
     if (!ctx_) {
         ATLAS_LOGGER_DEBUG("Cannot create CoAP context");
         throw AtlasCoapException("Invalid CoAP context");
