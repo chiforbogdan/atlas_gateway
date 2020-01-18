@@ -1,22 +1,81 @@
+#include <string>
 #include <boost/bind.hpp>
 #include "AtlasRegister.h"
 #include "../coap/AtlasCoapServer.h"
 #include "../logger/AtlasLogger.h"
+#include "../commands/AtlasCommandBatch.h"
+#include "../commands/AtlasCommandType.h"
 
 namespace atlas {
 
 const std::string ATLAS_REGISTER_URI = "gateway/register";
 const std::string ATLAS_KEEPALIVE_URI = "gateway/keepalive";
 
-AtlasRegister::AtlasRegister() : registerResource_(ATLAS_REGISTER_URI, ATLAS_COAP_METHOD_POST, boost::bind(&AtlasRegister::registerCallback, this, _1, _2, _3, _4, _5, _6)),
-                                 keepAliveResource_(ATLAS_KEEPALIVE_URI, ATLAS_COAP_METHOD_PUT, boost::bind(&AtlasRegister::keepaliveCallback, this, _1, _2, _3, _4, _5, _6)) {}
+AtlasRegister::AtlasRegister() : registerResource_(ATLAS_REGISTER_URI,
+                                                   ATLAS_COAP_METHOD_POST,
+                                                   boost::bind(&AtlasRegister::registerCallback, this, _1, _2, _3, _4, _5, _6)),
+                                 keepAliveResource_(ATLAS_KEEPALIVE_URI,
+                                                    ATLAS_COAP_METHOD_PUT,
+                                                    boost::bind(&AtlasRegister::keepaliveCallback, this, _1, _2, _3, _4, _5, _6)) {}
 
 AtlasCoapResponse AtlasRegister::keepaliveCallback(std::string path, AtlasCoapMethod method,
                                                   const uint8_t* reqPayload, size_t reqPayloadLen,
                                                   uint8_t **respPayload, size_t *respPayloadLen)
 {
+    AtlasCommandBatch cmdBatch;
+    std::vector<AtlasCommand> cmd;
+    std::string identity = "";
+    uint8_t *token = nullptr;
+    
     ATLAS_LOGGER_DEBUG("Keepalive callback executed...");
 
+    /* Parse commands */
+    cmdBatch.setRawCommands(reqPayload, reqPayloadLen);
+    cmd = cmdBatch.getParsedCommands();
+
+    if (cmd.empty()) {
+        ATLAS_LOGGER_ERROR("Keep-alive end-point called with empty command set");
+        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    }
+
+    for (AtlasCommand &cmdEntry : cmd) {
+        if (cmdEntry.getType() == ATLAS_CMD_KEEPALIVE) {
+            ATLAS_LOGGER_DEBUG("Keep-alive end-point called and KEEPALIVE command is found");
+           
+            /* The keep-alive token must have two bytes length */
+            if (cmdEntry.getLen() != sizeof(uint16_t)) {
+                ATLAS_LOGGER_ERROR("Keep-alive end-point called with invalid KEEPALIVE token length");
+                return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+            }
+
+            token = new uint8_t[cmdEntry.getLen()];
+            memcpy(token, cmdEntry.getVal(), cmdEntry.getLen());
+        }
+
+        if (cmdEntry.getType() == ATLAS_CMD_IDENTITY) {
+            ATLAS_LOGGER_DEBUG("Keep-alive end-point called and IDENTITY command is found");
+           
+            if (!cmdEntry.getLen()) {
+                ATLAS_LOGGER_ERROR("Keep-alive end-point called with empty IDENTITY command");
+                return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+            }
+
+            identity.assign((char *)cmdEntry.getVal(), cmdEntry.getLen());
+        }
+
+    }
+
+    if (identity == "" || !token) {
+        ATLAS_LOGGER_ERROR("Keep-alive failed because of invalid identity or keep-alive token");
+        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    }
+
+    /* Echo keep-alive token */
+    *respPayload = token;
+    *respPayloadLen = sizeof(uint16_t);
+
+    ATLAS_LOGGER_INFO1("Keep-alive SUCCESS sent by client with identity ", identity);
+    
     return ATLAS_COAP_RESP_OK;
 }
 
@@ -25,9 +84,41 @@ AtlasCoapResponse AtlasRegister::registerCallback(std::string path, AtlasCoapMet
                                                   const uint8_t* reqPayload, size_t reqPayloadLen,
                                                   uint8_t **respPayload, size_t *respPayloadLen)
 {
+    AtlasCommandBatch cmdBatch;
+    std::vector<AtlasCommand> cmd;
+    std::string identity;
+    
     ATLAS_LOGGER_DEBUG("Register callback executed...");
 
-    return ATLAS_COAP_RESP_OK;
+    /* Parse commands */
+    cmdBatch.setRawCommands(reqPayload, reqPayloadLen);
+    cmd = cmdBatch.getParsedCommands();
+
+    if (cmd.empty()) {
+        ATLAS_LOGGER_ERROR("Registration end-point called with empty command set");
+        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    }
+
+    for (AtlasCommand &cmdEntry : cmd) {
+        if (cmdEntry.getType() == ATLAS_CMD_REGISTER) {
+            ATLAS_LOGGER_DEBUG("Registration end-point called and REGISTER command is found");
+           
+            if (!cmdEntry.getLen()) {
+                ATLAS_LOGGER_ERROR("Registration end-point called with empty REGISTER command");
+                return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+            }
+
+            identity.assign((char *)cmdEntry.getVal(), cmdEntry.getLen());
+
+            ATLAS_LOGGER_INFO1("New ATLAS client registered with identity ", identity);
+
+            return ATLAS_COAP_RESP_OK;
+        }
+    }
+
+    ATLAS_LOGGER_ERROR("Registration end-point called with no REGISTER commands");
+
+    return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
 }
 
 void AtlasRegister::start()

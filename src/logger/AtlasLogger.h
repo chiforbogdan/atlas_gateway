@@ -7,6 +7,7 @@
 #define ATLAS_LOGGER_DEBUG(MSG) BOOST_LOG_SEV(atlas::logger, boost::log::trivial::debug) << (MSG)
 #define ATLAS_LOGGER_ERROR(MSG) BOOST_LOG_SEV(atlas::logger, boost::log::trivial::error) << (MSG)
 #define ATLAS_LOGGER_INFO(MSG) BOOST_LOG_SEV(atlas::logger, boost::log::trivial::info) << (MSG)
+#define ATLAS_LOGGER_INFO1(MSG, PARAM1) BOOST_LOG_SEV(atlas::logger, boost::log::trivial::info) << (MSG) << (PARAM1)
 
 namespace atlas {
 
