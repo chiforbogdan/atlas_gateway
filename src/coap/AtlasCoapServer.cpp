@@ -71,9 +71,16 @@ void AtlasCoapServer::incomingHandler(coap_context_t *ctx, struct coap_resource_
     size_t respPayloadLen = 0;
     AtlasCoapResource coapResource;
     AtlasCoapResponse respCode;
+    std::string identity = "";
 
     ATLAS_LOGGER_DEBUG("Handling incoming CoAP request...");
     
+    /* Assign CoAP PSK identity if the transport is DTLS */
+    if (session->proto == COAP_PROTO_DTLS) {
+        ATLAS_LOGGER_DEBUG("Assigning PSK DTLS identity from the transport layer");
+        identity.assign((const char*)session->psk_identity->s, session->psk_identity->length);
+    }
+
     /* Get request payload if any */
     coap_get_data(request, &reqPayloadLen, &reqPayload);
 
@@ -93,7 +100,7 @@ void AtlasCoapServer::incomingHandler(coap_context_t *ctx, struct coap_resource_
 	goto RET;
     }
 
-    respCode = coapResource.getCallback()(uriPath, method, reqPayload, reqPayloadLen, &respPayload, &respPayloadLen);
+    respCode = coapResource.getCallback()(uriPath, identity, method, reqPayload, reqPayloadLen, &respPayload, &respPayloadLen);
 
     response->code = COAP_RESPONSE_CODE(respCode);
 

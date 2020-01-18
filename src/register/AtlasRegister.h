@@ -20,6 +20,7 @@ private:
     /**
     * @brief Register client callback
     * @param[in] path CoAP URI path
+    * @param[in] pskIdentity PSK identity (extracted from the DTLS transport layer)
     * @param[in] method CoAP method
     * @param[in] reqPayload Request payload
     * @param[in] reqPayloadLen Request payload length
@@ -27,11 +28,14 @@ private:
     * @param[out] respPayloadLen Response payload length
     * @return CoAP response status
     */
-    AtlasCoapResponse registerCallback(std::string path, AtlasCoapMethod method, const uint8_t* reqPayload, size_t reqPayloadLen, uint8_t **respPayload, size_t *respPayloadLen);
+    AtlasCoapResponse registerCallback(const std::string &path, const std::string &pskIdentity,
+                                       AtlasCoapMethod method, const uint8_t* reqPayload, size_t reqPayloadLen,
+                                       uint8_t **respPayload, size_t *respPayloadLen);
     
     /**
     * @brief Keepalive client callback
     * @param[in] path CoAP URI path
+    * @param[in] pskIdentity PSK identity (extracted from the DTLS transport layer)
     * @param[in] method CoAP method
     * @param[in] reqPayload Request payload
     * @param[in] reqPayloadLen Request payload length
@@ -39,10 +43,14 @@ private:
     * @param[out] respPayloadLen Response payload length
     * @return CoAP response status
     */
-    AtlasCoapResponse keepaliveCallback(std::string path, AtlasCoapMethod method, const uint8_t* reqPayload, size_t reqPayloadLen, uint8_t **respPayload, size_t *respPayloadLen);
+    AtlasCoapResponse keepaliveCallback(const std::string &path, const std::string &identity,
+                                        AtlasCoapMethod method, const uint8_t* reqPayload, size_t reqPayloadLen,
+                                        uint8_t **respPayload, size_t *respPayloadLen);
 
-
+    /* REGISTER command CoAP resource*/
     AtlasCoapResource registerResource_;
+
+    /* KEEPALIVE command CoAP resource*/
     AtlasCoapResource keepAliveResource_;
 };
 

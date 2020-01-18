@@ -13,14 +13,15 @@ const std::string ATLAS_KEEPALIVE_URI = "gateway/keepalive";
 
 AtlasRegister::AtlasRegister() : registerResource_(ATLAS_REGISTER_URI,
                                                    ATLAS_COAP_METHOD_POST,
-                                                   boost::bind(&AtlasRegister::registerCallback, this, _1, _2, _3, _4, _5, _6)),
+                                                   boost::bind(&AtlasRegister::registerCallback, this, _1, _2, _3, _4, _5, _6, _7)),
                                  keepAliveResource_(ATLAS_KEEPALIVE_URI,
                                                     ATLAS_COAP_METHOD_PUT,
-                                                    boost::bind(&AtlasRegister::keepaliveCallback, this, _1, _2, _3, _4, _5, _6)) {}
+                                                    boost::bind(&AtlasRegister::keepaliveCallback, this, _1, _2, _3, _4, _5, _6, _7)) {}
 
-AtlasCoapResponse AtlasRegister::keepaliveCallback(std::string path, AtlasCoapMethod method,
-                                                  const uint8_t* reqPayload, size_t reqPayloadLen,
-                                                  uint8_t **respPayload, size_t *respPayloadLen)
+AtlasCoapResponse AtlasRegister::keepaliveCallback(const std::string &path, const std::string &pskIdentity,
+                                                   AtlasCoapMethod method, const uint8_t* reqPayload,
+                                                   size_t reqPayloadLen, uint8_t **respPayload,
+                                                   size_t *respPayloadLen)
 {
     AtlasCommandBatch cmdBatch;
     std::vector<AtlasCommand> cmd;
@@ -29,6 +30,8 @@ AtlasCoapResponse AtlasRegister::keepaliveCallback(std::string path, AtlasCoapMe
     
     ATLAS_LOGGER_DEBUG("Keepalive callback executed...");
 
+    ATLAS_LOGGER_INFO1("Process KEEPALIVE command from client with DTLS PSK identity ", pskIdentity);
+    
     /* Parse commands */
     cmdBatch.setRawCommands(reqPayload, reqPayloadLen);
     cmd = cmdBatch.getParsedCommands();
@@ -61,6 +64,10 @@ AtlasCoapResponse AtlasRegister::keepaliveCallback(std::string path, AtlasCoapMe
             }
 
             identity.assign((char *)cmdEntry.getVal(), cmdEntry.getLen());
+            if (pskIdentity != identity) {
+                ATLAS_LOGGER_ERROR("Keep-alive end-point called with SPOOFED identity");
+                return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+            }
         }
 
     }
@@ -80,15 +87,18 @@ AtlasCoapResponse AtlasRegister::keepaliveCallback(std::string path, AtlasCoapMe
 }
 
 
-AtlasCoapResponse AtlasRegister::registerCallback(std::string path, AtlasCoapMethod method,
-                                                  const uint8_t* reqPayload, size_t reqPayloadLen,
-                                                  uint8_t **respPayload, size_t *respPayloadLen)
+AtlasCoapResponse AtlasRegister::registerCallback(const std::string &path, const std::string &pskIdentity,
+                                                  AtlasCoapMethod method, const uint8_t* reqPayload,
+                                                  size_t reqPayloadLen, uint8_t **respPayload,
+                                                  size_t *respPayloadLen)
 {
     AtlasCommandBatch cmdBatch;
     std::vector<AtlasCommand> cmd;
     std::string identity;
     
     ATLAS_LOGGER_DEBUG("Register callback executed...");
+
+    ATLAS_LOGGER_INFO1("Process REGISTER command from client with DTLS PSK identity ", pskIdentity);
 
     /* Parse commands */
     cmdBatch.setRawCommands(reqPayload, reqPayloadLen);
@@ -109,7 +119,11 @@ AtlasCoapResponse AtlasRegister::registerCallback(std::string path, AtlasCoapMet
             }
 
             identity.assign((char *)cmdEntry.getVal(), cmdEntry.getLen());
-
+            if (pskIdentity != identity) {
+                ATLAS_LOGGER_ERROR("Keep-alive end-point called with SPOOFED identity");
+                return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+            }
+ 
             ATLAS_LOGGER_INFO1("New ATLAS client registered with identity ", identity);
 
             return ATLAS_COAP_RESP_OK;
