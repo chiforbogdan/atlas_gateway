@@ -15,15 +15,24 @@ include_directories(include)
 # Add CoAP headers
 include_directories(${COAP_INCLUDE_DIRS})
 
-# Atlas client files
-file(GLOB SOURCES "src/*.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp")
+# Atlas gateway files
+file(GLOB ATLAS_GATEWAY_SOURCES "src/*.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp")
 
 link_directories(${COAP_LIBRARY_DIRS})
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME} ${ATLAS_GATEWAY_SOURCES})
 
 #Add CoAP and Boost library
 target_link_libraries(${PROJECT_NAME} ${COAP_LIBRARIES} ${Boost_LIBRARIES})
 
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
+
+# Mosquitto dependency
+pkg_check_modules(MOSQUITTO libmosquitto REQUIRED)
+
+# Atlas mosquitto plug-in files
+file(GLOB ATLAS_GATEWAY_MOSQUITTO_PLUGIN_SOURCES "src/mosquitto_plugin/*.c")
+
+add_library(atlas_gateway_mosquitto_plugin SHARED ${ATLAS_GATEWAY_MOSQUITTO_PLUGIN_SOURCES})
+target_link_libraries(${PROJECT_NAME}_mosquitto_plugin ${MOSQUITTO_LIBRARIES})
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
