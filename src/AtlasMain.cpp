@@ -8,10 +8,12 @@
 #include "alarm/AtlasAlarm.h"
 #include "coap/AtlasCoapClient.h"
 #include "register/AtlasRegister.h"
+#include "pubsub_agent/AtlasPubSubAgent.h"
 
 int main(int argc, char **argv)
 {
     atlas::AtlasRegister reg;
+    atlas::AtlasPubSubAgent pubSubAgent;
     
     atlas::initLog();
 
@@ -21,6 +23,9 @@ int main(int argc, char **argv)
     
     /* Start registration module */
     reg.start();
+
+    /* Start publish-subscribe agent */
+    pubSubAgent.start();
 
     /* Start scheduler */
     atlas::AtlasScheduler::getInstance().run();

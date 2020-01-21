@@ -21,6 +21,12 @@ public:
      */
     static AtlasScheduler &getInstance();
 
+    /**
+    * @brief Get a reference to the internal service
+    * @return Reference to the internal service
+    */
+    boost::asio::io_service& getService() { return ioService_; }
+
     /*
     * @brief Run scheduler main loop
     * @return none
@@ -48,13 +54,6 @@ public:
      * @return timer
      */
     boost::asio::deadline_timer *getTimer(uint32_t periodMs);
-
-    /**
-     * @brief Get a unix socket server data
-     * @param[in] unixSockPath Unix socket path
-     * @return A pair consisting in a acceptor and a socket
-     */
-    unix_sock_info_t getUnixSocketServer(const std::string &unixSockPath);
 
 private:
     /**
