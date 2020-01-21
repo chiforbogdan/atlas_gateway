@@ -2,11 +2,14 @@
 #define __ATLAS_SCHEDULER_H__
 
 #include <unordered_map>
+#include <utility>
 #include <boost/asio.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "AtlasSchedulerFdEntry.h"
 
 namespace atlas {
+
+typedef std::pair<boost::asio::local::stream_protocol::acceptor*, boost::asio::local::stream_protocol::socket*> unix_sock_info_t;
 
 class AtlasScheduler {
 
@@ -45,6 +48,13 @@ public:
      * @return timer
      */
     boost::asio::deadline_timer *getTimer(uint32_t periodMs);
+
+    /**
+     * @brief Get a unix socket server data
+     * @param[in] unixSockPath Unix socket path
+     * @return A pair consisting in a acceptor and a socket
+     */
+    unix_sock_info_t getUnixSocketServer(const std::string &unixSockPath);
 
 private:
     /**

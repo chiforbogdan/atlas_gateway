@@ -1,7 +1,23 @@
 #include "AtlasScheduler.h"
 #include <iostream>
 
+
 namespace atlas {
+
+unix_sock_info_t AtlasScheduler::getUnixSocketServer(const std::string &unixSockPath)
+{
+    unix_sock_info_t sockInfo;
+    
+    boost::asio::local::stream_protocol::acceptor *acceptor = new boost::asio::local::stream_protocol::acceptor(ioService_,
+                                                                                                                boost::asio::local::stream_protocol::endpoint(unixSockPath));
+    
+    boost::asio::local::stream_protocol::socket *socket = new boost::asio::local::stream_protocol::socket(ioService_);
+
+    sockInfo.first = acceptor;
+    sockInfo.second = socket;
+
+    return sockInfo;
+}
 
 boost::asio::deadline_timer * AtlasScheduler::getTimer(uint32_t periodMs)
 {

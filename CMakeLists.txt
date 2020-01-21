@@ -16,7 +16,7 @@ include_directories(include)
 include_directories(${COAP_INCLUDE_DIRS})
 
 # Atlas gateway files
-file(GLOB ATLAS_GATEWAY_SOURCES "src/*.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp")
+file(GLOB ATLAS_GATEWAY_SOURCES "src/*.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp" "src/pubsub_agent/*.cpp")
 
 link_directories(${COAP_LIBRARY_DIRS})
 add_executable(${PROJECT_NAME} ${ATLAS_GATEWAY_SOURCES})
