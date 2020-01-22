@@ -4,41 +4,90 @@
 
 namespace atlas {
 
-void AtlasCommandBatch::parseCommands()
+std::pair<const uint8_t*, size_t> AtlasCommandBatch::getSerializedAddedCommands()
 {
-    uint8_t *ptr = cmdBuf_;
+    std::pair<const uint8_t*, size_t> ret(nullptr, 0);
+    uint8_t *ptr;
+    size_t totalLen = 0;
 
-    while (cmdBufLen_ > 0) {
+    if (addedCmd_.empty())
+        return ret;
+
+    if (addedCmdBuf_)
+        delete[] addedCmdBuf_;
+
+    for (const AtlasCommand &cmd : addedCmd_) {
+        totalLen += 2 * sizeof(uint16_t) + cmd.getLen();
+    }
+
+    addedCmdBuf_ = new uint8_t[totalLen];
+    memset(addedCmdBuf_, 0, totalLen);
+
+    ptr = addedCmdBuf_;
+    for (const AtlasCommand &cmd : addedCmd_) {
+        /* Set type */
+        uint16_t type = cmd.getType();
+        type = htons(type);
+        memcpy(ptr, &type, sizeof(type));
+        ptr += sizeof(type);
+    
+        /* Set length */
+        uint16_t len = cmd.getLen();
+        len = htons(len);
+        memcpy(ptr, &len, sizeof(len));
+        ptr += sizeof(len);
+
+        /* Set value */
+        if (cmd.getVal())
+            memcpy(ptr, cmd.getVal(), cmd.getLen());
+        
+        ptr += cmd.getLen();
+    }
+    
+    ret.first = addedCmdBuf_;
+    ret.second = totalLen;
+
+    return ret;    
+}
+
+void AtlasCommandBatch::addCommand(const AtlasCommand &cmd)
+{
+    addedCmd_.push_back(cmd);
+}
+
+void AtlasCommandBatch::parseCommands(size_t cmdLen)
+{
+    uint8_t *ptr = parsedCmdBuf_;
+
+    while (cmdLen > 0) {
 
         /* Get command type */
-        if (cmdBufLen_ < sizeof(uint16_t))
+        if (cmdLen < sizeof(uint16_t))
             return;
 
         uint16_t type = *((uint16_t *) ptr);
         type = ntohs(type);
         ptr += sizeof(uint16_t);
-        cmdBufLen_ -= sizeof(uint16_t);
-
-        /* Verify command type */
+        cmdLen -= sizeof(uint16_t);
 
         /* Get command length */
-        if (cmdBufLen_ < sizeof(uint16_t))
+        if (cmdLen < sizeof(uint16_t))
             return;
 
         uint16_t len = *((uint16_t *) ptr);
         len = ntohs(len);
         ptr += sizeof(uint16_t);
-        cmdBufLen_ -= sizeof(uint16_t);
+        cmdLen -= sizeof(uint16_t);
 
         /* Get command value */
-        if (cmdBufLen_ < len)
+        if (cmdLen < len)
             return;
         
         /* Save command */
         parsedCmd_.push_back(AtlasCommand(type, len, ptr));
  
         ptr += len;
-        cmdBufLen_ -= len;
+        cmdLen -= len;
     }
 }
 
@@ -48,22 +97,21 @@ void AtlasCommandBatch::setRawCommands(const uint8_t *cmd, size_t cmdLen)
         return;
 
     /* Clear existing commands, if any */
-    if (cmdBuf_)
-        delete[] cmdBuf_;
+    if (parsedCmdBuf_)
+        delete[] parsedCmdBuf_;
 
     parsedCmd_.clear();
 
-    cmdBuf_ = new uint8_t[cmdLen];
-    memcpy(cmdBuf_, cmd, cmdLen);
-    
-    cmdBufLen_ = cmdLen;
+    parsedCmdBuf_ = new uint8_t[cmdLen];
+    memcpy(parsedCmdBuf_, cmd, cmdLen);
 
-    parseCommands();
+    parseCommands(cmdLen);
 }
 
 AtlasCommandBatch::~AtlasCommandBatch()
 {
-    delete[] cmdBuf_;
+    delete[] parsedCmdBuf_;
+    delete[] addedCmdBuf_;
 }
 
 } //namespace atlas

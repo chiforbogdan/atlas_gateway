@@ -12,6 +12,9 @@ enum AtlasCommandType {
 
     /* Identity command: payload is the client identity */
     ATLAS_CMD_IDENTITY,
+
+    /* Get all publish-subscribe firewall rules: no payload */
+    ATLAS_CMD_GET_ALL_PUB_SUB_FIREWALL_RULES,
 };
 
 } // namespace atlas

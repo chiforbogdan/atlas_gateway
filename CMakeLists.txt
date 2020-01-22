@@ -30,7 +30,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
 pkg_check_modules(MOSQUITTO libmosquitto REQUIRED)
 
 # Atlas mosquitto plug-in files
-file(GLOB ATLAS_GATEWAY_MOSQUITTO_PLUGIN_SOURCES "src/mosquitto_plugin/*.cpp" "src/mosquitto_plugin/logger/*.cpp" "src/mosquitto_plugin/filter/*.cpp")
+file(GLOB ATLAS_GATEWAY_MOSQUITTO_PLUGIN_SOURCES "src/mosquitto_plugin/*.cpp" "src/mosquitto_plugin/logger/*.cpp" "src/mosquitto_plugin/filter/*.cpp" "src/commands/*.cpp")
 
 add_library(atlas_gateway_mosquitto_plugin SHARED ${ATLAS_GATEWAY_MOSQUITTO_PLUGIN_SOURCES})
 target_link_libraries(${PROJECT_NAME}_mosquitto_plugin ${MOSQUITTO_LIBRARIES} ${Boost_LIBRARIES})

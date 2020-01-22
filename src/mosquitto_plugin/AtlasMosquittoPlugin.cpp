@@ -49,8 +49,9 @@ int mosquitto_auth_security_cleanup(void *userdata, struct mosquitto_opt *auth_o
     return MOSQ_ERR_SUCCESS;
 }
 
-int mosquitto_auth_pkt_inspect(void *user_data, const char *src_client_id, const char *src_username, const char *dst_client_id,
-                               const char *dst_username, const char *topic, uint8_t qos, uint16_t payload_len, const uint8_t *payload)
+int mosquitto_auth_pkt_inspect(void *user_data, const char *src_client_id, const char *src_username,
+                               const char *dst_client_id, const char *dst_username, const char *topic,
+                               uint8_t qos, uint16_t payload_len, const uint8_t *payload)
 {
     ATLAS_LOGGER_DEBUG("Inspecting Mosquitto packet: \n"
                             "\tSource client id: %s\n"
