@@ -14,6 +14,8 @@ public:
     AtlasFilter &operator=(const AtlasFilter &) = delete;
 private:
     AtlasFilter();
+
+    void gatewayConnect();
 };
 
 } // namespace atlas
