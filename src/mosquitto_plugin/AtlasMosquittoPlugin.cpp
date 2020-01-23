@@ -81,6 +81,9 @@ int mosquitto_auth_pkt_inspect(void *user_data, const char *src_client_id, const
     pkt.setPayload(payload);
     pkt.setPayloadLen(payload_len);
 
+    if (atlas::AtlasFilter::getInstance().filter(pkt))
+        return MOSQ_ERR_SUCCESS;
+    
     return MOSQ_ERR_PKT_DROP;
 }
 

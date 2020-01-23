@@ -22,10 +22,68 @@ AtlasFilter& AtlasFilter::getInstance()
     return instance;
 }
 
+void AtlasFilter::installFirewallRule(const uint8_t *cmdBuf, uint16_t cmdLen)
+{
+    AtlasCommandBatch cmdBatch;
+    std::vector<AtlasCommand> cmds;
+    std::string clientId = "";
+    uint16_t maxQos;
+    uint16_t pps;
+    uint16_t maxPayloadLen;
+
+    ATLAS_LOGGER_DEBUG("Install firewall rules from gateway");
+    
+    /* Parse commands */
+    cmdBatch.setRawCommands(cmdBuf, cmdLen);
+    cmds = cmdBatch.getParsedCommands();
+
+    for (const AtlasCommand &cmd : cmds) {
+        if (cmd.getType() == ATLAS_CMD_PUB_SUB_CLIENT_ID) {
+            clientId.assign((char *)cmd.getVal(), cmd.getLen());
+        } else if (cmd.getType() == ATLAS_CMD_PUB_SUB_MAX_QOS && cmd.getLen() == sizeof(uint16_t)) {
+            memcpy(&maxQos, cmd.getVal(), sizeof(uint16_t));
+            maxQos = ntohs(maxQos);
+        } else if (cmd.getType() == ATLAS_CMD_PUB_SUB_PPS && cmd.getLen() == sizeof(uint16_t)) {
+            memcpy(&pps, cmd.getVal(), sizeof(uint16_t));
+            pps = ntohs(pps);      
+        } else if (cmd.getType() == ATLAS_CMD_PUB_SUB_MAX_PAYLOAD_LEN && cmd.getLen() == sizeof(uint16_t)) {
+            memcpy(&maxPayloadLen, cmd.getVal(), sizeof(uint16_t));
+            maxPayloadLen = ntohs(maxPayloadLen);
+        }
+    }
+
+    /* Install firewall rule */
+    mutex_.lock();
+    rules_[clientId] = AtlasPacketPolicer(maxQos, pps, maxPayloadLen);
+    mutex_.unlock();
+    
+    ATLAS_LOGGER_INFO("Installed firewall rule for client id %s, Max QoS: %d, PPS: %d, Max payload length: %d",
+                      clientId.c_str(), maxQos, pps, maxPayloadLen);
+}
+
+void AtlasFilter::processCommand(size_t cmdLen)
+{
+    AtlasCommandBatch cmdBatch;
+    std::vector<AtlasCommand> cmds;
+    
+    ATLAS_LOGGER_DEBUG("Process command from gateway");
+    
+    /* Parse commands */
+    cmdBatch.setRawCommands(data_, cmdLen);
+    cmds = cmdBatch.getParsedCommands();
+
+    for (const AtlasCommand &cmd : cmds) {
+        if (cmd.getType() == ATLAS_CMD_PUB_SUB_INSTALL_FIREWALL_RULE)
+            installFirewallRule(cmd.getVal(), cmd.getLen());
+    }
+}
+
 void AtlasFilter::handleRead(const boost::system::error_code& error, size_t bytesTransferred)
 {
     if (!error) {
         ATLAS_LOGGER_DEBUG("Reading data from gateway");
+
+        processCommand(bytesTransferred);
 
         socket_->async_read_some(boost::asio::buffer(data_, sizeof(data_)),
                                  boost::bind(&AtlasFilter::handleRead, this, _1, _2));
@@ -87,6 +145,18 @@ void AtlasFilter::init()
     std::thread t(&AtlasFilter::gatewayLoop, this);
     
     t.detach();
+}
+
+bool AtlasFilter::filter(const AtlasPacket &pkt)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::string dstClientId = pkt.getDstClientId();
+
+    /* If no rule is found for the destination client id, then packet can be processed */
+    if (rules_.find(dstClientId) == rules_.end())
+        return true;
+
+    return rules_[dstClientId].filter(pkt);
 }
 
 } // namespace atlas

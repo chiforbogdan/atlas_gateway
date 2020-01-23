@@ -31,6 +31,7 @@ public:
     */
     void start();
 
+private:
     /**
     * @brief Write data to publish-subscribe agent
     * @param[in] buf Data buffer
@@ -38,7 +39,19 @@ public:
     * @return none
     */
     void write(const uint8_t *buf, size_t bufLen);
-private:
+    
+    /**
+    * @brief Get all firewall rules for publish-subscribe agent
+    * @return none
+    */
+    void getAllFirewallRules();
+
+    /**
+    * @brief Process command received from publish-subsribe agent
+    * @param[in] cmdLen Command length
+    * @return none
+    */
+    void processCommand(size_t cmdLen);
     
     /**
     * @brief Accept connections from publish-subscribe agent

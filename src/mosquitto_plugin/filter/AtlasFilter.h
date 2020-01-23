@@ -2,6 +2,10 @@
 #define __ATLAS_FILTER_H__
 
 #include <boost/asio.hpp>
+#include <mutex>
+#include <unordered_map>
+#include "AtlasPacket.h"
+#include "AtlasPacketPolicer.h"
 
 #define ATLAS_PUB_SUB_AGENT_BUF_LEN (2048)
 
@@ -14,6 +18,13 @@ public:
     static AtlasFilter& getInstance();
     void init();
 
+    /**
+    * @brief Filter publish-subscribe packet
+    * @param[in] packet Publish-subscribe packet
+    * @return True if packet should be processed, False if packet should be dropped
+    */
+    bool filter(const AtlasPacket &pkt);
+
     AtlasFilter(const AtlasFilter &) = delete;
     AtlasFilter &operator=(const AtlasFilter &) = delete;
 private:
@@ -22,6 +33,21 @@ private:
     void gatewayConnect();
 
     void gatewayLoop();
+
+    /**
+    * @brief Install firewall rule
+    * @param[in] cmdBuf Command buffer
+    * @param[in] cmdLen Command length
+    * @return none
+    */
+    void installFirewallRule(const uint8_t *cmdBuf, uint16_t cmdLen);
+
+    /**
+    * @brief Process command from gateway
+    * @param[in] cmdLen Command length
+    * @return none
+    */ 
+    void processCommand(size_t cmdLen);
     
     /**
     * @brief Read data from publish-subscribe agent
@@ -50,6 +76,11 @@ private:
     /* Read data buffer */
     uint8_t data_[ATLAS_PUB_SUB_AGENT_BUF_LEN];
 
+    /* Filter rules lock */
+    std::mutex mutex_;
+
+    /* Filter rules */
+    std::unordered_map<std::string, AtlasPacketPolicer> rules_;
 };
 
 } // namespace atlas
