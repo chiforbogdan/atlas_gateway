@@ -9,6 +9,7 @@
 #include <time.h>
 #include "logger/AtlasLogger.h"
 #include "filter/AtlasFilter.h"
+#include "filter/AtlasPacket.h"
 
 #define ATLAS_MOSQUITTO_PLUGIN_START_MSG "Atlas gateway mosquitto plug-in starting..."
 
@@ -53,6 +54,8 @@ int mosquitto_auth_pkt_inspect(void *user_data, const char *src_client_id, const
                                const char *dst_client_id, const char *dst_username, const char *topic,
                                uint8_t qos, uint16_t payload_len, const uint8_t *payload)
 {
+    atlas::AtlasPacket pkt;
+
     ATLAS_LOGGER_DEBUG("Inspecting Mosquitto packet: \n"
                             "\tSource client id: %s\n"
                             "\tSource username: %s\n"
@@ -68,6 +71,15 @@ int mosquitto_auth_pkt_inspect(void *user_data, const char *src_client_id, const
                             topic,
                             qos,
                             payload_len);
+
+    pkt.setSrcUsername(src_username);
+    pkt.setSrcClientId(src_client_id);
+    pkt.setDstUsername(dst_username);
+    pkt.setDstClientId(dst_client_id);
+    pkt.setTopic(topic);
+    pkt.setQos(qos);
+    pkt.setPayload(payload);
+    pkt.setPayloadLen(payload_len);
 
     return MOSQ_ERR_PKT_DROP;
 }
