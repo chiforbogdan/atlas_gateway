@@ -15,7 +15,16 @@ class AtlasFilter
 {
 
 public:
+    /**
+    * @brief Get filter instance
+    * @return none
+    */
     static AtlasFilter& getInstance();
+
+    /**
+    * brief Init filter instance
+    * @return none
+    */
     void init();
 
     /**
@@ -27,12 +36,33 @@ public:
 
     AtlasFilter(const AtlasFilter &) = delete;
     AtlasFilter &operator=(const AtlasFilter &) = delete;
+
 private:
+    /**
+    * @brief Default ctor for filter
+    * @return none
+    */
     AtlasFilter();
 
+    /**
+    * @brief Connect to gateway
+    * @return none
+    */
     void gatewayConnect();
 
+    /**
+    * @brief Main loop for gateway connection
+    * @return none
+    */
     void gatewayLoop();
+
+    /**
+    * @brief Remove firewall rule
+    * @param[in] cmdBuf Command buffer
+    * @param[in] cmdLen Command length
+    * @return none
+    */
+    void removeFirewallRule(const uint8_t *cmdBuf, uint16_t cmdLen);
 
     /**
     * @brief Install firewall rule

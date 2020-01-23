@@ -22,6 +22,35 @@ AtlasFilter& AtlasFilter::getInstance()
     return instance;
 }
 
+void AtlasFilter::removeFirewallRule(const uint8_t *cmdBuf, uint16_t cmdLen)
+{
+    AtlasCommandBatch cmdBatch;
+    std::vector<AtlasCommand> cmds;
+    std::string clientId = "";
+
+    ATLAS_LOGGER_DEBUG("Remove firewall rule from agent");
+    
+    /* Parse commands */
+    cmdBatch.setRawCommands(cmdBuf, cmdLen);
+    cmds = cmdBatch.getParsedCommands();
+
+    for (const AtlasCommand &cmd : cmds)
+        if (cmd.getType() == ATLAS_CMD_PUB_SUB_CLIENT_ID)
+            clientId.assign((char *)cmd.getVal(), cmd.getLen());
+ 
+    if (clientId == "") {    
+        ATLAS_LOGGER_ERROR("Empty client id in firewall remove command. Dropping command...");
+        return;
+    }
+
+    /* Remove firewall rule */
+    mutex_.lock();
+    rules_.erase(clientId);
+    mutex_.unlock();
+
+    ATLAS_LOGGER_INFO("Firewall rule for client id %s was removed", clientId.c_str());
+} 
+
 void AtlasFilter::installFirewallRule(const uint8_t *cmdBuf, uint16_t cmdLen)
 {
     AtlasCommandBatch cmdBatch;
@@ -30,8 +59,11 @@ void AtlasFilter::installFirewallRule(const uint8_t *cmdBuf, uint16_t cmdLen)
     uint16_t maxQos;
     uint16_t pps;
     uint16_t maxPayloadLen;
+    bool qosFound = false;
+    bool ppsFound = false;
+    bool payloadLenFound = false;
 
-    ATLAS_LOGGER_DEBUG("Install firewall rules from gateway");
+    ATLAS_LOGGER_DEBUG("Install firewall rule from gateway");
     
     /* Parse commands */
     cmdBatch.setRawCommands(cmdBuf, cmdLen);
@@ -43,13 +75,36 @@ void AtlasFilter::installFirewallRule(const uint8_t *cmdBuf, uint16_t cmdLen)
         } else if (cmd.getType() == ATLAS_CMD_PUB_SUB_MAX_QOS && cmd.getLen() == sizeof(uint16_t)) {
             memcpy(&maxQos, cmd.getVal(), sizeof(uint16_t));
             maxQos = ntohs(maxQos);
+            qosFound = true;
         } else if (cmd.getType() == ATLAS_CMD_PUB_SUB_PPS && cmd.getLen() == sizeof(uint16_t)) {
             memcpy(&pps, cmd.getVal(), sizeof(uint16_t));
-            pps = ntohs(pps);      
+            pps = ntohs(pps);
+            ppsFound = true;      
         } else if (cmd.getType() == ATLAS_CMD_PUB_SUB_MAX_PAYLOAD_LEN && cmd.getLen() == sizeof(uint16_t)) {
             memcpy(&maxPayloadLen, cmd.getVal(), sizeof(uint16_t));
             maxPayloadLen = ntohs(maxPayloadLen);
+            payloadLenFound = true;
         }
+    }
+
+    if (clientId == "") {    
+        ATLAS_LOGGER_ERROR("Empty client id in firewall install command. Dropping command...");
+        return;
+    }
+
+    if (!qosFound) {    
+        ATLAS_LOGGER_ERROR("Empty QoS in firewall install command. Dropping command...");
+        return;
+    }
+
+    if (!ppsFound) {    
+        ATLAS_LOGGER_ERROR("Empty PPS in firewall install command. Dropping command...");
+        return;
+    }
+
+    if (!payloadLenFound) {    
+        ATLAS_LOGGER_ERROR("Empty payload length in firewall install command. Dropping command...");
+        return;
     }
 
     /* Install firewall rule */
@@ -75,6 +130,8 @@ void AtlasFilter::processCommand(size_t cmdLen)
     for (const AtlasCommand &cmd : cmds) {
         if (cmd.getType() == ATLAS_CMD_PUB_SUB_INSTALL_FIREWALL_RULE)
             installFirewallRule(cmd.getVal(), cmd.getLen());
+        else if (cmd.getType() == ATLAS_CMD_PUB_SUB_REMOVE_FIREWALL_RULE)
+            removeFirewallRule(cmd.getVal(), cmd.getLen());
     }
 }
 
