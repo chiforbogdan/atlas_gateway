@@ -2,6 +2,7 @@
 #define __ATLAS_DEVICE_MANAGER_H__
 
 #include <unordered_map>
+#include <boost/asio.hpp>
 #include "AtlasDevice.h"
 
 namespace atlas {
@@ -12,7 +13,7 @@ class AtlasDeviceManager
 public:
     /**
     * @brief Get device manager instance
-    * @return device manager instance
+    * @return Device manager instance
     */
     static AtlasDeviceManager& getInstance();
 
@@ -28,10 +29,24 @@ public:
     AtlasDeviceManager& operator=(const AtlasDeviceManager&) = delete;
 
 private:
-    AtlasDeviceManager() = default;
+    /**
+    * @brief Ctor for device manager
+    * @return none
+    */
+    AtlasDeviceManager();
+
+    /**
+    * @brief Internal keep-alive timer handler
+    * @param[in] ec Error code
+    * @return none
+    */
+    void kaTimerHandler(const boost::system::error_code& ec);
 
     /* Client devices */
     std::unordered_map<std::string, AtlasDevice> devices_;
+
+    /* Keep-alive timer  */
+    boost::asio::deadline_timer kaTimer_;
 };
 
 } // namespace atlas

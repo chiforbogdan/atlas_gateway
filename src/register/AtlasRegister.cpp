@@ -32,6 +32,12 @@ AtlasCoapResponse AtlasRegister::keepaliveCallback(const std::string &path, cons
     ATLAS_LOGGER_DEBUG("Keepalive callback executed...");
 
     ATLAS_LOGGER_INFO1("Process KEEPALIVE command from client with DTLS PSK identity ", pskIdentity);
+
+    AtlasDevice& device = AtlasDeviceManager::getInstance().getDevice(pskIdentity);
+    if (!device.isRegistered()) {
+        ATLAS_LOGGER_ERROR("Received KEEPALIVE command for a device which is not registered...");
+        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    }
     
     /* Parse commands */
     cmdBatch.setRawCommands(reqPayload, reqPayloadLen);
@@ -83,6 +89,9 @@ AtlasCoapResponse AtlasRegister::keepaliveCallback(const std::string &path, cons
     *respPayloadLen = sizeof(uint16_t);
 
     ATLAS_LOGGER_INFO1("Keep-alive SUCCESS sent by client with identity ", identity);
+
+    /* Notify device that a keep-alive was just received */
+    device.keepAliveNow();
     
     return ATLAS_COAP_RESP_OK;
 }
@@ -128,6 +137,7 @@ AtlasCoapResponse AtlasRegister::registerCallback(const std::string &path, const
 
             /* Create device if necessary and set PSK */
             AtlasDeviceManager::getInstance().getDevice(identity).setPsk(psk);
+            AtlasDeviceManager::getInstance().getDevice(identity).registerNow();
 
             return ATLAS_COAP_RESP_OK;
         }

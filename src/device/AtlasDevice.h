@@ -13,7 +13,7 @@ public:
     * @brief Default ctor for client device
     * @return none
     */
-    AtlasDevice() : identity_("") {}
+    AtlasDevice() : identity_(""), registered_(false) {}
 
     /**
     * @brief Set identity for client device
@@ -41,12 +41,54 @@ public:
     */
     inline std::string getPsk() const { return psk_; }
 
+    /**
+    * @brief Get client device registration time
+    * @return Client device registration time
+    */
+    inline std::string getRegTime() const { return regTime_; }
+
+    /**
+    * @brief Indicate that a client device just registered
+    * @return none
+    */
+    void registerNow();
+
+    /**
+    * @brief Indicate that a client device just sent a keep-alive
+    * @return none
+    */
+    void keepAliveNow();
+
+    /**
+    * @brief Keep-alive expired timer callback. This will decrement the internal keep-alive counter
+    * @return none
+    */
+    void keepAliveExpired();
+
+    /**
+    * @brief Get the client device registration state
+    * @return True if the device is registered, false otherwise
+    */
+    inline bool isRegistered() const { return registered_; }
+
 private:
     /* IoT client identity */
     std::string identity_;
 
     /* IoT client pre-shared key */
     std::string psk_;
+
+    /* Registration timestamp */
+    std::string regTime_;
+
+    /* Keep-alive timestamp */
+    std::string keepAliveTime_;
+
+    /* Indicates if the device is registered */
+    bool registered_;
+
+    /* Keep-alive counter. When this counter reaches 0, the device is de-registered */
+    uint8_t kaCtr_;
 };
 
 } // namespace atlas
