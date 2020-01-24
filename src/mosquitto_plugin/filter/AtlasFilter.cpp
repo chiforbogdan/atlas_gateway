@@ -213,8 +213,10 @@ void AtlasFilter::handleRead(const boost::system::error_code& error, size_t byte
 
         socket_->async_read_some(boost::asio::buffer(data_, sizeof(data_)),
                                  boost::bind(&AtlasFilter::handleRead, this, _1, _2));
-    } else
-        ATLAS_LOGGER_ERROR("Error when reading data from gateway");
+    } else {
+        ATLAS_LOGGER_ERROR("Error when reading data from gateway. Trying to reconnect to the gateway...");
+        gatewayConnect();
+    }
 }
 
 void AtlasFilter::handleWrite(const boost::system::error_code& error)
