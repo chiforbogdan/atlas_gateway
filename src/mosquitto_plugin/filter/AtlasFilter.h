@@ -57,6 +57,22 @@ private:
     void gatewayLoop();
 
     /**
+    * @brief Write firewall rule statistics to gateway
+    * @param[in] clientId Client id associated with the firewall rule
+    * @param[in] droppedPkts Number of dropped packets
+    * @param[in] passedPkts Number of accepted packets
+    */
+    void writeFirewallRuleStats(const std::string &clientId, uint32_t droppedPkts, uint32_t passedPkts);
+
+    /**
+    * @brief Get statistics for firewall rule
+    * @param[in] cmdBuf Command buffer
+    * @param[in] cmdLen Command length
+    * @return none
+    */
+    void getFirewallRuleStats(const uint8_t *cmdBuf, uint16_t cmdLen);
+
+    /**
     * @brief Remove firewall rule
     * @param[in] cmdBuf Command buffer
     * @param[in] cmdLen Command length

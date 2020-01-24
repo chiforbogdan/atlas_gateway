@@ -34,6 +34,18 @@ public:
     */
     bool filter(const AtlasPacket &pkt);
 
+    /**
+    * @brief Get number of dropped packets
+    * @return Number of dropped packets
+    */
+    uint32_t getStatDroppedPkt() const { return statPktDrop_; }
+
+    /**
+    * @brief Get number of passed packets
+    * @return Number of passed packets
+    */
+    uint32_t getStatPassedPkt() const { return statPktPass_; }
+
 private:
     /* Qualifiers */
     

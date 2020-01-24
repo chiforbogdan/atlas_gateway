@@ -32,6 +32,64 @@ AtlasPubSubAgent::~AtlasPubSubAgent()
     delete connectedSocket_;
 }
 
+void AtlasPubSubAgent::getFirewallRuleStats(const std::string &clientId)
+{
+    AtlasCommandBatch cmdBatchInner;
+    AtlasCommandBatch cmdBatchOuter;
+    
+    if (clientId == "") {
+        ATLAS_LOGGER_ERROR("Empty client id is not allowed when getting statistics fora firewall rule");
+        return;
+    }
+
+    ATLAS_LOGGER_INFO1("Get statistics for firewall rule associated with client id ", clientId);
+
+    /* Inner command */
+    AtlasCommand cmdClientId(ATLAS_CMD_PUB_SUB_CLIENT_ID, clientId.length(), (uint8_t *) clientId.c_str());
+   
+    cmdBatchInner.addCommand(cmdClientId);
+    std::pair<const uint8_t*, size_t> innerCmd = cmdBatchInner.getSerializedAddedCommands();
+
+    /* Outer command */
+    AtlasCommand cmdRemoveFwRule(ATLAS_CMD_PUB_SUB_GET_STAT_FIREWALL_RULE, innerCmd.second, innerCmd.first);
+    
+    cmdBatchOuter.addCommand(cmdRemoveFwRule);
+
+    std::pair<const uint8_t*, size_t> outerCmd = cmdBatchOuter.getSerializedAddedCommands();
+
+    /* Write command to publish-subscribe agent */
+    write(outerCmd.first, outerCmd.second);
+}
+
+void AtlasPubSubAgent::removeFirewallRule(const std::string &clientId)
+{
+    AtlasCommandBatch cmdBatchInner;
+    AtlasCommandBatch cmdBatchOuter;
+    
+    if (clientId == "") {
+        ATLAS_LOGGER_ERROR("Empty client id is not allowed when removing a firewall rule");
+        return;
+    }
+
+    ATLAS_LOGGER_INFO1("Remove firewall rule for client id ", clientId);
+
+    /* Inner command */
+    AtlasCommand cmdClientId(ATLAS_CMD_PUB_SUB_CLIENT_ID, clientId.length(), (uint8_t *) clientId.c_str());
+   
+    cmdBatchInner.addCommand(cmdClientId);
+    std::pair<const uint8_t*, size_t> innerCmd = cmdBatchInner.getSerializedAddedCommands();
+
+    /* Outer command */
+    AtlasCommand cmdRemoveFwRule(ATLAS_CMD_PUB_SUB_REMOVE_FIREWALL_RULE, innerCmd.second, innerCmd.first);
+    
+    cmdBatchOuter.addCommand(cmdRemoveFwRule);
+
+    std::pair<const uint8_t*, size_t> outerCmd = cmdBatchOuter.getSerializedAddedCommands();
+
+    /* Write command to publish-subscribe agent */
+    write(outerCmd.first, outerCmd.second);
+}
+
 void AtlasPubSubAgent::getAllFirewallRules()
 {
 
@@ -93,6 +151,57 @@ void AtlasPubSubAgent::getAllFirewallRules()
     write(outer1.first, outer1.second);
 }
 
+void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t cmdLen)
+{
+    AtlasCommandBatch cmdBatch;
+    std::vector<AtlasCommand> cmds;
+    std::string clientId = "";
+    uint32_t droppedPkts = 0;
+    uint32_t passedPkts = 0;
+    bool droppedPktsFound = false;
+    bool passedPktsFound = false;
+
+    if (!cmdBuf || !cmdLen)
+        return;
+
+    ATLAS_LOGGER_DEBUG("Process firewall rule statistics from publish-subscribe agent");
+
+    /* Parse commands */
+    cmdBatch.setRawCommands(cmdBuf, cmdLen);
+    cmds = cmdBatch.getParsedCommands();
+
+    for (const AtlasCommand &cmd : cmds) {
+        if (cmd.getType() == ATLAS_CMD_PUB_SUB_CLIENT_ID) {
+            clientId.assign((char *) cmd.getVal(), cmd.getLen());
+        } else if (cmd.getType() == ATLAS_CMD_PUB_SUB_PKT_DROP && cmd.getLen() == sizeof(uint32_t)) {
+            memcpy(&droppedPkts, cmd.getVal(), cmd.getLen());
+            droppedPkts = ntohl(droppedPkts);
+            droppedPktsFound = true;
+        } else if (cmd.getType() == ATLAS_CMD_PUB_SUB_PKT_PASS && cmd.getLen() == sizeof(uint32_t)) {
+            memcpy(&passedPkts, cmd.getVal(), cmd.getLen());
+            passedPkts = ntohl(passedPkts);
+            passedPktsFound = true;
+        }
+    }
+
+    if (clientId == "") {
+        ATLAS_LOGGER_ERROR("Empty client id found when processing firewall rule statistics command");
+        return;
+    }
+
+    if (!droppedPktsFound) {
+        ATLAS_LOGGER_ERROR("Empty dropped packets found when processing firewall rule statistics command");
+        return;
+    }
+
+    if (!passedPktsFound) {
+        ATLAS_LOGGER_ERROR("Empty accepted packets found when processing firewall rule statistics command");
+        return;
+    }
+
+    /* TODO update IoT device */
+}
+
 void AtlasPubSubAgent::processCommand(size_t cmdLen)
 {
     AtlasCommandBatch cmdBatch;
@@ -107,6 +216,8 @@ void AtlasPubSubAgent::processCommand(size_t cmdLen)
     for (const AtlasCommand &cmd : cmds) {
         if (cmd.getType() == ATLAS_CMD_GET_ALL_PUB_SUB_FIREWALL_RULES)
             getAllFirewallRules();
+        else if (cmd.getType() == ATLAS_CMD_PUB_SUB_PUT_STAT_FIREWALL_RULE)
+            processFirewallRuleStat(cmd.getVal(), cmd.getLen());
     }
 }
 

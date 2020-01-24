@@ -2,6 +2,8 @@
 #include <chrono>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include <utility>
+#include <arpa/inet.h>
 #include "AtlasFilter.h"
 #include "../logger/AtlasLogger.h"
 #include "../../commands/AtlasCommandType.h"
@@ -21,6 +23,71 @@ AtlasFilter& AtlasFilter::getInstance()
 
     return instance;
 }
+
+void AtlasFilter::writeFirewallRuleStats(const std::string &clientId, uint32_t droppedPkts, uint32_t passedPkts)
+{
+    AtlasCommandBatch cmdBatchInner;
+    AtlasCommandBatch cmdBatchOuter;
+
+    /* Inner commands */
+    droppedPkts = htonl(droppedPkts);
+    passedPkts = htonl(passedPkts);
+
+    AtlasCommand cmdClientId(ATLAS_CMD_PUB_SUB_CLIENT_ID, clientId.length(), (uint8_t *) clientId.c_str());
+    AtlasCommand cmdDroppedPkts(ATLAS_CMD_PUB_SUB_PKT_DROP, sizeof(uint32_t), (uint8_t *) &droppedPkts);
+    AtlasCommand cmdPassedPkts(ATLAS_CMD_PUB_SUB_PKT_PASS, sizeof(uint32_t), (uint8_t *) &passedPkts);
+    
+    cmdBatchInner.addCommand(cmdClientId);
+    cmdBatchInner.addCommand(cmdDroppedPkts);
+    cmdBatchInner.addCommand(cmdPassedPkts);
+
+    std::pair<const uint8_t*, size_t> innerCmd = cmdBatchInner.getSerializedAddedCommands();
+
+    /* Outer commands */
+    AtlasCommand cmdPutStatRule(ATLAS_CMD_PUB_SUB_PUT_STAT_FIREWALL_RULE, innerCmd.second, innerCmd.first);
+
+    cmdBatchOuter.addCommand(cmdPutStatRule);
+
+    std::pair<const uint8_t*, size_t> outerCmd = cmdBatchOuter.getSerializedAddedCommands();
+
+    /* Write command to gateway */
+    boost::asio::async_write(*socket_,
+                             boost::asio::buffer(outerCmd.first, outerCmd.second),
+                             boost::bind(&AtlasFilter::handleWrite, this, _1));
+
+    ATLAS_LOGGER_DEBUG("Firewall rule statistics sent by agent");
+}
+
+void AtlasFilter::getFirewallRuleStats(const uint8_t *cmdBuf, uint16_t cmdLen)
+{
+    AtlasCommandBatch cmdBatch;
+    std::vector<AtlasCommand> cmds;
+    std::string clientId = "";
+    uint32_t droppedPkts = 0;
+    uint32_t passedPkts = 0;
+
+    ATLAS_LOGGER_DEBUG("Get firewall rule statistics from agent");
+    
+    /* Parse commands */
+    cmdBatch.setRawCommands(cmdBuf, cmdLen);
+    cmds = cmdBatch.getParsedCommands();
+
+    for (const AtlasCommand &cmd : cmds) {
+        if (cmd.getType() == ATLAS_CMD_PUB_SUB_CLIENT_ID)
+            clientId.assign((char *)cmd.getVal(), cmd.getLen());
+    }
+    
+    if (clientId != "") {
+        /* Remove firewall rule */
+        mutex_.lock();
+        droppedPkts = rules_[clientId].getStatDroppedPkt();
+        passedPkts = rules_[clientId].getStatPassedPkt();
+        mutex_.unlock();
+    } else
+        ATLAS_LOGGER_ERROR("Empty client id in firewall get statistics command");
+
+    writeFirewallRuleStats(clientId, droppedPkts, passedPkts);
+} 
 
 void AtlasFilter::removeFirewallRule(const uint8_t *cmdBuf, uint16_t cmdLen)
 {
@@ -132,6 +199,8 @@ void AtlasFilter::processCommand(size_t cmdLen)
             installFirewallRule(cmd.getVal(), cmd.getLen());
         else if (cmd.getType() == ATLAS_CMD_PUB_SUB_REMOVE_FIREWALL_RULE)
             removeFirewallRule(cmd.getVal(), cmd.getLen());
+        else if (cmd.getType() == ATLAS_CMD_PUB_SUB_GET_STAT_FIREWALL_RULE)
+            getFirewallRuleStats(cmd.getVal(), cmd.getLen());
     }
 }
 

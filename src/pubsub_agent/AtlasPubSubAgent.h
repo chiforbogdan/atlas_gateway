@@ -39,6 +39,28 @@ private:
     * @return none
     */
     void write(const uint8_t *buf, size_t bufLen);
+
+    /**
+    * @brief Process firewall rule statistics
+    * @param[in] cmdBuf Firewall rule statistics command buffer
+    * @param[in] cmdLen Command length
+    * @return none
+    */
+    void processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t cmdLen);
+
+    /**
+    * @brief Get firewall rule statistics for client id
+    * @param[in] clientId Publish-subscribe Client id
+    * @return none
+    */
+    void getFirewallRuleStats(const std::string &clientId);
+ 
+    /**
+    * @brief Remove firewall rule for client id
+    * @param[in] clientId Publish-subscribe Client id
+    * @return none
+    */
+    void removeFirewallRule(const std::string &clientId);
     
     /**
     * @brief Get all firewall rules for publish-subscribe agent
