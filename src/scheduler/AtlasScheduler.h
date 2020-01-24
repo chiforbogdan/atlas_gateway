@@ -25,7 +25,7 @@ public:
     * @brief Get a reference to the internal service
     * @return Reference to the internal service
     */
-    boost::asio::io_service& getService() { return ioService_; }
+    inline boost::asio::io_service& getService() { return ioService_; }
 
     /*
     * @brief Run scheduler main loop
@@ -47,13 +47,6 @@ public:
     * @return none
     */ 
     void delFdEntry(int fd);
-
-    /**
-     * @Create a timer which expires in <periodMs> ms
-     * @param[in] periodMs Timer interval in ms
-     * @return timer
-     */
-    boost::asio::deadline_timer *getTimer(uint32_t periodMs);
 
 private:
     /**

@@ -41,7 +41,8 @@ void AtlasAlarm::start()
     if (timer_)
         return;
 
-    timer_ = AtlasScheduler::getInstance().getTimer(this->periodMs_);
+    timer_ = new boost::asio::deadline_timer(AtlasScheduler::getInstance().getService(),
+                                             boost::posix_time::millisec(this->periodMs_));
 
     /* Start timer now */
     timer_->async_wait(boost::bind(&AtlasAlarm::timerHandler, this, _1));

@@ -8,7 +8,7 @@
 
 namespace atlas {
 
-typedef std::function<AtlasCoapResponse (const std::string&, const std::string&, AtlasCoapMethod, const uint8_t*, size_t, uint8_t **, size_t *)> resource_callback_t;
+typedef std::function<AtlasCoapResponse (const std::string&, const std::string&, const std::string&, AtlasCoapMethod, const uint8_t*, size_t, uint8_t **, size_t *)> resource_callback_t;
 
 class AtlasCoapResource {
 

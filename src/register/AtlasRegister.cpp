@@ -3,6 +3,7 @@
 #include "AtlasRegister.h"
 #include "../coap/AtlasCoapServer.h"
 #include "../logger/AtlasLogger.h"
+#include "../device/AtlasDeviceManager.h"
 #include "../commands/AtlasCommandBatch.h"
 #include "../commands/AtlasCommandType.h"
 
@@ -13,15 +14,15 @@ const std::string ATLAS_KEEPALIVE_URI = "gateway/keepalive";
 
 AtlasRegister::AtlasRegister() : registerResource_(ATLAS_REGISTER_URI,
                                                    ATLAS_COAP_METHOD_POST,
-                                                   boost::bind(&AtlasRegister::registerCallback, this, _1, _2, _3, _4, _5, _6, _7)),
+                                                   boost::bind(&AtlasRegister::registerCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)),
                                  keepAliveResource_(ATLAS_KEEPALIVE_URI,
                                                     ATLAS_COAP_METHOD_PUT,
-                                                    boost::bind(&AtlasRegister::keepaliveCallback, this, _1, _2, _3, _4, _5, _6, _7)) {}
+                                                    boost::bind(&AtlasRegister::keepaliveCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)) {}
 
 AtlasCoapResponse AtlasRegister::keepaliveCallback(const std::string &path, const std::string &pskIdentity,
-                                                   AtlasCoapMethod method, const uint8_t* reqPayload,
-                                                   size_t reqPayloadLen, uint8_t **respPayload,
-                                                   size_t *respPayloadLen)
+                                                   const std::string& psk, AtlasCoapMethod method,
+                                                   const uint8_t* reqPayload, size_t reqPayloadLen,
+                                                   uint8_t **respPayload, size_t *respPayloadLen)
 {
     AtlasCommandBatch cmdBatch;
     std::vector<AtlasCommand> cmd;
@@ -86,11 +87,10 @@ AtlasCoapResponse AtlasRegister::keepaliveCallback(const std::string &path, cons
     return ATLAS_COAP_RESP_OK;
 }
 
-
 AtlasCoapResponse AtlasRegister::registerCallback(const std::string &path, const std::string &pskIdentity,
-                                                  AtlasCoapMethod method, const uint8_t* reqPayload,
-                                                  size_t reqPayloadLen, uint8_t **respPayload,
-                                                  size_t *respPayloadLen)
+                                                  const std::string &psk, AtlasCoapMethod method,
+                                                  const uint8_t* reqPayload, size_t reqPayloadLen,
+                                                  uint8_t **respPayload, size_t *respPayloadLen)
 {
     AtlasCommandBatch cmdBatch;
     std::vector<AtlasCommand> cmd;
@@ -120,11 +120,14 @@ AtlasCoapResponse AtlasRegister::registerCallback(const std::string &path, const
 
             identity.assign((char *)cmdEntry.getVal(), cmdEntry.getLen());
             if (pskIdentity != identity) {
-                ATLAS_LOGGER_ERROR("Keep-alive end-point called with SPOOFED identity");
+                ATLAS_LOGGER_ERROR("Register end-point called with SPOOFED identity");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
  
             ATLAS_LOGGER_INFO1("New ATLAS client registered with identity ", identity);
+
+            /* Create device if necessary and set PSK */
+            AtlasDeviceManager::getInstance().getDevice(identity).setPsk(psk);
 
             return ATLAS_COAP_RESP_OK;
         }
