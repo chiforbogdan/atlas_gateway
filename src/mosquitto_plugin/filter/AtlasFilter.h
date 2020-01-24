@@ -57,6 +57,13 @@ private:
     void gatewayLoop();
 
     /**
+    * @brief Internal timer handler
+    * @param[in] ec Error code
+    * @return none
+    */
+    void timerHandler(const boost::system::error_code& ec);
+
+    /**
     * @brief Write firewall rule statistics to gateway
     * @param[in] clientId Client id associated with the firewall rule
     * @param[in] droppedPkts Number of dropped packets
@@ -127,6 +134,9 @@ private:
 
     /* Filter rules */
     std::unordered_map<std::string, AtlasPacketPolicer> rules_;
+
+    /* Fixed window rate limiting timer object */
+    boost::asio::deadline_timer timer_;
 };
 
 } // namespace atlas

@@ -17,7 +17,7 @@ enum AtlasCommandType {
     ATLAS_CMD_GET_ALL_PUB_SUB_FIREWALL_RULES,
 
     /* Install publish-subscribe firewall rule: payload is ATLAS_CMD_PUB_SUB_CLIENT_ID,
-    ATLAS_CMD_PUB_SUB_MAX_QOS, ATLAS_CMD_PUB_SUB_PPS, ATLAS_CMD_PUB_SUB_MAX_PAYLOAD_LEN,*/
+    ATLAS_CMD_PUB_SUB_MAX_QOS, ATLAS_CMD_PUB_SUB_PPM, ATLAS_CMD_PUB_SUB_MAX_PAYLOAD_LEN,*/
     ATLAS_CMD_PUB_SUB_INSTALL_FIREWALL_RULE,
 
     /* Remove publish-subscribe firewall rule: payload is ATLAS_CMD_PUB_SUB_CLIENT_ID */
@@ -36,8 +36,8 @@ enum AtlasCommandType {
     /* Publish-subscribe firewall max QoS: payload is 1 byte QoS value */
     ATLAS_CMD_PUB_SUB_MAX_QOS,
 
-    /* Publish-subscribe firewall packets per second: payload is 2 byte PPS value */
-    ATLAS_CMD_PUB_SUB_PPS,
+    /* Publish-subscribe firewall packets per minute: payload is 2 byte PPM value */
+    ATLAS_CMD_PUB_SUB_PPM,
 
     /* Publish-subscribe max payload length: payload is 2 byte max payload length */
     ATLAS_CMD_PUB_SUB_MAX_PAYLOAD_LEN,

@@ -99,16 +99,16 @@ void AtlasPubSubAgent::getAllFirewallRules()
     AtlasCommandBatch cmdBatchInner, cmdBatchOuter;
     std::string clientId = "test1";
     uint16_t qos = 1;
-    uint16_t pps = 4;
+    uint16_t ppm = 4;
     uint16_t payloadLen = 5;
 
     qos = htons(qos);
-    pps = htons(pps);
+    ppm = htons(ppm);
     payloadLen = htons(payloadLen);
 
     AtlasCommand cmd1(ATLAS_CMD_PUB_SUB_CLIENT_ID, clientId.length(), (uint8_t *)clientId.c_str());
     AtlasCommand cmd2(ATLAS_CMD_PUB_SUB_MAX_QOS, sizeof(qos), (uint8_t *)&qos);
-    AtlasCommand cmd3(ATLAS_CMD_PUB_SUB_PPS, sizeof(pps), (uint8_t *)&pps);
+    AtlasCommand cmd3(ATLAS_CMD_PUB_SUB_PPM, sizeof(ppm), (uint8_t *)&ppm);
     AtlasCommand cmd4(ATLAS_CMD_PUB_SUB_MAX_PAYLOAD_LEN, sizeof(payloadLen), (uint8_t *)&payloadLen);
 
     cmdBatchInner.addCommand(cmd1);
@@ -126,16 +126,16 @@ void AtlasPubSubAgent::getAllFirewallRules()
     AtlasCommandBatch cmdBatchInner1, cmdBatchOuter1;
     clientId = "test2";
     qos = 0;
-    pps = 3;
+    ppm = 3;
     payloadLen = 4;
 
     qos = htons(qos);
-    pps = htons(pps);
+    ppm = htons(ppm);
     payloadLen = htons(payloadLen);
 
     AtlasCommand cmd11(ATLAS_CMD_PUB_SUB_CLIENT_ID, clientId.length(), (uint8_t *)clientId.c_str());
     AtlasCommand cmd12(ATLAS_CMD_PUB_SUB_MAX_QOS, sizeof(qos), (uint8_t *)&qos);
-    AtlasCommand cmd13(ATLAS_CMD_PUB_SUB_PPS, sizeof(pps), (uint8_t *)&pps);
+    AtlasCommand cmd13(ATLAS_CMD_PUB_SUB_PPM, sizeof(ppm), (uint8_t *)&ppm);
     AtlasCommand cmd14(ATLAS_CMD_PUB_SUB_MAX_PAYLOAD_LEN, sizeof(payloadLen), (uint8_t *)&payloadLen);
 
     cmdBatchInner1.addCommand(cmd11);

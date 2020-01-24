@@ -2,6 +2,7 @@
 #include <chrono>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <utility>
 #include <arpa/inet.h>
 #include "AtlasFilter.h"
@@ -14,14 +15,42 @@ namespace atlas {
 
 const std::string ATLAS_PUB_SUB_AGENT_SOCK = "/tmp/atlas_pub_sub_agent";
 const int ATLAS_SOCKET_RECONNECT_RETRY_SEC = 10;
+const int ATLAS_FIXED_WINDOW_RATE_LIMIT_INTERVAL_MIN = 1;
 
-AtlasFilter::AtlasFilter() : work_(ioService_), socket_(nullptr) {}
+AtlasFilter::AtlasFilter() : work_(ioService_), socket_(nullptr),
+                             timer_(ioService_, boost::posix_time::minutes(ATLAS_FIXED_WINDOW_RATE_LIMIT_INTERVAL_MIN))
+{
+    timer_.async_wait(boost::bind(&AtlasFilter::timerHandler, this, _1));    
+}
 
 AtlasFilter& AtlasFilter::getInstance()
 {
     static AtlasFilter instance;
 
     return instance;
+}
+
+void AtlasFilter::timerHandler(const boost::system::error_code& ec)
+{
+    ATLAS_LOGGER_DEBUG("Fixed window rate limit timer handler executed");
+ 
+    if (!ec) {
+        /* Start timer again */
+        timer_.expires_at(timer_.expires_at() + boost::posix_time::minutes(ATLAS_FIXED_WINDOW_RATE_LIMIT_INTERVAL_MIN));
+        timer_.async_wait(boost::bind(&AtlasFilter::timerHandler, this, _1));
+
+        /* Start a new rate limit window */
+        mutex_.lock();
+
+        std::unordered_map<std::string, AtlasPacketPolicer>::iterator it = rules_.begin();
+        while(it != rules_.end()) {
+	    (*it).second.rateLimitWindowStart();
+            it++;
+        }
+
+        mutex_.unlock();
+    } else
+        ATLAS_LOGGER_ERROR("Timer handler called with error");
 }
 
 void AtlasFilter::writeFirewallRuleStats(const std::string &clientId, uint32_t droppedPkts, uint32_t passedPkts)
@@ -78,7 +107,7 @@ void AtlasFilter::getFirewallRuleStats(const uint8_t *cmdBuf, uint16_t cmdLen)
     }
     
     if (clientId != "") {
-        /* Remove firewall rule */
+        /* Get statistics for firewall rule */
         mutex_.lock();
         droppedPkts = rules_[clientId].getStatDroppedPkt();
         passedPkts = rules_[clientId].getStatPassedPkt();
@@ -124,10 +153,10 @@ void AtlasFilter::installFirewallRule(const uint8_t *cmdBuf, uint16_t cmdLen)
     std::vector<AtlasCommand> cmds;
     std::string clientId = "";
     uint16_t maxQos;
-    uint16_t pps;
+    uint16_t ppm;
     uint16_t maxPayloadLen;
     bool qosFound = false;
-    bool ppsFound = false;
+    bool ppmFound = false;
     bool payloadLenFound = false;
 
     ATLAS_LOGGER_DEBUG("Install firewall rule from gateway");
@@ -143,10 +172,10 @@ void AtlasFilter::installFirewallRule(const uint8_t *cmdBuf, uint16_t cmdLen)
             memcpy(&maxQos, cmd.getVal(), sizeof(uint16_t));
             maxQos = ntohs(maxQos);
             qosFound = true;
-        } else if (cmd.getType() == ATLAS_CMD_PUB_SUB_PPS && cmd.getLen() == sizeof(uint16_t)) {
-            memcpy(&pps, cmd.getVal(), sizeof(uint16_t));
-            pps = ntohs(pps);
-            ppsFound = true;      
+        } else if (cmd.getType() == ATLAS_CMD_PUB_SUB_PPM && cmd.getLen() == sizeof(uint16_t)) {
+            memcpy(&ppm, cmd.getVal(), sizeof(uint16_t));
+            ppm = ntohs(ppm);
+            ppmFound = true;      
         } else if (cmd.getType() == ATLAS_CMD_PUB_SUB_MAX_PAYLOAD_LEN && cmd.getLen() == sizeof(uint16_t)) {
             memcpy(&maxPayloadLen, cmd.getVal(), sizeof(uint16_t));
             maxPayloadLen = ntohs(maxPayloadLen);
@@ -164,8 +193,8 @@ void AtlasFilter::installFirewallRule(const uint8_t *cmdBuf, uint16_t cmdLen)
         return;
     }
 
-    if (!ppsFound) {    
-        ATLAS_LOGGER_ERROR("Empty PPS in firewall install command. Dropping command...");
+    if (!ppmFound) {    
+        ATLAS_LOGGER_ERROR("Empty PPM in firewall install command. Dropping command...");
         return;
     }
 
@@ -176,11 +205,11 @@ void AtlasFilter::installFirewallRule(const uint8_t *cmdBuf, uint16_t cmdLen)
 
     /* Install firewall rule */
     mutex_.lock();
-    rules_[clientId] = AtlasPacketPolicer(maxQos, pps, maxPayloadLen);
+    rules_[clientId] = AtlasPacketPolicer(maxQos, ppm, maxPayloadLen);
     mutex_.unlock();
     
-    ATLAS_LOGGER_INFO("Installed firewall rule for client id %s, Max QoS: %d, PPS: %d, Max payload length: %d",
-                      clientId.c_str(), maxQos, pps, maxPayloadLen);
+    ATLAS_LOGGER_INFO("Installed firewall rule for client id %s, Max QoS: %d, PPM: %d, Max payload length: %d",
+                      clientId.c_str(), maxQos, ppm, maxPayloadLen);
 }
 
 void AtlasFilter::processCommand(size_t cmdLen)

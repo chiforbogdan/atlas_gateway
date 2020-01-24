@@ -21,11 +21,11 @@ public:
     /**
     * @brief Ctor for packet policer
     * @param[in] maxQoS Max QoS value
-    * @param[in] pps Allowed packets per second
+    * @param[in] ppm Allowed packets per minute
     * @param[in] maxPayloadLen Max payload length
     * @return none
     */
-    AtlasPacketPolicer(uint8_t maxQos, uint16_t pps, uint16_t maxPayloadLen);
+    AtlasPacketPolicer(uint8_t maxQos, uint16_t ppm, uint16_t maxPayloadLen);
     
     /**
     * @brief Filter publis-subscribe packet
@@ -46,14 +46,23 @@ public:
     */
     uint32_t getStatPassedPkt() const { return statPktPass_; }
 
+    /**
+    * @brief Start a new window for the rate limit (packets per minute)
+    * @return none
+    */
+    void rateLimitWindowStart();
+
 private:
+    /* Rate limit current packet counter per window */
+    uint32_t windowPpm_;
+    
     /* Qualifiers */
     
     /* Maximum QoS value */
     uint8_t maxQos_;
     
-    /* Allowed number of packets per second */
-    uint16_t pps_;
+    /* Allowed number of packets per minute */
+    uint16_t ppm_;
 
     /* Maximum payload length*/
     uint16_t maxPayloadLen_;

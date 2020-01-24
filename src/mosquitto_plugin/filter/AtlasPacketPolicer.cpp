@@ -3,22 +3,26 @@
 
 namespace atlas {
 
-AtlasPacketPolicer::AtlasPacketPolicer(uint8_t maxQos, uint16_t pps, uint16_t maxPayloadLen) : statPktDrop_(0), statPktPass_(0)
+AtlasPacketPolicer::AtlasPacketPolicer(uint8_t maxQos, uint16_t ppm, uint16_t maxPayloadLen) : statPktDrop_(0), statPktPass_(0), windowPpm_(0)
 {
     maxQos_ = maxQos;
-    pps_ = pps;
+    ppm_ = ppm;
     maxPayloadLen_ = maxPayloadLen;
 }
 
 bool AtlasPacketPolicer::filter(const AtlasPacket &pkt)
 {
+    /* Increment rate limit window counter */
+    windowPpm_++;
+
     if (pkt.getQos() > maxQos_)
         goto DROP;
 
     if (pkt.getPayloadLen() > maxPayloadLen_)
         goto DROP;
 
-    /* TODO implement PPS */
+    if (windowPpm_ > ppm_)
+        goto DROP;
 
     /* Accept packet */
     ATLAS_LOGGER_DEBUG("Packet for destination client id %s is allowed", pkt.getDstClientId());
@@ -30,6 +34,13 @@ DROP:
     /* Drop packet */
     statPktDrop_++;
     return false;
+}
+
+void AtlasPacketPolicer::rateLimitWindowStart()
+{
+    ATLAS_LOGGER_DEBUG("Start new window for rate limiting");
+
+    windowPpm_ = 0;
 }
 
 } // namespace atlas
