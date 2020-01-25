@@ -47,6 +47,45 @@ private:
 
     /* Kernel info telemetry CoAP resource*/
     AtlasCoapResource kernInfoResource_;
+    
+    /* Sysinfo uptime telemetry CoAP resource*/
+    AtlasCoapResource uptimeResource_;
+    
+    /* Sysinfo totalram telemetry CoAP resource*/
+    AtlasCoapResource totalramResource_;
+    
+    /* Sysinfo freeram telemetry CoAP resource*/
+    AtlasCoapResource freeramResource_;
+    
+    /* Sysinfo sharedram telemetry CoAP resource*/
+    AtlasCoapResource sharedramResource_;
+    
+    /* Sysinfo bufferram telemetry CoAP resource*/
+    AtlasCoapResource bufferramResource_;
+    
+    /* Sysinfo totalswap telemetry CoAP resource*/
+    AtlasCoapResource totalswapResource_;
+    
+    /* Sysinfo freeswap telemetry CoAP resource*/
+    AtlasCoapResource freeswapResource_;
+    
+    /* Sysinfo procs telemetry CoAP resource*/
+    AtlasCoapResource procsResource_;
+    
+    /* Sysinfo totalhigh telemetry CoAP resource*/
+    AtlasCoapResource totalhighResource_;
+    
+    /* Sysinfo freehigh telemetry CoAP resource*/
+    AtlasCoapResource freehighResource_;
+    
+    /* Sysinfo load1 telemetry CoAP resource*/
+    AtlasCoapResource load1Resource_;
+    
+    /* Sysinfo load5 telemetry CoAP resource*/
+    AtlasCoapResource load5Resource_;
+
+    /* Sysinfo load15 telemetry CoAP resource*/
+    AtlasCoapResource load15Resource_;
 };
 
 } // namespace atlas

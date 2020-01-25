@@ -7,6 +7,19 @@ namespace atlas {
 
 const std::string TELEMETRY_HOSTNAME = "hostname";
 const std::string TELEMETRY_KERN_INFO = "kernel-info";
+const std::string TELEMETRY_SYSINFO_UPTIME = "sysinfo-uptime";
+const std::string TELEMETRY_SYSINFO_TOTALRAM = "sysinfo-totalram";
+const std::string TELEMETRY_SYSINFO_FREERAM = "sysinfo-freeram";
+const std::string TELEMETRY_SYSINFO_SHAREDRAM = "sysinfo-sharedram";
+const std::string TELEMETRY_SYSINFO_BUFFERRAM = "sysinfo-bufferram";
+const std::string TELEMETRY_SYSINFO_TOTALSWAP = "sysinfo-totalswap";
+const std::string TELEMETRY_SYSINFO_FREESWAP = "sysinfo-freeswap";
+const std::string TELEMETRY_SYSINFO_PROCS = "sysinfo-procs";
+const std::string TELEMETRY_SYSINFO_TOTALHIGH = "sysinfo-totalhigh";
+const std::string TELEMETRY_SYSINFO_FREEHIGH = "sysinfo-freehigh";
+const std::string TELEMETRY_SYSINFO_LOAD1 = "sysinfo-load1";
+const std::string TELEMETRY_SYSINFO_LOAD5 = "sysinfo-load5";
+const std::string TELEMETRY_SYSINFO_LOAD15 = "sysinfo-load15";
 
 class AtlasTelemetryInfo
 {
