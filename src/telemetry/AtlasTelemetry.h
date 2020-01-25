@@ -4,6 +4,7 @@
 #include "../coap/AtlasCoapResponse.h"
 #include "../coap/AtlasCoapMethod.h"
 #include "../coap/AtlasCoapResource.h"
+#include "../commands/AtlasCommandBatch.h"
 
 namespace atlas {
 
@@ -18,7 +19,7 @@ public:
 
 private:
     /**
-    * @brief Hostname telemetry client callback
+    * @brief Telemetry feature client callback
     * @param[in] path CoAP URI path
     * @param[in] pskIdentity PSK identity (extracted from the DTLS transport layer)
     * @param[in] psk Pre-shared key
@@ -29,27 +30,17 @@ private:
     * @param[out] respPayloadLen Response payload length
     * @return CoAP response status
     */
-    AtlasCoapResponse hostnameCallback(const std::string &path, const std::string &identity, const std::string &psk,
+    AtlasCoapResponse featureCallback(const std::string &path, const std::string &identity, const std::string &psk,
                                        AtlasCoapMethod method, const uint8_t* reqPayload, size_t reqPayloadLen,
                                        uint8_t **respPayload, size_t *respPayloadLen);
 
     /**
-    * @brief Kernel info telemetry client callback
-    * @param[in] path CoAP URI path
-    * @param[in] pskIdentity PSK identity (extracted from the DTLS transport layer)
-    * @param[in] psk Pre-shared key
-    * @param[in] method CoAP method
-    * @param[in] reqPayload Request payload
-    * @param[in] reqPayloadLen Request payload length
-    * @param[out] respPayload Response payload
-    * @param[out] respPayloadLen Response payload length
-    * @return CoAP response status
+    * @brief Get telemetry feature information from command
+    * @param[in] path Telemetry feature URI path
+    * @param[in] cmd CoAP command
+    * @return A pair consisting in a feature key and a feature value
     */
-    AtlasCoapResponse kernInfoCallback(const std::string &path, const std::string &identity, const std::string &psk,
-                                       AtlasCoapMethod method, const uint8_t* reqPayload, size_t reqPayloadLen,
-                                        uint8_t **respPayload, size_t *respPayloadLen);
-
-
+    std::pair<std::string,std::string> getFeature(const std::string &path, AtlasCommand &cmd);
 
     /* Hostname telemetry CoAP resource*/
     AtlasCoapResource hostnameResource_;

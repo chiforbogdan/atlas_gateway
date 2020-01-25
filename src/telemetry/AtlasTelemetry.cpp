@@ -1,11 +1,10 @@
-#include <iostream>
+#include <string>
 #include <vector>
 #include <boost/bind.hpp>
 #include "AtlasTelemetry.h"
 #include "../logger/AtlasLogger.h"
 #include "../coap/AtlasCoapServer.h"
 #include "../device/AtlasDeviceManager.h"
-#include "../commands/AtlasCommandBatch.h"
 #include "../commands/AtlasCommandType.h"
 
 namespace atlas {
@@ -15,10 +14,10 @@ const std::string ATLAS_TELEMETRY_KERN_INFO_URI = "gateway/telemetry/kernel_info
 
 AtlasTelemetry::AtlasTelemetry() : hostnameResource_(ATLAS_TELEMETRY_HOSTNAME_URI,
                                                      ATLAS_COAP_METHOD_PUT,
-                                                     boost::bind(&AtlasTelemetry::hostnameCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)),
+                                                     boost::bind(&AtlasTelemetry::featureCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)),
                                    kernInfoResource_(ATLAS_TELEMETRY_KERN_INFO_URI,
                                                      ATLAS_COAP_METHOD_PUT,
-                                                     boost::bind(&AtlasTelemetry::kernInfoCallback, this, _1, _2, _3, _4, _5, _6, _7, _8))
+                                                     boost::bind(&AtlasTelemetry::featureCallback, this, _1, _2, _3, _4, _5, _6, _7, _8))
 {
     ATLAS_LOGGER_DEBUG("Start telemetry module");
  
@@ -27,24 +26,44 @@ AtlasTelemetry::AtlasTelemetry() : hostnameResource_(ATLAS_TELEMETRY_HOSTNAME_UR
     AtlasCoapServer::getInstance().addResource(kernInfoResource_);
 }
 
+std::pair<std::string,std::string> AtlasTelemetry::getFeature(const std::string &path, AtlasCommand &cmd)
+{
+    std::pair<std::string, std::string> ret;
+    ret.first = "";
+    ret.second = "";
 
-AtlasCoapResponse AtlasTelemetry::hostnameCallback(const std::string &path, const std::string &pskIdentity,
-                                                   const std::string& psk, AtlasCoapMethod method,
-                                                   const uint8_t* reqPayload, size_t reqPayloadLen,
-                                                   uint8_t **respPayload, size_t *respPayloadLen)
+    if (!cmd.getLen()) {
+        ATLAS_LOGGER_ERROR("Telemetry end-point called with invalid feature length");
+        return ret;
+    }
+ 
+    if (std::strstr(path.c_str(), ATLAS_TELEMETRY_HOSTNAME_URI.c_str()) && cmd.getType() == ATLAS_CMD_TELEMETRY_HOSTNAME)
+        ret.first = TELEMETRY_HOSTNAME;
+    else if (std::strstr(path.c_str(), ATLAS_TELEMETRY_KERN_INFO_URI.c_str()) && cmd.getType() == ATLAS_CMD_TELEMETRY_KERN_INFO)
+        ret.first = TELEMETRY_KERN_INFO;
+        
+    ret.second.assign((char *)cmd.getVal(), cmd.getLen());
+
+    return ret;
+}
+
+AtlasCoapResponse AtlasTelemetry::featureCallback(const std::string &path, const std::string &pskIdentity,
+                                                  const std::string& psk, AtlasCoapMethod method,
+                                                  const uint8_t* reqPayload, size_t reqPayloadLen,
+                                                  uint8_t **respPayload, size_t *respPayloadLen)
 {
     AtlasCommandBatch cmdBatch;
     std::vector<AtlasCommand> cmd;
     std::string identity = "";
-    std::string hostname = "";
-
+    std::pair<std::string, std::string> feature;
+    
     ATLAS_LOGGER_DEBUG("Telemetry hostname callback executed...");
 
-    ATLAS_LOGGER_INFO1("Process TELEMETRY HOSTNAME command from client with DTLS PSK identity ", pskIdentity);
+    ATLAS_LOGGER_INFO1("Process TELEMETRY command from client with DTLS PSK identity ", pskIdentity);
 
     AtlasDevice& device = AtlasDeviceManager::getInstance().getDevice(pskIdentity);
     if (!device.isRegistered()) {
-        ATLAS_LOGGER_ERROR("Received TELEMETRY HOSTNAME command for a device which is not registered...");
+        ATLAS_LOGGER_ERROR("Received TELEMETRY command for a device which is not registered...");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
 
@@ -53,21 +72,14 @@ AtlasCoapResponse AtlasTelemetry::hostnameCallback(const std::string &path, cons
     cmd = cmdBatch.getParsedCommands();
 
     if (cmd.empty()) {
-        ATLAS_LOGGER_ERROR("Telemetry hostname end-point called with empty command set");
+        ATLAS_LOGGER_ERROR("Telemetry end-point called with empty command set");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
 
     for (AtlasCommand &cmdEntry : cmd) {
-        if (cmdEntry.getType() == ATLAS_CMD_TELEMETRY_HOSTNAME) {
+        if (cmdEntry.getType() == ATLAS_CMD_IDENTITY) {
             if (!cmdEntry.getLen()) {
-                ATLAS_LOGGER_ERROR("Telemetry hostname end-point called with invalid HOSTNAME token length");
-                return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
-            }
-            
-            hostname.assign((char *)cmdEntry.getVal(), cmdEntry.getLen());
-        } else if (cmdEntry.getType() == ATLAS_CMD_IDENTITY) {
-            if (!cmdEntry.getLen()) {
-                ATLAS_LOGGER_ERROR("Telemetry hostname end-point called with empty IDENTITY command");
+                ATLAS_LOGGER_ERROR("Telemetry end-point called with empty IDENTITY command");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
             
@@ -76,93 +88,25 @@ AtlasCoapResponse AtlasTelemetry::hostnameCallback(const std::string &path, cons
                 ATLAS_LOGGER_ERROR("Telemetry hostname end-point called with SPOOFED identity");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
-        }
+        } else
+            feature = getFeature(path, cmdEntry);
     }
 
     if (identity == "") {
-        ATLAS_LOGGER_ERROR("Telemetry hostname failed because of invalid identity");
+        ATLAS_LOGGER_ERROR("Telemetry failed because of invalid identity");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
-    if (hostname == "") {
-        ATLAS_LOGGER_ERROR("Telemetry hostname failed because of invalid identity");
+    if (feature.first == "" || feature.second == "") {
+        ATLAS_LOGGER_ERROR("Telemetry failed because of invalid feature");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
 
-    /* Set device hostname */
-    device.getTelemetryInfo().setFeature(TELEMETRY_HOSTNAME, hostname);
+    /* Set device telemetry feature */
+    device.getTelemetryInfo().setFeature(feature.first, feature.second);
 
     ATLAS_LOGGER_INFO1("Device telemetry state changed to ", device.getTelemetryInfo().toString());
     
     return ATLAS_COAP_RESP_OK;
 }
-
-AtlasCoapResponse AtlasTelemetry::kernInfoCallback(const std::string &path, const std::string &pskIdentity,
-                                                   const std::string& psk, AtlasCoapMethod method,
-                                                   const uint8_t* reqPayload, size_t reqPayloadLen,
-                                                   uint8_t **respPayload, size_t *respPayloadLen)
-{
-    AtlasCommandBatch cmdBatch;
-    std::vector<AtlasCommand> cmd;
-    std::string identity = "";
-    std::string kernInfo = "";
-
-    ATLAS_LOGGER_DEBUG("Telemetry kernel info callback executed...");
-
-    ATLAS_LOGGER_INFO1("Process TELEMETRY KERNEL INFO command from client with DTLS PSK identity ", pskIdentity);
-
-    AtlasDevice& device = AtlasDeviceManager::getInstance().getDevice(pskIdentity);
-    if (!device.isRegistered()) {
-        ATLAS_LOGGER_ERROR("Received TELEMETRY KERNEL INFO command for a device which is not registered...");
-        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
-    }
-
-    /* Parse commands */
-    cmdBatch.setRawCommands(reqPayload, reqPayloadLen);
-    cmd = cmdBatch.getParsedCommands();
-
-    if (cmd.empty()) {
-        ATLAS_LOGGER_ERROR("Telemetry kernel info end-point called with empty command set");
-        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
-    }
-
-    for (AtlasCommand &cmdEntry : cmd) {
-        if (cmdEntry.getType() == ATLAS_CMD_TELEMETRY_KERN_INFO) {
-            if (!cmdEntry.getLen()) {
-                ATLAS_LOGGER_ERROR("Telemetry kernel info end-point called with invalid KERNEL INFO token length");
-                return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
-            }
-            
-            kernInfo.assign((char *)cmdEntry.getVal(), cmdEntry.getLen());
-        } else if (cmdEntry.getType() == ATLAS_CMD_IDENTITY) {
-            if (!cmdEntry.getLen()) {
-                ATLAS_LOGGER_ERROR("Telemetry kernel info end-point called with empty IDENTITY command");
-                return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
-            }
-            
-            identity.assign((char *)cmdEntry.getVal(), cmdEntry.getLen());
-            if (pskIdentity != identity) {
-                ATLAS_LOGGER_ERROR("Telemetry kernel info end-point called with SPOOFED identity");
-                return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
-            }
-        }
-    }
-
-    if (identity == "") {
-        ATLAS_LOGGER_ERROR("Telemetry kernel info failed because of invalid identity");
-        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
-    }
-    if (kernInfo == "") {
-        ATLAS_LOGGER_ERROR("Telemetry kernel info failed because of invalid kernel info");
-        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
-    }
-
-    /* Set device kernel info */
-    device.getTelemetryInfo().setFeature(TELEMETRY_KERN_INFO, kernInfo);
-
-    ATLAS_LOGGER_INFO1("Device telemetry state changed to ", device.getTelemetryInfo().toString());
-    
-    return ATLAS_COAP_RESP_OK;
-}
-
 
 } // namespace atlas
