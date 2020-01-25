@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <boost/asio.hpp>
 #include "AtlasDevice.h"
+#include "../telemetry/AtlasTelemetry.h"
 
 namespace atlas {
 
@@ -47,6 +48,9 @@ private:
 
     /* Keep-alive timer  */
     boost::asio::deadline_timer kaTimer_;
+
+    /* Telemetry manager which handles the telemetry CoAP resources and pushes the data into the devices */
+    AtlasTelemetry telemetry_;
 };
 
 } // namespace atlas

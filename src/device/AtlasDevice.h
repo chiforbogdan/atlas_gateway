@@ -2,6 +2,7 @@
 #define __ATLAS_DEVICE_H__
 
 #include <string>
+#include "../telemetry/AtlasTelemetryInfo.h"
 
 namespace atlas {
 
@@ -71,6 +72,7 @@ public:
     */
     inline bool isRegistered() const { return registered_; }
 
+    inline AtlasTelemetryInfo& getTelemetryInfo() { return telemetryInfo_; }
 private:
     /* IoT client identity */
     std::string identity_;
@@ -89,6 +91,9 @@ private:
 
     /* Keep-alive counter. When this counter reaches 0, the device is de-registered */
     uint8_t kaCtr_;
+
+    /* Telemetry info */
+    AtlasTelemetryInfo telemetryInfo_;
 };
 
 } // namespace atlas

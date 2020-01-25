@@ -13,8 +13,14 @@ enum AtlasCommandType {
     /* Identity command: payload is the client identity */
     ATLAS_CMD_IDENTITY,
 
+    /* Telemetry hostname command: payload is client hostname */
+    ATLAS_CMD_TELEMETRY_HOSTNAME,
+
+
+    /* COMMANDS SHARED WITH THE PUBLISH-SUBSCRIBE AGENT*/
+
     /* Get all publish-subscribe firewall rules: no payload */
-    ATLAS_CMD_GET_ALL_PUB_SUB_FIREWALL_RULES,
+    ATLAS_CMD_GET_ALL_PUB_SUB_FIREWALL_RULES = 1000,
 
     /* Install publish-subscribe firewall rule: payload is ATLAS_CMD_PUB_SUB_CLIENT_ID,
     ATLAS_CMD_PUB_SUB_MAX_QOS, ATLAS_CMD_PUB_SUB_PPM, ATLAS_CMD_PUB_SUB_MAX_PAYLOAD_LEN,*/

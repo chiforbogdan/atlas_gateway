@@ -25,7 +25,7 @@ void AtlasDevice::keepAliveNow()
 
     kaCtr_ = ATLAS_KEEP_ALIVE_COUNTER;
 
-    ATLAS_LOGGER_INFO1("Client device sent a keep-alive at ", regTime_);
+    ATLAS_LOGGER_INFO1("Client device sent a keep-alive at ", keepAliveTime_);
 }
 
 void AtlasDevice::keepAliveExpired()

@@ -60,9 +60,7 @@ AtlasCoapResponse AtlasRegister::keepaliveCallback(const std::string &path, cons
 
             token = new uint8_t[cmdEntry.getLen()];
             memcpy(token, cmdEntry.getVal(), cmdEntry.getLen());
-        }
-
-        if (cmdEntry.getType() == ATLAS_CMD_IDENTITY) {
+        } else if (cmdEntry.getType() == ATLAS_CMD_IDENTITY) {
             ATLAS_LOGGER_DEBUG("Keep-alive end-point called and IDENTITY command is found");
            
             if (!cmdEntry.getLen()) {
