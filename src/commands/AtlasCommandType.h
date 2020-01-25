@@ -16,6 +16,9 @@ enum AtlasCommandType {
     /* Telemetry hostname command: payload is client hostname */
     ATLAS_CMD_TELEMETRY_HOSTNAME,
 
+    /* Telemetry kernel info command: payload is client kernel info  */
+    ATLAS_CMD_TELEMETRY_KERN_INFO,
+
 
     /* COMMANDS SHARED WITH THE PUBLISH-SUBSCRIBE AGENT*/
 

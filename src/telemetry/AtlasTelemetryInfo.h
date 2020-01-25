@@ -6,6 +6,7 @@
 namespace atlas {
 
 const std::string TELEMETRY_HOSTNAME = "hostname";
+const std::string TELEMETRY_KERN_INFO = "kernel-info";
 
 class AtlasTelemetryInfo
 {
