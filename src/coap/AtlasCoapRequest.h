@@ -48,7 +48,12 @@ public:
      */
     coap_request_callback_t getCallback() const { return callback_; }
 
+    /**
+    * @brief Get CoAP token
+    * @return CoAP token
+    */
     uint32_t getToken() const { return token_; }
+
 private:
     /* CoAP context */
     coap_context_t *context_;

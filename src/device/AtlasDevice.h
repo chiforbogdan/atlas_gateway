@@ -2,7 +2,9 @@
 #define __ATLAS_DEVICE_H__
 
 #include <string>
+#include <memory>
 #include "../telemetry/AtlasTelemetryInfo.h"
+#include "../telemetry/AtlasAlert.h"
 
 namespace atlas {
 
@@ -14,14 +16,14 @@ public:
     * @brief Default ctor for client device
     * @return none
     */
-    AtlasDevice() : identity_(""), registered_(false) {}
+    AtlasDevice();
 
     /**
-    * @brief Set identity for client device
+    * @brief Ctor for client device
     * @param[in] identity Client device identity
     * @return none
     */
-    inline void setIdentity(const std::string &identity) { identity_ = identity; }
+    AtlasDevice(const std::string &identity);
 
     /**
     * @brief Set PSK for client device
@@ -72,8 +74,31 @@ public:
     */
     inline bool isRegistered() const { return registered_; }
 
+    /**
+    * @brief Get telemetry info
+    * @return Reference to telemetry info
+    */
     inline AtlasTelemetryInfo& getTelemetryInfo() { return telemetryInfo_; }
+
+    /**
+    * @brief Push all telemetry alerts on client device
+    * @return none
+    */
+    void pushAlerts();
+
+    /**
+    *@brief Get device URL FIXME add URL here
+    * @return Client device URL
+    */
+    inline std::string getUrl() const { return "coaps://127.0.0.1:10002"; }
+
 private:
+    /**
+    * @brief Install default telemetry alerts
+    * @return none
+    */
+    void installDefaultAlerts();
+
     /* IoT client identity */
     std::string identity_;
 
@@ -94,6 +119,9 @@ private:
 
     /* Telemetry info */
     AtlasTelemetryInfo telemetryInfo_;
+
+    /* Telemetry alerts */
+    std::unordered_map<std::string, std::unique_ptr<AtlasAlert>> telemetryAlerts_;
 };
 
 } // namespace atlas

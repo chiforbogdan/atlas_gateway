@@ -15,8 +15,6 @@ AtlasCoapClient &AtlasCoapClient::getInstance()
     return instance;
 }
 
-AtlasCoapClient::AtlasCoapClient() : token_(0) {}
-
 uint32_t AtlasCoapClient::getToken()
 {
     return token_++;
@@ -95,7 +93,6 @@ int AtlasCoapClient::eventHandler(coap_context_t *ctx, coap_event_t event,
      return 0;
 }
 
-
 void AtlasCoapClient::nackHandler(coap_context_t *context, coap_session_t *session,
                                   coap_pdu_t *sent, coap_nack_reason_t reason,
                                   const coap_tid_t id) {
@@ -168,11 +165,10 @@ void AtlasCoapClient::messageProcess(struct coap_context_t *ctx,
         req.getCallback()(ATLAS_COAP_RESP_RESET, NULL, 0);
     } else if (COAP_RESPONSE_CLASS(received->code) == 2) {
         ATLAS_LOGGER_DEBUG("CoAP client: Response code is 200");
-        /* Returns 0 on error*/
-        if (!coap_get_data(received, &respPayloadLen, &respPayload)) {
-            ATLAS_LOGGER_ERROR("CoAP client: cannot get CoAP response payload");
-            return;
-        }
+        
+        /* Get CoAP payload, if any */
+        coap_get_data(received, &respPayloadLen, &respPayload);
+        
         /* Call the higher layer application callback */
         req.getCallback()(ATLAS_COAP_RESP_OK, respPayload, respPayloadLen);
     } else if (COAP_RESPONSE_CLASS(received->code) == 4) {
@@ -253,7 +249,6 @@ void AtlasCoapClient::addRequest(coap_context_t *ctx, coap_session_t *session,
 void AtlasCoapClient::sendRequest(const std::string &uri, AtlasCoapMethod method, const uint8_t *reqPayload,
                                   size_t reqPayloadLen, uint32_t timeout, coap_request_callback_t callback)
 {
-
     coap_uri_t coapUri;
     coap_str_const_t hostname;
     coap_address_t dst;
@@ -382,7 +377,6 @@ void AtlasCoapClient::sendRequest(const std::string &uri, AtlasCoapMethod method
         /* Send request */
         ATLAS_LOGGER_DEBUG("Sending CoAP client request...");
         coap_send(session, reqPdu);
-
     } catch(const char *e) {
         ATLAS_LOGGER_ERROR(e);
 
