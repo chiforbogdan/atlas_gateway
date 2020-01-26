@@ -10,10 +10,10 @@
 #include "../../commands/AtlasCommandType.h"
 #include "../../commands/AtlasCommand.h"
 #include "../../commands/AtlasCommandBatch.h"
+#include "../../utils/AtlasUtils.h"
 
 namespace atlas {
 
-const std::string ATLAS_PUB_SUB_AGENT_SOCK = "/tmp/atlas_pub_sub_agent";
 const int ATLAS_SOCKET_RECONNECT_RETRY_SEC = 10;
 const int ATLAS_FIXED_WINDOW_RATE_LIMIT_INTERVAL_MIN = 1;
 

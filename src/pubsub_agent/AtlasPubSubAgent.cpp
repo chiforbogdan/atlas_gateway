@@ -5,10 +5,9 @@
 #include "../commands/AtlasCommandBatch.h"
 #include "../commands/AtlasCommandType.h"
 #include "../commands/AtlasCommand.h"
+#include "../utils/AtlasUtils.h"
 
 namespace atlas {
-
-const std::string ATLAS_PUB_SUB_AGENT_SOCK = "/tmp/atlas_pub_sub_agent";
 
 AtlasPubSubAgent::AtlasPubSubAgent() : acceptor_(AtlasScheduler::getInstance().getService()),
                                        acceptingSocket_(nullptr), connectedSocket_(nullptr)
