@@ -31,7 +31,7 @@ void AtlasAlert::respCallback(AtlasCoapResponse respStatus, const uint8_t *resp_
         return;
     }
 
-    /* If gateway processed this request and returned an error, then skip it */
+    /* If client processed this request and returned an error, then skip it */
     if (respStatus != ATLAS_COAP_RESP_TIMEOUT) {
         ATLAS_LOGGER_INFO("Telemetry alert URI error on the client side. Abording request...");
         return;
@@ -65,7 +65,7 @@ void AtlasAlert::push()
     cmdBatch.addCommand(cmdExtPush);
     cmdBatch.addCommand(cmdIntScan);
     cmdBatch.addCommand(cmdThreshold);
-    cmdBuf =  cmdBatch.getSerializedAddedCommands();
+    cmdBuf = cmdBatch.getSerializedAddedCommands();
 
     /* Set DTLS information for this client device */
     AtlasCoapClient::getInstance().setDtlsInfo(deviceIdentity_, device.getPsk());     
