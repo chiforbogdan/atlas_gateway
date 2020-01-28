@@ -20,8 +20,13 @@ class AtlasCoapClient
 {
 
 public:
-
+    
+    /**
+    * @brief Get CoAP client instance
+    * @return CoAP client instance
+    */
     static AtlasCoapClient &getInstance();
+
     /**
     * @brief Send CoAP client request
     * @param[in] uri CoAP URI
@@ -32,6 +37,7 @@ public:
     * @param[in] callback CoAP request callback
     * @return none
     */
+    
     void sendRequest(const std::string &uri, AtlasCoapMethod method, const uint8_t *reqPayload,
                      size_t reqPayloadLen, uint32_t timeout,
                      coap_request_callback_t callback);
@@ -45,10 +51,15 @@ public:
     void setDtlsInfo(const std::string &identity, const std::string &psk);
 
     AtlasCoapClient(const AtlasCoapClient &) = delete;
-
     AtlasCoapClient & operator=(const AtlasCoapClient &) = delete;
+
 private:
-    AtlasCoapClient();
+    /**
+    * @brief Default ctor for CoAP client
+    * @return none
+    */
+    AtlasCoapClient() : token_(0) {}
+    
     /**
     * @brief Resolve CoAP hostname
     * @param[in] hostname CoAP hostname
@@ -116,8 +127,10 @@ private:
     /* CoAP request unique token */
     uint32_t token_;
 
+    /* CoAP requests */
     std::unordered_map<coap_context_t*, AtlasCoapRequest> requests_;
 
+    /* CoAP timeouts */
     std::unordered_map<coap_context_t*, std::unique_ptr<AtlasAlarm> > timeouts_;
 };
 

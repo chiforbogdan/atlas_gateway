@@ -42,14 +42,12 @@ void AtlasDeviceManager::kaTimerHandler(const boost::system::error_code& ec)
 
 AtlasDevice& AtlasDeviceManager::getDevice(const std::string& identity)
 {
-    AtlasDevice& device = devices_[identity];
-
-    if (device.getIdentity() == "") {
-        device.setIdentity(identity);
+    if (devices_.find(identity) == devices_.end()) {
         ATLAS_LOGGER_INFO1("New client device created with identity ", identity);
+        devices_[identity] = AtlasDevice(identity); 
     }
 
-    return device;
+    return devices_[identity];
 }
 
 } // namespace atlas

@@ -133,9 +133,12 @@ AtlasCoapResponse AtlasRegister::registerCallback(const std::string &path, const
  
             ATLAS_LOGGER_INFO1("New ATLAS client registered with identity ", identity);
 
-            /* Create device if necessary and set PSK */
+            /* Create device (if necessary) and set PSK */
             AtlasDeviceManager::getInstance().getDevice(identity).setPsk(psk);
             AtlasDeviceManager::getInstance().getDevice(identity).registerNow();
+
+            /* Install alerts on client device */
+            AtlasDeviceManager::getInstance().getDevice(identity).pushAlerts();
 
             return ATLAS_COAP_RESP_OK;
         }

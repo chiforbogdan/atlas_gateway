@@ -1,11 +1,55 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "AtlasDevice.h"
 #include "../logger/AtlasLogger.h"
+#include "../telemetry/AtlasTelemetryInfo.h"
+#include "../telemetry/AtlasAlertFactory.h"
 
 namespace atlas {
 
 /* Keep-alive counter initial value */
 const int ATLAS_KEEP_ALIVE_COUNTER = 6;
+
+AtlasDevice::AtlasDevice(const std::string &identity) : identity_(identity), registered_(false)
+{
+    installDefaultAlerts();
+}
+
+AtlasDevice::AtlasDevice() : identity_(""), registered_(false) {}
+
+void AtlasDevice::installDefaultAlerts()
+{
+    AtlasPushAlert *pushAlert;
+    AtlasThresholdAlert *thresholdAlert;
+
+    ATLAS_LOGGER_INFO1("Install default telemetry alerts for client with identity ", identity_);
+
+    /* Install default push alerts */
+    pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_SYSINFO_PROCS, identity_);
+    pushAlerts_[TELEMETRY_SYSINFO_PROCS] = std::unique_ptr<AtlasAlert>(pushAlert);
+
+    /* Install default threshold alerts */
+    thresholdAlert = AtlasAlertFactory::getThresholdAlert(TELEMETRY_SYSINFO_PROCS, identity_);
+    thresholdAlerts_[TELEMETRY_SYSINFO_PROCS] = std::unique_ptr<AtlasAlert>(thresholdAlert);
+}
+
+void AtlasDevice::pushAlerts()
+{
+    ATLAS_LOGGER_INFO1("Push all telemetry alerts to client with identity ", identity_);
+
+    std::unordered_map<std::string, std::unique_ptr<AtlasAlert>>::iterator it = pushAlerts_.begin();
+    while (it != pushAlerts_.end()) {
+        ATLAS_LOGGER_INFO1("Push to client device telemetry push alert of type ", (*it).first);
+        (*it).second->push();
+        ++it;
+    }
+    
+    it = thresholdAlerts_.begin();
+    while (it != thresholdAlerts_.end()) {
+        ATLAS_LOGGER_INFO1("Push to client device telemetry threshold alert of type ", (*it).first);
+        (*it).second->push();
+        ++it;
+    }
+}
 
 void AtlasDevice::registerNow()
 {
