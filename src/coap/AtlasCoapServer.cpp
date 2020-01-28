@@ -12,6 +12,7 @@
 #include "AtlasCoapException.h"
 #include "../scheduler/AtlasScheduler.h"
 #include "../logger/AtlasLogger.h"
+#include "../sql/AtlasSQLite.h"
 
 #define ATLAS_COAP_SERVER_IS_UDP(MODE) ((MODE) & ATLAS_COAP_SERVER_MODE_UDP)
 #define ATLAS_COAP_SERVER_IS_DTLS(MODE) ((MODE) & ATLAS_COAP_SERVER_MODE_DTLS_PSK)
@@ -165,19 +166,11 @@ const coap_bin_const_t *AtlasCoapServer::getPskForIdentity(coap_bin_const_t *ide
 {
     ATLAS_LOGGER_DEBUG("Getting PSK for client...");
 
-    /* This code is just an example, it should be replaced with a query in
-     * the SQLite DB */
-    if (!strncmp((char*)identity->s, "test1", identity->length)) {
-        identityPsk_.s = (uint8_t *) "12345678";
-        identityPsk_.length = 8;
-    } else if (!strncmp((char *)identity->s, "test2", identity->length)) {
-        identityPsk_.s = (uint8_t *) "1234567";
-        identityPsk_.length = 7;
-    } else {
-        identityPsk_.s = nullptr;
-        identityPsk_.length = 0;
-    }
-
+    atlas::AtlasSQLite object;
+    object.openConnection("local.db","./");
+    const unsigned char * ob = object.select((char*)identity->s);
+    identityPsk_.s = ob;
+    identityPsk_.length = strlen((const char*)ob);
     return &identityPsk_;
 }
 
