@@ -1,7 +1,8 @@
 #ifndef __ATLAS_ALERT_FACTORY_H__
 #define __ATLAS_ALERT_FACTORY_H__
 
-#include "AtlasAlert.h"
+#include "AtlasPushAlert.h"
+#include "AtlasThresholdAlert.h"
 
 namespace atlas {
 
@@ -9,12 +10,20 @@ class AtlasAlertFactory
 {
 public:
     /**
-    * @brief Create telemetry alert
+    * @brief Create telemetry push alert
     * @param[in] type Telemetry feature type
     * @param[in] deviceIdentity Client device identity
-    * @return Telemetry alert
+    * @return Telemetry push alert
     */
-    static AtlasAlert* getAlert(const std::string& type, const std::string &deviceIdentity_);
+    static AtlasPushAlert* getPushAlert(const std::string& type, const std::string &deviceIdentity_);
+
+    /**
+    * @brief Create telemetry threshold alert
+    * @param[in] type Telemetry feature type
+    * @param[in] deviceIdentity Client device identity
+    * @return Telemetry threshold alert
+    */
+    static AtlasThresholdAlert* getThresholdAlert(const std::string& type, const std::string &deviceIdentity_);
 };
 
 } // namespace atlas

@@ -1,26 +1,23 @@
-#ifndef __ATLAS_ALERT_H__
-#define __ATLAS_ALERT_H__
+#ifndef __ATLAS_PUSH_ALERT_H__
+#define __ATLAS_PUSH_ALERT_H__
 
 #include <string>
 #include "../coap/AtlasCoapResponse.h"
 
 namespace atlas {
 
-class AtlasAlert
+class AtlasPushAlert
 {
 public:
     /**
     * @brief Ctor for telemetry alert
     * @param[in] deviceIdentity Client device identity
     * @param[in] path Telemetry alert CoAP path
-    * @param[in] extPushRate External push rate value
-    * @param[in] intScanRate Internal scan rate value
-    * @param[in] threshold Threshold value
+    * @param[in] pushRate Push rate value
     * @return none
     */
-    AtlasAlert(const std::string &deviceIdentity, const std::string &path,
-               uint16_t extPushRate, uint16_t intScanRate,
-               const std::string &threshold);
+    AtlasPushAlert(const std::string &deviceIdentity, const std::string &path,
+               uint16_t pushRate);
     
     /**
     * @brief Push telemetry alert to client device
@@ -46,15 +43,9 @@ private:
     std::string path_;
 
     /* Telemetry alert external push to gateway rate */
-    uint16_t extPushRate_;
-
-    /* Telemetry alert internal scan rate */
-    uint16_t intScanRate_;
-
-    /* Telemetry alert threshold (string because it is application specific) */
-    std::string threshold_;
+    uint16_t pushRate_;
 };
 
 } // namespace atlas
 
-#endif /* __ATLAS_TELEMETRY_ALERT_H__ */
+#endif /* __ATLAS_PUSH_ALERT_H__ */

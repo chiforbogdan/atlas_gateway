@@ -1,6 +1,6 @@
 #include <iostream>
 #include <boost/bind.hpp>
-#include "AtlasAlert.h"
+#include "AtlasThresholdAlert.h"
 #include "../logger/AtlasLogger.h"
 #include "../coap/AtlasCoapClient.h"
 #include "../device/AtlasDeviceManager.h"
@@ -11,17 +11,16 @@ namespace atlas {
 
 const uint16_t ATLAS_ALERT_COAP_TIMEOUT_MS = 5000;
 
-AtlasAlert::AtlasAlert(const std::string &deviceIdentity, const std::string &path,
-                       uint16_t extPushRate, uint16_t intScanRate, const std::string &threshold)
+AtlasThresholdAlert::AtlasThresholdAlert(const std::string &deviceIdentity, const std::string &path,
+                                         uint16_t scanRate, const std::string &threshold)
 {
     deviceIdentity_ = deviceIdentity;
     path_ = path;
-    extPushRate_ = extPushRate;
-    intScanRate_ = intScanRate;
+    scanRate_ = scanRate;
     threshold_ = threshold;
 }
 
-void AtlasAlert::respCallback(AtlasCoapResponse respStatus, const uint8_t *resp_payload, size_t resp_payload_len)
+void AtlasThresholdAlert::respCallback(AtlasCoapResponse respStatus, const uint8_t *resp_payload, size_t resp_payload_len)
 {
     ATLAS_LOGGER_INFO1("Telemetry alert CoAP response for client with identity ", deviceIdentity_);
 
@@ -41,16 +40,15 @@ void AtlasAlert::respCallback(AtlasCoapResponse respStatus, const uint8_t *resp_
     push();
 }
 
-void AtlasAlert::push()
+void AtlasThresholdAlert::push()
 {
     AtlasCommandBatch cmdBatch;
     AtlasDevice &device = AtlasDeviceManager::getInstance().getDevice(deviceIdentity_);
     std::string url = device.getUrl() + "/" + path_;
-    uint16_t extPush = htons(extPushRate_);
-    uint16_t intScan = htons(intScanRate_);
+    uint16_t scanRate = htons(scanRate_);
     std::pair<const uint8_t*, size_t> cmdBuf;
 
-    ATLAS_LOGGER_DEBUG("Creating command for telemetry alert push");
+    ATLAS_LOGGER_DEBUG("Creating command for telemetry alert threshold");
 
     if (!device.isRegistered()) {
         ATLAS_LOGGER_INFO1("Cannot push telemetry alert for OFFLINE device with identity ", deviceIdentity_);
@@ -58,11 +56,9 @@ void AtlasAlert::push()
     }
 
     /* Add telemetry alert commands */
-    AtlasCommand cmdExtPush(ATLAS_CMD_TELEMETRY_ALERT_EXT_PUSH_RATE, sizeof(uint16_t), (uint8_t *) &extPush);
-    AtlasCommand cmdIntScan(ATLAS_CMD_TELEMETRY_ALERT_INT_SCAN_RATE, sizeof(uint16_t), (uint8_t *) &intScan);
+    AtlasCommand cmdIntScan(ATLAS_CMD_TELEMETRY_ALERT_INT_SCAN_RATE, sizeof(uint16_t), (uint8_t *) &scanRate);
     AtlasCommand cmdThreshold(ATLAS_CMD_TELEMETRY_ALERT_THRESHOLD, threshold_.length(), (uint8_t *) threshold_.c_str());
 
-    cmdBatch.addCommand(cmdExtPush);
     cmdBatch.addCommand(cmdIntScan);
     cmdBatch.addCommand(cmdThreshold);
     cmdBuf = cmdBatch.getSerializedAddedCommands();
@@ -72,7 +68,7 @@ void AtlasAlert::push()
 
     /* Send CoAP request */
     AtlasCoapClient::getInstance().sendRequest(url, ATLAS_COAP_METHOD_PUT, cmdBuf.first, cmdBuf.second,
-                                               ATLAS_ALERT_COAP_TIMEOUT_MS, boost::bind(&AtlasAlert::respCallback, this, _1, _2, _3));
+                                               ATLAS_ALERT_COAP_TIMEOUT_MS, boost::bind(&AtlasThresholdAlert::respCallback, this, _1, _2, _3));
 
     /* FIXME what if object is destroyed while response is hanging and callback reaches the dead object */
 }
