@@ -5,8 +5,8 @@ namespace atlas {
 
 /* Sysinfo procs default telemetry alert values */
 const uint16_t ATLAS_PUSH_ALERT_PROCS_RATE_SEC_DEFAULT = 60;
-const uint16_t ATLAS_THRESHOLD_ALERT_PROCS_RATE_SEC_DEFAULT = 30;
-const std::string ATLAS_THRESHOLD_ALERT_PROCS_THRESHOLD_DEFAULT = "1000";
+const uint16_t ATLAS_THRESHOLD_ALERT_PROCS_RATE_SEC_DEFAULT = 2;
+const std::string ATLAS_THRESHOLD_ALERT_PROCS_THRESHOLD_DEFAULT = "1130";
 const std::string ATLAS_PUSH_ALERT_PROCS_PATH = "client/telemetry/sysinfo/procs/alerts/push";
 const std::string ATLAS_THRESHOLD_ALERT_PROCS_PATH = "client/telemetry/sysinfo/procs/alerts/threshold";
 

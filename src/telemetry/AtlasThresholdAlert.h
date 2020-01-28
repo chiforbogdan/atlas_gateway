@@ -2,11 +2,12 @@
 #define __ATLAS_THRESHOLD_ALERT_H__
 
 #include <string>
+#include "AtlasAlert.h"
 #include "../coap/AtlasCoapResponse.h"
 
 namespace atlas {
 
-class AtlasThresholdAlert
+class AtlasThresholdAlert: public AtlasAlert
 {
 public:
     /**
@@ -19,29 +20,9 @@ public:
     */
     AtlasThresholdAlert(const std::string &deviceIdentity, const std::string &path,
                         uint16_t scanRate, const std::string &threshold);
-    
-    /**
-    * @brief Push telemetry alert to client device
-    * @return none
-    */
-    void push();
 
 private:
-
-    /**
-    * @brief CoAP response callbacl
-    * @param[in] respStatus CoAP response status
-    * @param[in] resp_payload CoAP response payload
-    * @param[in] resp_payload_len CoAP response payload length
-    * @return none
-    */
-    void respCallback(AtlasCoapResponse respStatus, const uint8_t *resp_payload, size_t resp_payload_len);
-
-    /* Client device identity */
-    std::string deviceIdentity_;
-
-    /* Telemetry alert CoAP path */
-    std::string path_;
+    void pushCommand(const std::string &url);
 
     /* Telemetry alert internal scan rate */
     uint16_t scanRate_;

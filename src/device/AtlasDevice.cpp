@@ -25,29 +25,29 @@ void AtlasDevice::installDefaultAlerts()
 
     /* Install default push alerts */
     pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_SYSINFO_PROCS, identity_);
-    pushAlerts_[TELEMETRY_SYSINFO_PROCS] = std::unique_ptr<AtlasPushAlert>(pushAlert);
+    pushAlerts_[TELEMETRY_SYSINFO_PROCS] = std::unique_ptr<AtlasAlert>(pushAlert);
 
     /* Install default threshold alerts */
     thresholdAlert = AtlasAlertFactory::getThresholdAlert(TELEMETRY_SYSINFO_PROCS, identity_);
-    thresholdAlerts_[TELEMETRY_SYSINFO_PROCS] = std::unique_ptr<AtlasThresholdAlert>(thresholdAlert);
+    thresholdAlerts_[TELEMETRY_SYSINFO_PROCS] = std::unique_ptr<AtlasAlert>(thresholdAlert);
 }
 
 void AtlasDevice::pushAlerts()
 {
     ATLAS_LOGGER_INFO1("Push all telemetry alerts to client with identity ", identity_);
 
-    std::unordered_map<std::string, std::unique_ptr<AtlasPushAlert>>::iterator it1 = pushAlerts_.begin();
-    while (it1 != pushAlerts_.end()) {
-        ATLAS_LOGGER_INFO1("Push to client device telemetry push alert of type ", (*it1).first);
-        (*it1).second->push();
-        ++it1;
+    std::unordered_map<std::string, std::unique_ptr<AtlasAlert>>::iterator it = pushAlerts_.begin();
+    while (it != pushAlerts_.end()) {
+        ATLAS_LOGGER_INFO1("Push to client device telemetry push alert of type ", (*it).first);
+        (*it).second->push();
+        ++it;
     }
     
-    std::unordered_map<std::string, std::unique_ptr<AtlasThresholdAlert>>::iterator it2 = thresholdAlerts_.begin();
-    while (it2 != thresholdAlerts_.end()) {
-        ATLAS_LOGGER_INFO1("Push to client device telemetry push alert of type ", (*it2).first);
-        (*it2).second->push();
-        ++it2;
+    it = thresholdAlerts_.begin();
+    while (it != thresholdAlerts_.end()) {
+        ATLAS_LOGGER_INFO1("Push to client device telemetry threshold alert of type ", (*it).first);
+        (*it).second->push();
+        ++it;
     }
 }
 

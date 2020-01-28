@@ -2,11 +2,13 @@
 #define __ATLAS_PUSH_ALERT_H__
 
 #include <string>
+#include "AtlasAlert.h"
 #include "../coap/AtlasCoapResponse.h"
+
 
 namespace atlas {
 
-class AtlasPushAlert
+class AtlasPushAlert: public AtlasAlert
 {
 public:
     /**
@@ -17,30 +19,10 @@ public:
     * @return none
     */
     AtlasPushAlert(const std::string &deviceIdentity, const std::string &path,
-               uint16_t pushRate);
-    
-    /**
-    * @brief Push telemetry alert to client device
-    * @return none
-    */
-    void push();
+                   uint16_t pushRate);
 
 private:
-
-    /**
-    * @brief CoAP response callbacl
-    * @param[in] respStatus CoAP response status
-    * @param[in] resp_payload CoAP response payload
-    * @param[in] resp_payload_len CoAP response payload length
-    * @return none
-    */
-    void respCallback(AtlasCoapResponse respStatus, const uint8_t *resp_payload, size_t resp_payload_len);
-
-    /* Client device identity */
-    std::string deviceIdentity_;
-
-    /* Telemetry alert CoAP path */
-    std::string path_;
+    void pushCommand(const std::string &url);
 
     /* Telemetry alert external push to gateway rate */
     uint16_t pushRate_;

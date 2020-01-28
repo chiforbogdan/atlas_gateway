@@ -4,8 +4,7 @@
 #include <string>
 #include <memory>
 #include "../telemetry/AtlasTelemetryInfo.h"
-#include "../telemetry/AtlasPushAlert.h"
-#include "../telemetry/AtlasThresholdAlert.h"
+#include "../telemetry/AtlasAlert.h"
 
 namespace atlas {
 
@@ -122,10 +121,10 @@ private:
     AtlasTelemetryInfo telemetryInfo_;
 
     /* Telemetry push alerts */
-    std::unordered_map<std::string, std::unique_ptr<AtlasPushAlert> > pushAlerts_;
+    std::unordered_map<std::string, std::unique_ptr<AtlasAlert> > pushAlerts_;
 
     /* Telemetry threshold alerts */
-    std::unordered_map<std::string, std::unique_ptr<AtlasThresholdAlert> > thresholdAlerts_;
+    std::unordered_map<std::string, std::unique_ptr<AtlasAlert> > thresholdAlerts_;
 };
 
 } // namespace atlas
