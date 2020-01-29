@@ -26,6 +26,9 @@ void AtlasDevice::installDefaultAlerts()
     /* Install default push alerts */
     pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_SYSINFO_PROCS, identity_);
     pushAlerts_[TELEMETRY_SYSINFO_PROCS] = std::unique_ptr<AtlasAlert>(pushAlert);
+    
+    pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_SYSINFO_UPTIME, identity_);
+    pushAlerts_[TELEMETRY_SYSINFO_UPTIME] = std::unique_ptr<AtlasAlert>(pushAlert);
 
     /* Install default threshold alerts */
     thresholdAlert = AtlasAlertFactory::getThresholdAlert(TELEMETRY_SYSINFO_PROCS, identity_);
