@@ -169,6 +169,7 @@ const coap_bin_const_t *AtlasCoapServer::getPskForIdentity(coap_bin_const_t *ide
     atlas::AtlasSQLite object;
     object.openConnection("local.db","./");
     const unsigned char * ob = object.select((char*)identity->s);
+    object.closeConnection();
     identityPsk_.s = ob;
     identityPsk_.length = strlen((const char*)ob);
     return &identityPsk_;

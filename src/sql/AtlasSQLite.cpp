@@ -17,11 +17,11 @@ namespace atlas {
 AtlasSQLite::AtlasSQLite()
 {
     isConnected_ = false;
+    pCon_ = NULL;
 }
 
 AtlasSQLite::~AtlasSQLite()
 {
-    closeConnection();
 }
 
 void AtlasSQLite::closeConnection()
@@ -44,20 +44,19 @@ bool AtlasSQLite::openConnection(const std::string &databaseName, const std::str
 
 	if(sqlite3_open(path.c_str(), &pCon_))
 	{
-		std::string err = "Can't open database: ";
-		err = err.append(sqlite3_errmsg(pCon_));
-		ATLAS_LOGGER_ERROR(err);
+		ATLAS_LOGGER_ERROR(sqlite3_errmsg(pCon_));
 		isConnected_ = false;
+		return isConnected_;
 	}
 
 	/* Create table 'IdentityPSK' if not exists */
 	if(sqlite3_exec(pCon_, sqlCreateTable, NULL, 0, &lastError_) != SQLITE_OK )
 	{
-		std::string err = "Can't create table: ";
-		err = err.append(lastError_);
-		ATLAS_LOGGER_ERROR(err);
+		ATLAS_LOGGER_ERROR(lastError_);
 		sqlite3_free(lastError_);
+        sqlite3_close(pCon_);
 		isConnected_ = false;
+		return isConnected_;
 	} 
 	
 	ATLAS_LOGGER_DEBUG("Connection opened\n");
@@ -66,21 +65,22 @@ bool AtlasSQLite::openConnection(const std::string &databaseName, const std::str
 }
 uint8_t AtlasSQLite::insert(const std::string &identity, const  std::string &psk)
 {
-    if(!isConnected())
+    if(!isConnected_)
 		return -1;
 
-	sqlite3_stmt *stmt;
-
+	sqlite3_stmt *stmt = NULL;
 	/*check unique value for identity*/
 	if(sqlite3_prepare_v2(pCon_, sqlCheckIdentity,  -1, &stmt, 0) != SQLITE_OK) 
 	{
 		ATLAS_LOGGER_ERROR("Could not prepare unique statement.\n");
+		sqlite3_finalize(stmt);
 		return -1;
   	}
 
 	if (sqlite3_bind_text(stmt, 1, identity.c_str(), identity.length(),	SQLITE_STATIC) != SQLITE_OK)
 	{
 		ATLAS_LOGGER_ERROR("Could not bind text param.\n");
+		sqlite3_finalize(stmt);
 		return -1;
 	}
 
@@ -88,6 +88,7 @@ uint8_t AtlasSQLite::insert(const std::string &identity, const  std::string &psk
 	if (stat != SQLITE_DONE && stat != SQLITE_ROW) 
 	{
 		ATLAS_LOGGER_ERROR("Could not step (execute) unique stmt.\n");
+		sqlite3_finalize(stmt);
 		return -1;
   	}
 
@@ -99,6 +100,7 @@ uint8_t AtlasSQLite::insert(const std::string &identity, const  std::string &psk
 		if(sqlite3_prepare_v2(pCon_, sqlInsert,  -1, &stmt, 0) != SQLITE_OK) 
 		{
 			ATLAS_LOGGER_ERROR("Could not prepare insert statement.\n");
+			sqlite3_finalize(stmt);
 			return -1;
 		}
 
@@ -106,17 +108,16 @@ uint8_t AtlasSQLite::insert(const std::string &identity, const  std::string &psk
 			sqlite3_bind_text(stmt, 2, psk.c_str(), psk.length(),	SQLITE_STATIC) != SQLITE_OK)
 		{
 			ATLAS_LOGGER_ERROR("Could not bind text params.\n");
+			sqlite3_finalize(stmt);
 			return -1;
 		}
 
 		if (sqlite3_step(stmt) != SQLITE_DONE) 
 		{
 			ATLAS_LOGGER_ERROR("Could not step (execute) insert stmt.\n");
+			sqlite3_finalize(stmt);
 			return -1;
 		}
-
-		
-		//fprintf(stdout, "%d row(s) inserted\n", sqlite3_total_changes(pCon_));
 	}
 	else
 	{
@@ -124,6 +125,7 @@ uint8_t AtlasSQLite::insert(const std::string &identity, const  std::string &psk
 		if(sqlite3_prepare_v2(pCon_, sqlUpdate,  -1, &stmt, 0) != SQLITE_OK) 
 		{
 			ATLAS_LOGGER_ERROR("Could not prepare update statement.\n");
+			sqlite3_finalize(stmt);
 			return -1;
 		}
 
@@ -131,16 +133,16 @@ uint8_t AtlasSQLite::insert(const std::string &identity, const  std::string &psk
 			sqlite3_bind_text(stmt, 2, identity.c_str(), identity.length(),	SQLITE_STATIC) != SQLITE_OK) 
 		{
 			ATLAS_LOGGER_ERROR("Could not bind text params.\n");
+			sqlite3_finalize(stmt);
 			return -1;
 		}
 
 		if (sqlite3_step(stmt) != SQLITE_DONE) 
 		{
 			ATLAS_LOGGER_ERROR("Could not step (execute) update stmt.\n");
+			sqlite3_finalize(stmt);
 			return -1;
 		}
-
-		//fprintf(stdout, "%d row(s) updated\n", sqlite3_total_changes(pCon_));
 	}
 	sqlite3_finalize(stmt);
 	return 0;
@@ -150,18 +152,20 @@ const unsigned char* AtlasSQLite::select(const std::string &identity)
     if(!isConnected())
 		return NULL;
 
-	sqlite3_stmt *stmt;
+	sqlite3_stmt *stmt = NULL;
 
 	/*select PSK for given identity*/
 	if(sqlite3_prepare_v2(pCon_, sqlSelect,  -1, &stmt, 0) != SQLITE_OK) 
 	{
 		ATLAS_LOGGER_ERROR("Could not prepare select statement.\n");
+		sqlite3_finalize(stmt);
 		return NULL;
   	}
 
 	if (sqlite3_bind_text(stmt, 1, identity.c_str(), identity.length(),	SQLITE_STATIC) != SQLITE_OK)
 	{
 		ATLAS_LOGGER_ERROR("Could not bind text param.\n");
+		sqlite3_finalize(stmt);
 		return NULL;
 	}
 
@@ -169,11 +173,11 @@ const unsigned char* AtlasSQLite::select(const std::string &identity)
 	if (stat != SQLITE_DONE && stat != SQLITE_ROW) 
 	{
 		ATLAS_LOGGER_ERROR("Could not step (execute) select stmt.\n");
+		sqlite3_finalize(stmt);
 		return NULL;
   	}
 
 	const unsigned char *r = sqlite3_column_text(stmt, 0);
-	//uint8_t len = sqlite3_column_bytes(stmt, 0);
 
 	sqlite3_finalize(stmt);
 
