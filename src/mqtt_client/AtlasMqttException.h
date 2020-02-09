@@ -18,4 +18,5 @@ private:
 };
 
 } //namespace atlas
+
 #endif /* __ATLAS_MQTT_EXCEPTION_H__ */
