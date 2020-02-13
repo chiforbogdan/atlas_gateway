@@ -98,18 +98,63 @@ void AtlasMqttClient::publishMessage(const std::string topic, const std::string 
     }    
 }
 
+bool AtlasMqttClient::tryPublishMessage(const std::string topic, const std::string message, const int QoS)
+{
+    try
+    {   
+        if (connTok_ == nullptr)
+        {
+            ATLAS_LOGGER_ERROR("No existing connection for client [" + client_->get_client_id() + "]. PUBLISH aborted.");
+            return false;
+        }
+        else
+        {
+            if (!connTok_->try_wait())  //non-blocking task --> exit with false and wait for a re-call of publish
+            {
+                ATLAS_LOGGER_ERROR("Previous CONNECT action has not yet finished for client [" + client_->get_client_id() + "]. PUBLISH should be delayed.");
+                return false;
+            }
+            else
+            {
+                mqtt::message_ptr pubMsg = mqtt::make_message(topic, message);
+                pubMsg->set_qos(QoS);                
+                pubTok_ = client_->publish(pubMsg, nullptr, deliveryActList_);  
+                ATLAS_LOGGER_INFO("Message [" + std::to_string(pubTok_->get_message_id()) + "] will be sent with QoS " + 
+                            std::to_string(QoS) + " by client [" + client_->get_client_id() + "]."); 
+            }
+        }
+    }
+    catch(const mqtt::exception& e)
+    {
+        ATLAS_LOGGER_ERROR("Exception caught: " + std::string(e.what()));
+        throw AtlasMqttException(std::string(e.what()));
+    }
+    catch(const char* e)
+    {
+        ATLAS_LOGGER_ERROR(std::string(e));
+        if (client_->is_connected())
+        {
+            discTok_ = client_->disconnect(nullptr, disconnectActList_);
+        }
+        throw AtlasMqttException(std::string(e));
+    }
+
+    return true;
+}
+
+
 void AtlasMqttClient::subscribeTopic(const std::string topic, const int QoS)
 {
     try
     {
         if (client_->is_connected())   
         {     
-            ATLAS_LOGGER_INFO("Client subscribing to topic [" + topic + "] with QoS " + std::to_string(QoS));
+            ATLAS_LOGGER_INFO("Client [" + client_->get_client_id() + "] subscribing to topic [" + topic + "] with QoS " + std::to_string(QoS));
             subTok_ = client_->subscribe(topic, QoS, nullptr, subscribeActList_);
         }
         else
         {
-            ATLAS_LOGGER_INFO("No active connection. Subscribe not executed.");            
+            ATLAS_LOGGER_INFO("No active connection. SUBSCRIBE aborted.");            
         }
         
     }
@@ -129,6 +174,48 @@ void AtlasMqttClient::subscribeTopic(const std::string topic, const int QoS)
     } 
 }
 
+bool AtlasMqttClient::trySubscribeTopic(const std::string topic, const int QoS)
+{
+    try
+    {
+        if (connTok_ == nullptr)
+        {
+            std::cout << "No existing connection. SUBSCRIBE aborted." << std::endl;
+            return false;
+        }
+        else
+        {
+            if (!connTok_->try_wait())
+            {
+                std::cout << "Connection not yet finished. SUBSCRIBE should be delayed." << std::endl;
+                return false;
+            }
+            else
+            {
+                ATLAS_LOGGER_INFO("Client [" + client_->get_client_id() + "] subscribing to topic [" + topic + "] with QoS " + std::to_string(QoS));
+                subTok_ = client_->subscribe(topic, QoS, nullptr, subscribeActList_);
+            }
+        }        
+    }
+    catch(const mqtt::exception& e)
+    {
+        ATLAS_LOGGER_ERROR("Exception caught: " + std::string(e.what()));
+        throw AtlasMqttException(std::string(e.what()));
+    }
+    catch(const char* e)
+    {
+        ATLAS_LOGGER_ERROR(std::string(e));
+        if (client_->is_connected())
+        {
+            discTok_ = client_->disconnect(nullptr, disconnectActList_);
+        }
+        throw AtlasMqttException(std::string(e));
+    } 
+
+    return true;
+}
+
+
 void AtlasMqttClient::disconnect()
 {
     try
@@ -139,7 +226,7 @@ void AtlasMqttClient::disconnect()
                 pubTok_->wait();
                        
             discTok_ = client_->disconnect(nullptr, disconnectActList_);
-            ATLAS_LOGGER_INFO("Client " + client_->get_client_id() + " has successfully disconnected from " + client_->get_server_uri());
+            ATLAS_LOGGER_INFO("Client [" + client_->get_client_id() + "] has successfully disconnected from " + client_->get_server_uri());
         }
     }
     catch(const mqtt::exception& e)
@@ -157,6 +244,64 @@ void AtlasMqttClient::disconnect()
         throw AtlasMqttException(std::string(e));
     }  
 }
+
+bool AtlasMqttClient::tryDisconnect()
+{
+    try
+    {
+        if (connTok_ == nullptr)
+        {
+            ATLAS_LOGGER_INFO("No existing connection. DISCONNECT aborted.");
+            return false;
+        }
+        else
+        {
+            if (!connTok_->try_wait())
+            {
+                ATLAS_LOGGER_INFO("Connection is not yet finished. DISCONNECT should be delayed.");
+                return false;
+            }
+            else
+            {
+                if (pubTok_ == nullptr) 
+                {
+                    discTok_ = client_->disconnect(nullptr, disconnectActList_);
+                    ATLAS_LOGGER_INFO("Client [" + client_->get_client_id() + "] has successfully disconnected from " + client_->get_server_uri());
+                }
+                else
+                {
+                    if (pubTok_->try_wait())
+                    {
+                        discTok_ = client_->disconnect(nullptr, disconnectActList_);
+                        ATLAS_LOGGER_INFO("Client [" + client_->get_client_id() + "] has successfully disconnected from " + client_->get_server_uri());
+                    }
+                    else
+                    {
+                        ATLAS_LOGGER_INFO("Client [" + client_->get_client_id() + "] has unfinished PUBLISH tasks. DISCONNECT aborted.");
+                        return false;
+                    }
+                }
+            }
+        } 
+    }
+    catch(const mqtt::exception& e)
+    {
+        ATLAS_LOGGER_ERROR("Exception caught: " + std::string(e.what()));
+        throw AtlasMqttException(std::string(e.what()));
+    }
+    catch(const char* e)
+    {
+        ATLAS_LOGGER_ERROR(std::string(e));
+        if (client_->is_connected())
+        {
+            discTok_ = client_->disconnect(nullptr, disconnectActList_);
+        }
+        throw AtlasMqttException(std::string(e));
+    }
+
+    return true;
+}
+
 
 AtlasMqttClient::~AtlasMqttClient()
 {

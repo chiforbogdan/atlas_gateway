@@ -15,11 +15,15 @@ public:
 	static AtlasMqttClient& getInstance();
 	bool connect(const std::string address, const std::string clientID);
 
-	void publishMessage(const std::string topic, const std::string message, const int QoS);
-
+	//Blocking methods
+	void publishMessage(const std::string topic, const std::string message, const int QoS);	
 	void subscribeTopic(const std::string topic, const int QoS);
-
 	void disconnect();
+	
+	//Non-blocking methods
+	bool tryPublishMessage(const std::string topic, const std::string message, const int QoS);
+	bool trySubscribeTopic(const std::string topic, const int QoS);
+	bool tryDisconnect();
 
 	AtlasMqttClient(const AtlasMqttClient &) = delete;
 	AtlasMqttClient & operator = (const AtlasMqttClient &) = delete;
