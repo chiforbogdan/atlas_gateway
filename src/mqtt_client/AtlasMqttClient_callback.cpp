@@ -4,18 +4,6 @@
 namespace atlas
 {
 
-void AtlasMqttClient_callback::connected(const std::string& cause)
-{
-    if (cause.empty())
-    {
-        ATLAS_LOGGER_INFO("Connection successfully established!");
-    }
-    else
-    {
-        ATLAS_LOGGER_INFO("Connection could not be established --> cause: " + cause);
-    }
-}
-
 void AtlasMqttClient_callback::connection_lost(const std::string& cause)
 {
     if (cause.empty())
@@ -26,11 +14,6 @@ void AtlasMqttClient_callback::connection_lost(const std::string& cause)
     {
         ATLAS_LOGGER_ERROR("Connection lost --> cause: " + cause);
     }    
-}
-
-void AtlasMqttClient_callback::delivery_complete(mqtt::delivery_token_ptr tok)
-{
-    ATLAS_LOGGER_INFO("Delivery complete for token: " + (tok ? tok->get_message_id() : -1));
 }
 
 void AtlasMqttClient_callback::message_arrived(mqtt::const_message_ptr msg)

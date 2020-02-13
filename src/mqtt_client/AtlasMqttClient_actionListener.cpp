@@ -8,23 +8,70 @@ namespace atlas
 //***********Class base Action Listener*******************
 void AtlasMqttClient_actionListener::on_failure(const mqtt::token& tok)
 {
-    ATLAS_LOGGER_INFO("Listener failure for token: " + tok.get_message_id());
+    std::string tmpLine = tok.get_client()->get_client_id() + "] for token [" + std::to_string(tok.get_message_id()) + "].";
+    switch (actionListenerType_)
+    {
+    case AtlasMqttClient_actionListenerTypes::Connect:
+        ATLAS_LOGGER_INFO("Connect Listener: Failure of client [" +  tmpLine);
+        break;
+    case AtlasMqttClient_actionListenerTypes::Disconnect :
+        ATLAS_LOGGER_INFO("Disconnect Listener: Failure of client [" +  tmpLine);
+        break;
+    case AtlasMqttClient_actionListenerTypes::Delivery:
+        ATLAS_LOGGER_INFO("Delivery Listener: Failure of client [" +  tmpLine);
+        break;
+    case AtlasMqttClient_actionListenerTypes::Generic:
+        ATLAS_LOGGER_INFO("Generic Listener: Failure of client [" +  tmpLine);
+        break;
+    default:
+        ATLAS_LOGGER_INFO("Unknown Listener: Failure of client [" + tmpLine);
+        break;
+    }    
 }
+void AtlasMqttClient_actionListener::on_failure(const AtlasMqttClient_actionListenerTypes tip)
+{
+    actionListenerType_ = tip;
+}
+
 
 void AtlasMqttClient_actionListener::on_success(const mqtt::token& tok)
 {
-    ATLAS_LOGGER_INFO("Listener succes for token: " + tok.get_message_id());
+    std::string tmpLine = tok.get_client()->get_client_id() + "] for token [" + std::to_string(tok.get_message_id()) + "].";
+    switch (actionListenerType_)
+    {
+    case AtlasMqttClient_actionListenerTypes::Connect:
+        ATLAS_LOGGER_INFO("Connect Listener: Success of client [" +  tmpLine);
+        break;
+    case AtlasMqttClient_actionListenerTypes::Disconnect :
+        ATLAS_LOGGER_INFO("Disconnect Listener: Success of client [" +  tmpLine);
+        break;
+    case AtlasMqttClient_actionListenerTypes::Delivery:
+        ATLAS_LOGGER_INFO("Delivery Listener: Success of client [" +  tmpLine);
+        break;
+    case AtlasMqttClient_actionListenerTypes::Generic:
+        ATLAS_LOGGER_INFO("Generic Listener: Success of client [" +  tmpLine);
+        break;
+    default:
+        ATLAS_LOGGER_INFO("Unknown Listener: Success of client [" + tmpLine);
+        break;
+    } 
+}
+void AtlasMqttClient_actionListener::on_success(const AtlasMqttClient_actionListenerTypes tip)
+{
+    actionListenerType_ = tip;
 }
 
 //************Class Connecting Action Listener**************
 void AtlasMqttClient_connectActionListener::on_failure(const mqtt::token& tok)
 {
+    AtlasMqttClient_actionListener::on_failure(AtlasMqttClient_actionListenerTypes::Connect);
     AtlasMqttClient_actionListener::on_failure(tok);
     done_ = true;
 }
 
 void AtlasMqttClient_connectActionListener::on_success(const mqtt::token& tok)
 {
+    AtlasMqttClient_actionListener::on_failure(AtlasMqttClient_actionListenerTypes::Connect);
     AtlasMqttClient_actionListener::on_success(tok);
     done_ = true;
 }
@@ -33,12 +80,14 @@ void AtlasMqttClient_connectActionListener::on_success(const mqtt::token& tok)
 //************Class Delivery Action Listener****************
 void AtlasMqttClient_deliveryActionListener::on_failure(const mqtt::token& tok)
 {
+    AtlasMqttClient_actionListener::on_failure(AtlasMqttClient_actionListenerTypes::Delivery);
     AtlasMqttClient_actionListener::on_failure(tok);
     done_ = true;
 }
 
 void AtlasMqttClient_deliveryActionListener::on_success(const mqtt::token& tok)
 {
+    AtlasMqttClient_actionListener::on_failure(AtlasMqttClient_actionListenerTypes::Delivery);
     AtlasMqttClient_actionListener::on_success(tok);
     done_ = true;
 }
@@ -47,12 +96,14 @@ void AtlasMqttClient_deliveryActionListener::on_success(const mqtt::token& tok)
 //************Class Disconnecting Action Listener**************
 void AtlasMqttClient_disconnectActionListener::on_failure(const mqtt::token& tok)
 {
+    AtlasMqttClient_actionListener::on_failure(AtlasMqttClient_actionListenerTypes::Disconnect);
     AtlasMqttClient_actionListener::on_failure(tok);
     done_ = true;
 }
 
 void AtlasMqttClient_disconnectActionListener::on_success(const mqtt::token& tok)
 {
+    AtlasMqttClient_actionListener::on_failure(AtlasMqttClient_actionListenerTypes::Disconnect);
     AtlasMqttClient_actionListener::on_success(tok);
     done_ = true;
 }

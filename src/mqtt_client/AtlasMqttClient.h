@@ -13,7 +13,7 @@ class AtlasMqttClient
 {
 public:
 	static AtlasMqttClient& getInstance();
-	void connect(const std::string address, const std::string clientID);
+	bool connect(const std::string address, const std::string clientID);
 
 	void publishMessage(const std::string topic, const std::string message, const int QoS);
 
@@ -26,19 +26,18 @@ public:
 
 	~AtlasMqttClient();
 private:	
-	mqtt::async_client_ptr client_;
-	mqtt::token_ptr connTok_;
+	mqtt::async_client *client_;
+	mqtt::token_ptr connTok_, discTok_;
 	mqtt::delivery_token_ptr pubTok_;
 	mqtt::token_ptr subTok_;
 	mqtt::connect_options connOps_;
 	atlas::AtlasMqttClient_callback cb_;
-	atlas::AtlasMqttClient_actionListener genericActList_;
 	atlas::AtlasMqttClient_connectActionListener connectActList_;
 	atlas::AtlasMqttClient_deliveryActionListener deliveryActList_;
 	atlas::AtlasMqttClient_disconnectActionListener disconnectActList_;
 	atlas::AtlasMqttClient_subscriptionActionListener subscribeActList_;
 
-	AtlasMqttClient() {}
+	AtlasMqttClient();
 };
 } //namespace atlas
 
