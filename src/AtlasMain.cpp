@@ -8,11 +8,13 @@
 #include "alarm/AtlasAlarm.h"
 #include "coap/AtlasCoapClient.h"
 #include "register/AtlasRegister.h"
+#include "policy/AtlasPolicy.h"
 #include "pubsub_agent/AtlasPubSubAgent.h"
 
 int main(int argc, char **argv)
 {
     atlas::AtlasRegister reg;
+    atlas::AtlasPolicy policy;
     atlas::AtlasPubSubAgent pubSubAgent;
     
     atlas::initLog();
@@ -20,7 +22,10 @@ int main(int argc, char **argv)
     atlas::AtlasCoapServer::getInstance().start("127.0.0.1", "10099", atlas::ATLAS_COAP_SERVER_MODE_BOTH); 
 
     ATLAS_LOGGER_DEBUG("Starting Atlas gateway...");
-    
+
+    /* Start policy module */
+    policy.start();
+
     /* Start registration module */
     reg.start();
 
@@ -29,6 +34,9 @@ int main(int argc, char **argv)
 
     /* Start scheduler */
     atlas::AtlasScheduler::getInstance().run();
+
+    /* Stop policy module */
+    policy.stop();
 
     /* Stop registration module */
     reg.stop();

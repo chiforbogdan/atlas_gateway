@@ -31,6 +31,12 @@ public:
     */
     void start();
 
+    /**
+    * @brief Install firewall rule
+    * @return none
+    */
+    void installFirewallRule(const std::string &clientId, uint16_t qos, uint16_t ppm, uint16_t payloadLen);
+
 private:
     /**
     * @brief Write data to publish-subscribe agent
