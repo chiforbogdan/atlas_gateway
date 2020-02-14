@@ -13,6 +13,9 @@ enum AtlasCommandType {
     /* Identity command: payload is the client identity */
     ATLAS_CMD_IDENTITY,
 
+   /* IP command: payload is the local IP address used by gateway to connect the client*/
+    ATLAS_CMD_IP_PORT,
+
     /* Telemetry hostname command: payload is client hostname */
     ATLAS_CMD_TELEMETRY_HOSTNAME,
 

@@ -32,6 +32,14 @@ public:
     */
     inline void setPsk(const std::string &psk) { psk_ = psk; }
 
+
+    /**
+    * @brief Set IP for client device
+    * @param[in] ip address
+    * @return none
+    */
+    inline void setIpPort(const std::string &ipPort) { ipPort_ = ipPort; }
+
     /**
     * @brief Get client device identity
     * @return Client device identity
@@ -87,10 +95,10 @@ public:
     void pushAlerts();
 
     /**
-    *@brief Get device URL FIXME add URL here
+    *@brief Get device URL
     * @return Client device URL
     */
-    inline std::string getUrl() const { return "coaps://127.0.0.1:10002"; }
+    inline std::string getUrl() const { return "coaps://" + ipPort_; }
 
 private:
     /**
@@ -104,6 +112,9 @@ private:
 
     /* IoT client pre-shared key */
     std::string psk_;
+
+    /* IoT client ip adrress & port */
+    std::string ipPort_;
 
     /* Registration timestamp */
     std::string regTime_;
