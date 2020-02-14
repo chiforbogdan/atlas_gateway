@@ -17,7 +17,7 @@ AtlasRegister::AtlasRegister() : registerResource_(ATLAS_REGISTER_URI,
                                                    boost::bind(&AtlasRegister::registerCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)),
                                  keepAliveResource_(ATLAS_KEEPALIVE_URI,
                                                     ATLAS_COAP_METHOD_PUT,
-                                                    boost::bind(&AtlasRegister::keepaliveCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)) {}
+                                                    boost::bind(&AtlasRegister::keepaliveCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)){}
 
 AtlasCoapResponse AtlasRegister::keepaliveCallback(const std::string &path, const std::string &pskIdentity,
                                                    const std::string& psk, AtlasCoapMethod method,
@@ -27,6 +27,7 @@ AtlasCoapResponse AtlasRegister::keepaliveCallback(const std::string &path, cons
     AtlasCommandBatch cmdBatch;
     std::vector<AtlasCommand> cmd;
     std::string identity = "";
+    std::string ipPort = "";
     uint8_t *token = nullptr;
     
     ATLAS_LOGGER_DEBUG("Keepalive callback executed...");
@@ -73,12 +74,21 @@ AtlasCoapResponse AtlasRegister::keepaliveCallback(const std::string &path, cons
                 ATLAS_LOGGER_ERROR("Keep-alive end-point called with SPOOFED identity");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
+        } else if (cmdEntry.getType() == ATLAS_CMD_IP_PORT) {
+            ATLAS_LOGGER_DEBUG("Registration end-point called and UPDATE IP_PORT command is found");
+           
+            if (!cmdEntry.getLen()) {
+                ATLAS_LOGGER_ERROR("Registration end-point called with empty UPDATE IP_PORT command");
+                return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+            }
+
+            ipPort.assign((char *)cmdEntry.getVal(), cmdEntry.getLen());
         }
 
     }
 
-    if (identity == "" || !token) {
-        ATLAS_LOGGER_ERROR("Keep-alive failed because of invalid identity or keep-alive token");
+    if (identity == "" || !token || ipPort == "") {
+        ATLAS_LOGGER_ERROR("Keep-alive failed because of invalid identity, keep-alive token or ip_port address");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
 
@@ -90,6 +100,9 @@ AtlasCoapResponse AtlasRegister::keepaliveCallback(const std::string &path, cons
 
     /* Notify device that a keep-alive was just received */
     device.keepAliveNow();
+
+    /* Save ip address in device client*/
+    device.setIpPort(ipPort);
     
     return ATLAS_COAP_RESP_OK;
 }
@@ -101,8 +114,9 @@ AtlasCoapResponse AtlasRegister::registerCallback(const std::string &path, const
 {
     AtlasCommandBatch cmdBatch;
     std::vector<AtlasCommand> cmd;
-    std::string identity;
-
+    std::string identity = "";
+    std::string ipPort = "";
+    
     ATLAS_LOGGER_DEBUG("Register callback executed...");
 
     ATLAS_LOGGER_INFO1("Process REGISTER command from client with DTLS PSK identity ", pskIdentity);
@@ -130,22 +144,33 @@ AtlasCoapResponse AtlasRegister::registerCallback(const std::string &path, const
                 ATLAS_LOGGER_ERROR("Register end-point called with SPOOFED identity");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
- 
-            ATLAS_LOGGER_INFO1("New ATLAS client registered with identity ", identity);
+        } else if (cmdEntry.getType() == ATLAS_CMD_IP_PORT) {
+            ATLAS_LOGGER_DEBUG("Registration end-point called and UPDATE IP_PORT command is found");
+           
+            if (!cmdEntry.getLen()) {
+                ATLAS_LOGGER_ERROR("Registration end-point called with empty UPDATE IP_PORT command");
+                return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+            }
 
-            /* Save the device registration timestamp */
-            AtlasDeviceManager::getInstance().getDevice(identity).registerNow();
-
-            /* Install alerts on client device */
-            AtlasDeviceManager::getInstance().getDevice(identity).pushAlerts();
-
-            return ATLAS_COAP_RESP_OK;
-        }
+            ipPort.assign((char *)cmdEntry.getVal(), cmdEntry.getLen());
+        } 
     }
 
-    ATLAS_LOGGER_ERROR("Registration end-point called with no REGISTER commands");
+    if (identity == "" || ipPort == "") {
+        ATLAS_LOGGER_ERROR("Registration end-point called with no REGISTER commands");
+        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    }
 
-    return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    ATLAS_LOGGER_INFO1("New ATLAS client registered with identity ", identity);
+
+    /* Create device (if necessary) and set PSK, set IP */
+    AtlasDeviceManager::getInstance().getDevice(identity).setIpPort(ipPort);
+    AtlasDeviceManager::getInstance().getDevice(identity).registerNow();
+
+    /* Install alerts on client device */
+    AtlasDeviceManager::getInstance().getDevice(identity).pushAlerts();
+
+    return ATLAS_COAP_RESP_OK;
 }
 
 void AtlasRegister::start()
