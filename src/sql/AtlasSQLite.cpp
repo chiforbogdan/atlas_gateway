@@ -30,6 +30,8 @@ void AtlasSQLite::closeConnection()
     if(pCon_)
         sqlite3_close(pCon_);
 
+    pCon_ = nullptr;
+
     ATLAS_LOGGER_DEBUG("Connection closed");
 }
 
