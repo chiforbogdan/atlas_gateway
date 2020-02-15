@@ -13,6 +13,7 @@
 #include "../scheduler/AtlasScheduler.h"
 #include "../logger/AtlasLogger.h"
 #include "../sql/AtlasSQLite.h"
+#include "../device/AtlasDeviceManager.h"
 
 #define ATLAS_COAP_SERVER_IS_UDP(MODE) ((MODE) & ATLAS_COAP_SERVER_MODE_UDP)
 #define ATLAS_COAP_SERVER_IS_DTLS(MODE) ((MODE) & ATLAS_COAP_SERVER_MODE_DTLS_PSK)
@@ -162,16 +163,30 @@ void AtlasCoapServer::initDefaultResources(coap_context_t *ctx)
     coap_add_resource(ctx, resource);
 }
 
-const coap_bin_const_t *AtlasCoapServer::getPskForIdentity(coap_bin_const_t *identity)
+const coap_bin_const_t *AtlasCoapServer::getPskForIdentity(coap_bin_const_t *identityVal)
 {
+    std::string psk;
+    std::string identity;
+    const char *pskVal;
+    
     ATLAS_LOGGER_DEBUG("Getting PSK for client...");
 
-    atlas::AtlasSQLite object;
-    object.openConnection("local.db","./");
-    const unsigned char * ob = object.select((char*)identity->s);
-    object.closeConnection();
-    identityPsk_.s = ob;
-    identityPsk_.length = strlen((const char*)ob);
+    identity.assign(reinterpret_cast<const char *> (identityVal->s), identityVal->length);
+
+    /* If client device does not have a PSK, fetch the PSK from the database */
+    if (AtlasDeviceManager::getInstance().getDevice(identity).getPsk() == "") {
+        AtlasSQLite object;
+        object.openConnection(ATLAS_DB_PATH);
+        psk = object.selectPsk(identity);
+
+        /* Save the client device psk */
+        AtlasDeviceManager::getInstance().getDevice(identity).setPsk(psk);
+    }
+    
+    pskVal = AtlasDeviceManager::getInstance().getDevice(identity).getPskAsCharArray();
+    identityPsk_.s = reinterpret_cast<const uint8_t *> (pskVal);
+    identityPsk_.length = AtlasDeviceManager::getInstance().getDevice(identity).getPsk().length();
+    
     return &identityPsk_;
 }
 

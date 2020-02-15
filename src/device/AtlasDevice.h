@@ -45,6 +45,12 @@ public:
     inline std::string getPsk() const { return psk_; }
 
     /**
+    * @brief Get client device pre-shared key as char array
+    * @return Client device pre-shared key as char array
+    */
+    inline const char *getPskAsCharArray() const { return psk_.c_str(); }
+
+    /**
     * @brief Get client device registration time
     * @return Client device registration time
     */

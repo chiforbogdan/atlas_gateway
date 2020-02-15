@@ -102,7 +102,7 @@ AtlasCoapResponse AtlasRegister::registerCallback(const std::string &path, const
     AtlasCommandBatch cmdBatch;
     std::vector<AtlasCommand> cmd;
     std::string identity;
-    
+
     ATLAS_LOGGER_DEBUG("Register callback executed...");
 
     ATLAS_LOGGER_INFO1("Process REGISTER command from client with DTLS PSK identity ", pskIdentity);
@@ -133,8 +133,7 @@ AtlasCoapResponse AtlasRegister::registerCallback(const std::string &path, const
  
             ATLAS_LOGGER_INFO1("New ATLAS client registered with identity ", identity);
 
-            /* Create device (if necessary) and set PSK */
-            AtlasDeviceManager::getInstance().getDevice(identity).setPsk(psk);
+            /* Save the device registration timestamp */
             AtlasDeviceManager::getInstance().getDevice(identity).registerNow();
 
             /* Install alerts on client device */

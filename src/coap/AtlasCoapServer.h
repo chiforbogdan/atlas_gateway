@@ -174,7 +174,7 @@ private:
      * @param[in] identity CoAP identity
      * @return CoAP PSK for identity
      */
-    const coap_bin_const_t *getPskForIdentity(coap_bin_const_t *identity);
+    const coap_bin_const_t *getPskForIdentity(coap_bin_const_t *identityVal);
 
     /**
      * @brief Handle CoAP request

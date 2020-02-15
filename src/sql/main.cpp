@@ -1,6 +1,8 @@
 #include "AtlasSQLite.h"
 #include "../logger/AtlasLogger.h"
 
+#define ATLAS_DB_PATH "local.db"
+
 static void
 print_usage()
 {
@@ -17,8 +19,9 @@ int main(int argc, char** argv)
    }
 
    atlas::AtlasSQLite object;
-   object.openConnection("local.db","./");
+   object.openConnection(ATLAS_DB_PATH);
    object.insert(argv[2],argv[4]);
    object.closeConnection();
+
    return 0;
 }
