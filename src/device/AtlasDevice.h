@@ -8,6 +8,8 @@
 
 namespace atlas {
 
+const std::string ATLAS_COAPS_SCHEME = "coaps://";
+
 class AtlasDevice
 {
 
@@ -31,7 +33,6 @@ public:
     * @return none
     */
     inline void setPsk(const std::string &psk) { psk_ = psk; }
-
 
     /**
     * @brief Set IP for client device
@@ -104,7 +105,7 @@ public:
     *@brief Get device URL
     * @return Client device URL
     */
-    inline std::string getUrl() const { return "coaps://" + ipPort_; }
+    inline std::string getUrl() const { return ATLAS_COAPS_SCHEME + ipPort_; }
 
 private:
     /**
