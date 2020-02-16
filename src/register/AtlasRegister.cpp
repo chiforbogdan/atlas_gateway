@@ -17,7 +17,7 @@ AtlasRegister::AtlasRegister() : registerResource_(ATLAS_REGISTER_URI,
                                                    boost::bind(&AtlasRegister::registerCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)),
                                  keepAliveResource_(ATLAS_KEEPALIVE_URI,
                                                     ATLAS_COAP_METHOD_PUT,
-                                                    boost::bind(&AtlasRegister::keepaliveCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)){}
+                                                    boost::bind(&AtlasRegister::keepaliveCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)) {}
 
 AtlasCoapResponse AtlasRegister::keepaliveCallback(const std::string &path, const std::string &pskIdentity,
                                                    const std::string& psk, AtlasCoapMethod method,
