@@ -173,19 +173,21 @@ const coap_bin_const_t *AtlasCoapServer::getPskForIdentity(coap_bin_const_t *ide
 
     identity.assign(reinterpret_cast<const char *> (identityVal->s), identityVal->length);
 
+    AtlasDevice &device = AtlasDeviceManager::getInstance().getDevice(identity);
+
     /* If client device does not have a PSK, fetch the PSK from the database */
-    if (AtlasDeviceManager::getInstance().getDevice(identity).getPsk() == "") {
+    if (device.getPsk() == "") {
         AtlasSQLite object;
         object.openConnection(ATLAS_DB_PATH);
         psk = object.selectPsk(identity);
 
         /* Save the client device psk */
-        AtlasDeviceManager::getInstance().getDevice(identity).setPsk(psk);
+        device.setPsk(psk);
     }
     
-    pskVal = AtlasDeviceManager::getInstance().getDevice(identity).getPskAsCharArray();
+    pskVal = device.getPskAsCharArray();
     identityPsk_.s = reinterpret_cast<const uint8_t *> (pskVal);
-    identityPsk_.length = AtlasDeviceManager::getInstance().getDevice(identity).getPsk().length();
+    identityPsk_.length = device.getPsk().length();
     
     return &identityPsk_;
 }
