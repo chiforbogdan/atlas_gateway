@@ -14,7 +14,7 @@ enum AtlasCommandType {
     ATLAS_CMD_IDENTITY,
 
     /* Telemetry hostname command: payload is client hostname */
-    ATLAS_CMD_TELEMETRY_HOSTNAME,
+    ATLAS_CMD_TELEMETRY_HOSTNAME = 500,
 
     /* Telemetry kernel info command: payload is client kernel info  */
     ATLAS_CMD_TELEMETRY_KERN_INFO,
