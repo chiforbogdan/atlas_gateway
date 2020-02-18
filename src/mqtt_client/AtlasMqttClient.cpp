@@ -20,10 +20,8 @@ AtlasMqttClient& AtlasMqttClient::getInstance()
     return instance;
 }
 
-bool AtlasMqttClient::connect(const std::string &address, const std::string &clientID)
+void AtlasMqttClient::connect(const std::string &address, const std::string &clientID)
 {
-    bool returnResult;
-    
     ATLAS_LOGGER_INFO("Initializing client (" + clientID + ") connection to server (" + address + ")");
 
     //creating the async_client
@@ -41,10 +39,8 @@ bool AtlasMqttClient::connect(const std::string &address, const std::string &cli
         if (!client_->is_connected()) {
             connTok_ = client_->connect(connOps_, nullptr, connectActList_);
             ATLAS_LOGGER_INFO("Connection from " + clientID + " to " + address + " will be establshed.");
-            returnResult = true;
         }  else {
             ATLAS_LOGGER_INFO("Connection from " + clientID + " to " + address + " is already establshed.");
-            returnResult = false;
         }
     } catch(const mqtt::exception& e) {
         ATLAS_LOGGER_ERROR("Exception caught: " + std::string(e.what()));
@@ -56,11 +52,9 @@ bool AtlasMqttClient::connect(const std::string &address, const std::string &cli
         
         throw AtlasMqttException(std::string(e));
     }
-
-    return returnResult;
 }
 
-void AtlasMqttClient::publishMessage(const std::string topic, const std::string message, const int QoS)
+void AtlasMqttClient::publishMessage(const std::string &topic, const std::string &message, int QoS = 2)
 {
     try
     {        

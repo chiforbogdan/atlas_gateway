@@ -13,10 +13,10 @@ class AtlasMqttClient
 {
 public:
     static AtlasMqttClient& getInstance();
-    bool connect(const std::string &address, const std::string &clientID);
+    void connect(const std::string &address, const std::string &clientID);
 
     //Blocking methods
-    void publishMessage(const std::string topic, const std::string message, const int QoS);	
+    void publishMessage(const std::string &topic, const std::string &message, int QoS);	
     void subscribeTopic(const std::string topic, const int QoS);
     void disconnect();
 	
