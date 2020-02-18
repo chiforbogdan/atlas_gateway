@@ -1,6 +1,6 @@
 #include "AtlasMqttClient.h"
 #include "AtlasMqttException.h"
-#include "AtlasLogger.h"
+#include "../logger/AtlasLogger.h"
 
 namespace atlas
 {
@@ -211,7 +211,7 @@ void AtlasMqttClient::disconnect()
 {
     try
     {
-        if (client_->is_connected)
+        if (client_->is_connected())
         {
             if ((pubTok_ != nullptr) && (!pubTok_->is_complete()))
                 pubTok_->wait();

@@ -1,6 +1,6 @@
 #include <string>
 #include "AtlasMqttClient_actionListener.h"
-#include "AtlasLogger.h"
+#include "../logger/AtlasLogger.h"
 
 namespace atlas
 {

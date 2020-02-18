@@ -1,5 +1,5 @@
 #include "AtlasMqttClient_callback.h"
-#include "AtlasLogger.h"
+#include "../logger/AtlasLogger.h"
 
 namespace atlas
 {
