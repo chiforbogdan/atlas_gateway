@@ -12,36 +12,36 @@ namespace atlas
 class AtlasMqttClient
 {
 public:
-	static AtlasMqttClient& getInstance();
-	bool connect(const std::string address, const std::string clientID);
+    static AtlasMqttClient& getInstance();
+    bool connect(const std::string &address, const std::string &clientID);
 
-	//Blocking methods
-	void publishMessage(const std::string topic, const std::string message, const int QoS);	
-	void subscribeTopic(const std::string topic, const int QoS);
-	void disconnect();
+    //Blocking methods
+    void publishMessage(const std::string topic, const std::string message, const int QoS);	
+    void subscribeTopic(const std::string topic, const int QoS);
+    void disconnect();
 	
-	//Non-blocking methods
-	bool tryPublishMessage(const std::string topic, const std::string message, const int QoS);
-	bool trySubscribeTopic(const std::string topic, const int QoS);
-	bool tryDisconnect();
+    //Non-blocking methods
+    bool tryPublishMessage(const std::string topic, const std::string message, const int QoS);
+    bool trySubscribeTopic(const std::string topic, const int QoS);
+    bool tryDisconnect();
 
-	AtlasMqttClient(const AtlasMqttClient &) = delete;
-	AtlasMqttClient & operator = (const AtlasMqttClient &) = delete;
+    AtlasMqttClient(const AtlasMqttClient &) = delete;
+    AtlasMqttClient & operator = (const AtlasMqttClient &) = delete;
 
-	~AtlasMqttClient();
+    ~AtlasMqttClient();
 private:	
-	mqtt::async_client *client_;
-	mqtt::token_ptr connTok_, discTok_;
-	mqtt::delivery_token_ptr pubTok_;
-	mqtt::token_ptr subTok_;
-	mqtt::connect_options connOps_;
-	atlas::AtlasMqttClient_callback cb_;
-	atlas::AtlasMqttClient_connectActionListener connectActList_;
-	atlas::AtlasMqttClient_deliveryActionListener deliveryActList_;
-	atlas::AtlasMqttClient_disconnectActionListener disconnectActList_;
-	atlas::AtlasMqttClient_subscriptionActionListener subscribeActList_;
+    mqtt::async_client *client_;
+    mqtt::token_ptr connTok_, discTok_;
+    mqtt::delivery_token_ptr pubTok_;
+    mqtt::token_ptr subTok_;
+    mqtt::connect_options connOps_;
+    AtlasMqttClient_callback cb_;
+    AtlasMqttClient_connectActionListener connectActList_;
+    AtlasMqttClient_deliveryActionListener deliveryActList_;
+    AtlasMqttClient_disconnectActionListener disconnectActList_;
+    AtlasMqttClient_subscriptionActionListener subscribeActList_;
 
-	AtlasMqttClient();
+    AtlasMqttClient();
 };
 } //namespace atlas
 

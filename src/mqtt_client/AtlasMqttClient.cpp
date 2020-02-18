@@ -16,53 +16,44 @@ AtlasMqttClient::AtlasMqttClient()
 AtlasMqttClient& AtlasMqttClient::getInstance()
 {
     static AtlasMqttClient instance;
+
     return instance;
 }
 
-bool AtlasMqttClient::connect(const std::string address, const std::string clientID)
+bool AtlasMqttClient::connect(const std::string &address, const std::string &clientID)
 {
     bool returnResult;
+    
     ATLAS_LOGGER_INFO("Initializing client (" + clientID + ") connection to server (" + address + ")");
 
-    try     //creating the async_client
-    {
-        if (client_ == nullptr)
-        {
+    //creating the async_client
+    try {
+        if (client_ == nullptr) {
             client_ = new mqtt::async_client(address, clientID);
             client_->set_callback(cb_);
         }
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         ATLAS_LOGGER_ERROR(std::string(e.what()));
     }        
 
-    try     //connecting to remote server
-    {
-        if (!client_->is_connected())
-        {
+    //connecting to remote server
+    try {
+        if (!client_->is_connected()) {
             connTok_ = client_->connect(connOps_, nullptr, connectActList_);
             ATLAS_LOGGER_INFO("Connection from " + clientID + " to " + address + " will be establshed.");
             returnResult = true;
-        }  
-        else
-        {
+        }  else {
             ATLAS_LOGGER_INFO("Connection from " + clientID + " to " + address + " is already establshed.");
             returnResult = false;
         }
-    }
-    catch(const mqtt::exception& e)
-    {
+    } catch(const mqtt::exception& e) {
         ATLAS_LOGGER_ERROR("Exception caught: " + std::string(e.what()));
         throw AtlasMqttException(std::string(e.what()));
-    }
-    catch(const char* e)
-    {
+    } catch(const char* e) {
         ATLAS_LOGGER_ERROR(std::string(e));
         if (client_->is_connected())
-        {
             discTok_ = client_->disconnect(nullptr, disconnectActList_);
-        }
+        
         throw AtlasMqttException(std::string(e));
     }
 
