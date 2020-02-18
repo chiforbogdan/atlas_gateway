@@ -9,12 +9,34 @@
 #include "coap/AtlasCoapClient.h"
 #include "register/AtlasRegister.h"
 #include "pubsub_agent/AtlasPubSubAgent.h"
+#include "mqtt_client/AtlasMqttClient.h"
+
 
 int main(int argc, char **argv)
 {
     atlas::AtlasRegister reg;
     atlas::AtlasPubSubAgent pubSubAgent;
     
+    if (argc == 2) {        
+        atlas::AtlasMqttClient::getInstance().connect(argv[1]);
+    } else {
+        ATLAS_LOGGER_ERROR("Too few arguments used when atlas_gateway was executed!");
+        std::cout << "Incorrect number of parameters." << std::endl << "Correct usage: atlas_gateway <cloud_hostname>" << std::endl;
+        return 1;
+    }
+
+    //atlas::AtlasMqttClient::getInstance().connect("10.13.31.1", "clientTest");
+    bool ans;
+    for (int i=0; i< 1000; i++)
+    {
+        ans = atlas::AtlasMqttClient::getInstance().tryPublishMessage("test1235", "mesaj de test" + std::to_string(i), 1);
+        while (!ans)
+        {
+            ans = atlas::AtlasMqttClient::getInstance().tryPublishMessage("test1235", "mesaj de test" + std::to_string(i), 1);
+        }
+        sleep(0.05);
+    }
+
     atlas::initLog();
 
     atlas::AtlasCoapServer::getInstance().start(10100, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 

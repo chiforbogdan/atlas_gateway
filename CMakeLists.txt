@@ -34,7 +34,7 @@ add_executable(${PROJECT_NAME} ${ATLAS_GATEWAY_SOURCES})
 add_executable(atlas_gateway_cli ${ATLAS_GATEWAY_CLI_SOURCES})
 
 
-target_link_libraries(${PROJECT_NAME} paho-mqtt3c)
+target_link_libraries(${PROJECT_NAME} paho-mqtt3a)
 target_link_libraries(${PROJECT_NAME} paho-mqttpp3)
 
 #Add CoAP and Boost library

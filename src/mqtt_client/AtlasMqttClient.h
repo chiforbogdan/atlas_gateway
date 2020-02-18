@@ -14,6 +14,8 @@ class AtlasMqttClient
 public:
     static AtlasMqttClient& getInstance();
     void connect(const std::string &address, const std::string &clientID);
+    void connect(const char *arg);
+    void reconnect();
 
     //Blocking methods
     void publishMessage(const std::string &topic, const std::string &message, int QoS);	
@@ -29,7 +31,13 @@ public:
     AtlasMqttClient & operator = (const AtlasMqttClient &) = delete;
 
     ~AtlasMqttClient();
+
+    void setClientID(std::string id) { clientID_ = id; }
+    std::string getClientID() { return clientID_; }
 private:	
+    static bool firstConnection_;
+    std::string cloudHost_;
+    std::string clientID_;
     mqtt::async_client *client_;
     mqtt::token_ptr connTok_, discTok_;
     mqtt::delivery_token_ptr pubTok_;
