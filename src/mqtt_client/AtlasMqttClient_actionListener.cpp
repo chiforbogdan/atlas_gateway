@@ -28,7 +28,7 @@ void AtlasMqttClient_actionListener::on_failure(const mqtt::token& tok)
         break;
     }    
 }
-void AtlasMqttClient_actionListener::on_failure(const AtlasMqttClient_actionListenerTypes tip)
+void AtlasMqttClient_actionListener::on_failure(const AtlasMqttClient_actionListenerTypes& tip)
 {
     actionListenerType_ = tip;
 }
@@ -56,7 +56,7 @@ void AtlasMqttClient_actionListener::on_success(const mqtt::token& tok)
         break;
     } 
 }
-void AtlasMqttClient_actionListener::on_success(const AtlasMqttClient_actionListenerTypes tip)
+void AtlasMqttClient_actionListener::on_success(const AtlasMqttClient_actionListenerTypes& tip)
 {
     actionListenerType_ = tip;
 }
@@ -71,11 +71,10 @@ void AtlasMqttClient_connectActionListener::on_failure(const mqtt::token& tok)
 
 void AtlasMqttClient_connectActionListener::on_success(const mqtt::token& tok)
 {
-    AtlasMqttClient_actionListener::on_failure(AtlasMqttClient_actionListenerTypes::Connect);
+    AtlasMqttClient_actionListener::on_success(AtlasMqttClient_actionListenerTypes::Connect);
     AtlasMqttClient_actionListener::on_success(tok);
     done_ = true;
 }
-
 
 //************Class Delivery Action Listener****************
 void AtlasMqttClient_deliveryActionListener::on_failure(const mqtt::token& tok)
@@ -87,7 +86,7 @@ void AtlasMqttClient_deliveryActionListener::on_failure(const mqtt::token& tok)
 
 void AtlasMqttClient_deliveryActionListener::on_success(const mqtt::token& tok)
 {
-    AtlasMqttClient_actionListener::on_failure(AtlasMqttClient_actionListenerTypes::Delivery);
+    AtlasMqttClient_actionListener::on_success(AtlasMqttClient_actionListenerTypes::Delivery);
     AtlasMqttClient_actionListener::on_success(tok);
     done_ = true;
 }
@@ -103,7 +102,7 @@ void AtlasMqttClient_disconnectActionListener::on_failure(const mqtt::token& tok
 
 void AtlasMqttClient_disconnectActionListener::on_success(const mqtt::token& tok)
 {
-    AtlasMqttClient_actionListener::on_failure(AtlasMqttClient_actionListenerTypes::Disconnect);
+    AtlasMqttClient_actionListener::on_success(AtlasMqttClient_actionListenerTypes::Disconnect);
     AtlasMqttClient_actionListener::on_success(tok);
     done_ = true;
 }

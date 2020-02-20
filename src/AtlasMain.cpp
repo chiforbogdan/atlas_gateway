@@ -17,24 +17,25 @@ int main(int argc, char **argv)
     atlas::AtlasRegister reg;
     atlas::AtlasPubSubAgent pubSubAgent;
     
-    if (argc == 2) {        
-        atlas::AtlasMqttClient::getInstance().connect(argv[1]);
+    if (argc == 3) {        
+        atlas::AtlasMqttClient::getInstance().connect(argv[1], atoi(argv[2]));
     } else {
         ATLAS_LOGGER_ERROR("Too few arguments used when atlas_gateway was executed!");
-        std::cout << "Incorrect number of parameters." << std::endl << "Correct usage: atlas_gateway <cloud_hostname>" << std::endl;
+        std::cout << "Incorrect number of parameters." << std::endl << "Correct usage: atlas_gateway <cloud_hostname> <maxNoOfReconnects>" << std::endl;
         return 1;
     }
 
     //atlas::AtlasMqttClient::getInstance().connect("10.13.31.1", "clientTest");
     bool ans;
-    for (int i=0; i< 1000; i++)
+    for (int i=0; i< 30; i++)
     {
         ans = atlas::AtlasMqttClient::getInstance().tryPublishMessage("test1235", "mesaj de test" + std::to_string(i), 1);
         while (!ans)
         {
             ans = atlas::AtlasMqttClient::getInstance().tryPublishMessage("test1235", "mesaj de test" + std::to_string(i), 1);
-        }
-        sleep(0.05);
+            sleep(1.5);
+        }   
+        sleep(2);     
     }
 
     atlas::initLog();

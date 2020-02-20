@@ -20,10 +20,10 @@ class AtlasMqttClient_actionListener : public virtual mqtt::iaction_listener
 {
 protected:
     void on_failure(const mqtt::token&) override;
-    void on_failure(const AtlasMqttClient_actionListenerTypes);
+    void on_failure(const AtlasMqttClient_actionListenerTypes&);
 
     void on_success(const mqtt::token&) override;
-    void on_success(const AtlasMqttClient_actionListenerTypes);
+    void on_success(const AtlasMqttClient_actionListenerTypes&);
 private:
     AtlasMqttClient_actionListenerTypes actionListenerType_;
 };
