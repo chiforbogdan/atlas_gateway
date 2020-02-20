@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     
     atlas::initLog();
 
-    atlas::AtlasCoapServer::getInstance().start("127.0.0.1", "10099", atlas::ATLAS_COAP_SERVER_MODE_BOTH); 
+    atlas::AtlasCoapServer::getInstance().start(10100, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 
 
     ATLAS_LOGGER_DEBUG("Starting Atlas gateway...");
     

@@ -33,12 +33,10 @@ public:
 
     /**
      * @brief Start CoAP server
-     * @param[in] hostname CoAP hostname
      * @param[in] port CoAP port
      * @param[in] mode Server mode (UDP, DTLS or both)
      */
-    void start(const std::string &hostname, const std::string &port,
-               AtlasCoapServerMode mode);
+    void start(uint16_t port, AtlasCoapServerMode mode);
 
 
     /**
@@ -73,8 +71,7 @@ private:
      * @param[in] mode Server mode
      * @return CoAP context
      */
-    coap_context_t *getContext(const std::string &hostname, const std::string &port,
-                                AtlasCoapServerMode mode);
+    coap_context_t *getContext(uint16_t port, AtlasCoapServerMode mode);
     
     /**
      * @brief Set DTLS PSK info
