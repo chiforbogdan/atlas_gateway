@@ -33,8 +33,6 @@ public:
     */
     void connect(const char *arg);
 
-
-    #pragma region Blocking methods
     /**
      * @brief Subscribe to a topic on the Atlas Cloud module
      * @param[in] Topic to subscribe to
@@ -48,9 +46,7 @@ public:
      * @return none
     */
     void disconnect();
-	#pragma endregion
 
-    #pragma region Non-blocking methods
     /**
      * @brief Non-blocking Publish of a message to a specific topic
      * @param[in] Topic to publish the message to
@@ -59,7 +55,6 @@ public:
      * @return True on publish succes, False otherwise 
     */
     bool tryPublishMessage(const std::string &topic, const std::string &message, const int QoS);
-    #pragma endregion
 
     AtlasMqttClient(const AtlasMqttClient &) = delete;
     AtlasMqttClient & operator = (const AtlasMqttClient &) = delete;
