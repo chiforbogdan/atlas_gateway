@@ -17,26 +17,33 @@ int main(int argc, char **argv)
     atlas::AtlasRegister reg;
     atlas::AtlasPubSubAgent pubSubAgent;
     
-    if (argc == 3) {        
-        atlas::AtlasMqttClient::getInstance().connect(argv[1], atoi(argv[2]));
+    if (argc == 2) {        
+        atlas::AtlasMqttClient::getInstance().connect(argv[1]);
     } else {
         ATLAS_LOGGER_ERROR("Too few arguments used when atlas_gateway was executed!");
-        std::cout << "Incorrect number of parameters." << std::endl << "Correct usage: atlas_gateway <cloud_hostname> <maxNoOfReconnects>" << std::endl;
+        std::cout << "Incorrect number of parameters." << std::endl << "Correct usage: atlas_gateway <cloud_hostname>" << std::endl;
         return 1;
     }
 
     //atlas::AtlasMqttClient::getInstance().connect("10.13.31.1", "clientTest");
     bool ans;
-    for (int i=0; i< 30; i++)
+    do
     {
-        ans = atlas::AtlasMqttClient::getInstance().tryPublishMessage("test1235", "mesaj de test" + std::to_string(i), 1);
-        while (!ans)
-        {
-            ans = atlas::AtlasMqttClient::getInstance().tryPublishMessage("test1235", "mesaj de test" + std::to_string(i), 1);
-            sleep(1.5);
-        }   
-        sleep(2);     
-    }
+        ans = atlas::AtlasMqttClient::getInstance().subscribeTopic("testABC", 1);
+    } while (!ans);
+    
+    
+    // bool ans;
+    // for (int i=0; i< 30; i++)
+    // {
+    //     ans = atlas::AtlasMqttClient::getInstance().tryPublishMessage("test1235", "mesaj de test" + std::to_string(i), 1);
+    //     while (!ans)
+    //     {
+    //         ans = atlas::AtlasMqttClient::getInstance().tryPublishMessage("test1235", "mesaj de test" + std::to_string(i), 1);
+    //         sleep(1.5);
+    //     }   
+    //     sleep(2);     
+    // }
 
     atlas::initLog();
 
@@ -45,16 +52,16 @@ int main(int argc, char **argv)
     ATLAS_LOGGER_DEBUG("Starting Atlas gateway...");
     
     /* Start registration module */
-    reg.start();
+    //reg.start();
 
     /* Start publish-subscribe agent */
     pubSubAgent.start();
 
     /* Start scheduler */
-    atlas::AtlasScheduler::getInstance().run();
+    //atlas::AtlasScheduler::getInstance().run();
 
     /* Stop registration module */
-    reg.stop();
+    //reg.stop();
 
     ATLAS_LOGGER_DEBUG("Stopping Atlas gateway...");
 
