@@ -11,7 +11,7 @@
 
 namespace atlas {
 
-const std::string ATLAS_FIREWALLPOLICY_URI = "gateway/firewallPolicy";
+const std::string ATLAS_FIREWALLPOLICY_URI = "gateway/policy";
 
 AtlasPolicy::AtlasPolicy() : firewallPolicyResource_(ATLAS_FIREWALLPOLICY_URI,
                                                     ATLAS_COAP_METHOD_POST,
@@ -56,7 +56,7 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
 
     for (AtlasCommand &cmdEntry : cmd) 
     {
-        if (cmdEntry.getType() == ATLAS_CMD_PUB_SUB_CLIENT_ID) 
+        if (cmdEntry.getType() == ATLAS_CMD_DATA_PLANE_POLICY_CLIENTID) 
         {
             ATLAS_LOGGER_DEBUG("Policy end-point called and CLIENT ID command is found");
            
@@ -68,7 +68,7 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
 
             clientId.assign((char *)cmdEntry.getVal(), cmdEntry.getLen());
         }
-        else if (cmdEntry.getType() == ATLAS_CMD_PUB_SUB_MAX_QOS) 
+        else if (cmdEntry.getType() == ATLAS_CMD_DATA_PLANE_POLICY_MAX_QOS) 
         {
             ATLAS_LOGGER_DEBUG("Policy end-point called and QOS command is found");
            
@@ -81,7 +81,7 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
             qos = new uint16_t[cmdEntry.getLen()];
             memcpy(qos, cmdEntry.getVal(), cmdEntry.getLen());
         }
-        else if (cmdEntry.getType() == ATLAS_CMD_PUB_SUB_PPM) 
+        else if (cmdEntry.getType() == ATLAS_CMD_DATA_PLANE_POLICY_PACKETS_PER_MINUTE) 
         {
             ATLAS_LOGGER_DEBUG("Policy end-point called and PPM command is found");
            
@@ -94,7 +94,7 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
             ppm = new uint16_t[cmdEntry.getLen()];
             memcpy(ppm, cmdEntry.getVal(), cmdEntry.getLen());
         }
-        else if (cmdEntry.getType() == ATLAS_CMD_PUB_SUB_MAX_PAYLOAD_LEN) 
+        else if (cmdEntry.getType() == ATLAS_CMD_DATA_PLANE_POLICY_PACKETS_MAXLEN) 
         {
             ATLAS_LOGGER_DEBUG("Policy end-point called and PAYLOAD_LEN command is found");
            
