@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include <boost/bind.hpp>
 #include <boost/optional.hpp>
@@ -15,7 +16,7 @@ namespace atlas {
 const std::string ATLAS_FIREWALLPOLICY_URI = "gateway/policy";
 
 AtlasPolicy::AtlasPolicy() : firewallPolicyResource_(ATLAS_FIREWALLPOLICY_URI,
-                                                    ATLAS_COAP_METHOD_POST,
+                                                    ATLAS_COAP_METHOD_PUT,
                                                     boost::bind(&AtlasPolicy::firewallPolicyCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)){}
 
 
@@ -31,7 +32,7 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
     boost::optional<uint16_t> qos;
     boost::optional<uint16_t> ppm;
     boost::optional<uint16_t> payloadLen;
-    
+
     ATLAS_LOGGER_DEBUG("Firewall policy callback executed...");
 
     ATLAS_LOGGER_INFO1("Process FIREWALL POLICY INSTALL command from client with DTLS PSK identity ", pskIdentity);
