@@ -21,12 +21,6 @@ public:
     static AtlasPubSubAgent& getInstance();
 
     /**
-    * @brief Ctor for publish-subscribe agent
-    * @return none
-    */
-    AtlasPubSubAgent();
-
-    /**
     * @brief Dtor for publish-subscribe agent
     * @return none
     */
@@ -44,7 +38,17 @@ public:
     */
     void installFirewallRule(const std::string &clientId, uint16_t qos, uint16_t ppm, uint16_t payloadLen);
 
+    AtlasPubSubAgent(const AtlasPubSubAgent&) = delete;
+    AtlasPubSubAgent& operator=(const AtlasPubSubAgent&) = delete;
+
 private:
+
+    /**
+    * @brief Ctor for publish-subscribe agent
+    * @return none
+    */
+    AtlasPubSubAgent();
+
     /**
     * @brief Write data to publish-subscribe agent
     * @param[in] buf Data buffer

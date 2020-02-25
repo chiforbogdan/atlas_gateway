@@ -15,7 +15,6 @@ int main(int argc, char **argv)
 {
     atlas::AtlasRegister reg;
     atlas::AtlasPolicy policy;
-    atlas::AtlasPubSubAgent pubSubAgent;
     
     atlas::initLog();
 
@@ -30,7 +29,7 @@ int main(int argc, char **argv)
     reg.start();
 
     /* Start publish-subscribe agent */
-    pubSubAgent.start();
+    atlas::AtlasPubSubAgent::getInstance().start();
 
     /* Start scheduler */
     atlas::AtlasScheduler::getInstance().run();
