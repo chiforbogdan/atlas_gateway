@@ -4,13 +4,25 @@
 #include <mqtt/async_client.h>
 #include <stdlib.h>
 #include <string>
-
+#include <boost/bind.hpp>
+#include "../alarm/AtlasAlarm.h"
 
 namespace atlas
 {
     
 class AtlasMqttClient_callback : public virtual mqtt::callback, public virtual mqtt::iaction_listener
 {
+
+public:
+    /**
+     * @brief Explicit Ctor for the callback
+     * @param[in] Asynchronous MQTT client object used for connecting to a Atlas Cloud module
+     * @param[in] Connection Options related to the Asynchronous client
+     * @return none
+    */
+    AtlasMqttClient_callback(mqtt::async_client& client, mqtt::connect_options& connOpts);
+
+private:
     /**
      * @brief Callback called when a connection is lost
      * @param[in] Reason for loosing the connection
@@ -26,12 +38,6 @@ class AtlasMqttClient_callback : public virtual mqtt::callback, public virtual m
     void message_arrived(mqtt::const_message_ptr msg) override;
 
     /**
-     * @brief Reconnects to the most recent known Atlas Cloud module
-     * @return none
-    */
-    void reconnect();
-
-    /**
      * @brief Connection to a Atlas Cloud module fails
      * @param[in] Token of the failed connection
      * @return none
@@ -44,17 +50,27 @@ class AtlasMqttClient_callback : public virtual mqtt::callback, public virtual m
      * @return none
     */
     void on_success(const mqtt::token&) override {}
-public:
+
     /**
-     * @brief Explicit Ctor for the callback
-     * @param[in] Asynchronous MQTT client object used for connecting to a Atlas Cloud module
-     * @param[in] Connection Options related to the Asynchronous client
+     * @brief Reconnects to the most recent known Atlas Cloud module
      * @return none
     */
-    AtlasMqttClient_callback(mqtt::async_client& client, mqtt::connect_options& connOpts) : client_(client), connOpts_(connOpts) {};
-private:
+    void reconnect();
+	
+    /**
+     * @brief Callback for reconnect alarm
+     * @return none
+     */
+    void alarmCallback();
+    
+    /* Reference to MQTT client */
     mqtt::async_client& client_;
+
+    /* Reference to MQTT connection options */
     mqtt::connect_options& connOpts_;
+
+    /* MQTT reconnect alarm */
+    AtlasAlarm alarm_;
 };
 
 } //namespace atlas

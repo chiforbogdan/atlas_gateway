@@ -25,13 +25,6 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    //atlas::AtlasMqttClient::getInstance().connect("10.13.31.1", "clientTest");
-    bool ans;
-    do
-    {
-        ans = atlas::AtlasMqttClient::getInstance().subscribeTopic("testABC", 1);
-    } while (!ans);
-    
     
     // bool ans;
     // for (int i=0; i< 30; i++)
@@ -52,16 +45,16 @@ int main(int argc, char **argv)
     ATLAS_LOGGER_DEBUG("Starting Atlas gateway...");
     
     /* Start registration module */
-    //reg.start();
+    reg.start();
 
     /* Start publish-subscribe agent */
     pubSubAgent.start();
 
     /* Start scheduler */
-    //atlas::AtlasScheduler::getInstance().run();
+    atlas::AtlasScheduler::getInstance().run();
 
     /* Stop registration module */
-    //reg.stop();
+    reg.stop();
 
     ATLAS_LOGGER_DEBUG("Stopping Atlas gateway...");
 
