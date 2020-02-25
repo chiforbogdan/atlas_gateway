@@ -170,6 +170,11 @@ AtlasCoapResponse AtlasRegister::registerCallback(const std::string &path, const
     /* Install alerts on client device */
     AtlasDeviceManager::getInstance().getDevice(identity).pushAlerts();
 
+    /* Send to cloud the info of new registered node*/
+    AtlasMqttClient::getInstance().tryPublishMessage(AtlasIdentity::getInstance().getPsk(),
+                                                     AtlasDeviceManager::getInstance().getDevice(identity).toJSON(),
+                                                     1);
+
     return ATLAS_COAP_RESP_OK;
 }
 

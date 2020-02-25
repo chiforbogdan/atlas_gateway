@@ -4,6 +4,9 @@
 #include "../coap/AtlasCoapResponse.h"
 #include "../coap/AtlasCoapMethod.h"
 #include "../coap/AtlasCoapResource.h"
+#include "../mqtt_client/AtlasMqttClient.h"
+#include "../identity/AtlasIdentity.h"
+#include "../device/AtlasDeviceManager.h"
 
 namespace atlas {
 

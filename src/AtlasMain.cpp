@@ -10,6 +10,7 @@
 #include "register/AtlasRegister.h"
 #include "pubsub_agent/AtlasPubSubAgent.h"
 #include "mqtt_client/AtlasMqttClient.h"
+#include "identity/AtlasIdentity.h"
 
 
 int main(int argc, char **argv)
@@ -25,6 +26,11 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    if(!atlas::AtlasIdentity::getInstance().initIdentity()) {
+        ATLAS_LOGGER_ERROR("Error in generating gateway identity!");
+        return 1;
+    }
+    ATLAS_LOGGER_DEBUG("Identity generated with success!");
     
     // bool ans;
     // for (int i=0; i< 30; i++)

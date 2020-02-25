@@ -9,6 +9,12 @@ pkg_check_modules(COAP libcoap-2-openssl REQUIRED)
 # SQLite dependency
 pkg_check_modules(SQLITE sqlite3 REQUIRED)
 
+# UUID dependency
+pkg_check_modules(UUID uuid REQUIRED)
+
+# OpenSSL dependency
+find_package(OpenSSL REQUIRED)
+
 # Link with dynamic version of Boost (for logging)
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 
@@ -22,10 +28,10 @@ include_directories(${COAP_INCLUDE_DIRS})
 include_directories(${SQLITE_INCLUDE_DIRS})
 
 # Atlas gateway files
-file(GLOB ATLAS_GATEWAY_SOURCES "src/*.cpp" "src/sql/AtlasSQLite.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp" "src/pubsub_agent/*.cpp" "src/device/*.cpp" "src/telemetry/*.cpp" "src/mqtt_client/*.cpp")
+file(GLOB ATLAS_GATEWAY_SOURCES "src/*.cpp" "src/sql/AtlasSQLite.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp" "src/pubsub_agent/*.cpp" "src/device/*.cpp" "src/telemetry/*.cpp" "src/mqtt_client/*.cpp" "src/identity/*.cpp")
 
 # Atlas_gateway_cli files
-file(GLOB ATLAS_GATEWAY_CLI_SOURCES "src/sql/*.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp" "src/pubsub_agent/*.cpp" "src/device/*.cpp" "src/telemetry/*.cpp")
+file(GLOB ATLAS_GATEWAY_CLI_SOURCES "src/sql/*.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp" "src/pubsub_agent/*.cpp" "src/device/*.cpp" "src/telemetry/*.cpp" "src/mqtt_client/*.cpp" "src/identity/*.cpp")
 
 link_directories(${COAP_LIBRARY_DIRS})
 link_directories(${SQLITE_LIBRARY_DIRS})
@@ -33,8 +39,8 @@ link_directories(${SQLITE_LIBRARY_DIRS})
 add_executable(${PROJECT_NAME} ${ATLAS_GATEWAY_SOURCES})
 add_executable(atlas_gateway_cli ${ATLAS_GATEWAY_CLI_SOURCES})
 
-target_link_libraries(${PROJECT_NAME} paho-mqtt3a)
-target_link_libraries(${PROJECT_NAME} paho-mqttpp3)
+target_link_libraries(${PROJECT_NAME} paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto)
+target_link_libraries(atlas_gateway_cli paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto)
 
 #Add CoAP and Boost library
 target_link_libraries(${PROJECT_NAME} ${SQLITE_LIBRARIES} ${COAP_LIBRARIES} ${Boost_LIBRARIES})
