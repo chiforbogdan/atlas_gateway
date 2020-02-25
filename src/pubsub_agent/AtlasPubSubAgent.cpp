@@ -9,6 +9,14 @@
 
 namespace atlas {
 
+
+AtlasPubSubAgent& AtlasPubSubAgent::getInstance()
+{
+    static AtlasPubSubAgent instance;
+
+    return instance;
+}
+
 AtlasPubSubAgent::AtlasPubSubAgent() : acceptor_(AtlasScheduler::getInstance().getService()),
                                        acceptingSocket_(nullptr), connectedSocket_(nullptr)
 {
@@ -282,6 +290,35 @@ void AtlasPubSubAgent::write(const uint8_t *buf, size_t bufLen)
     if (connectedSocket_)
         boost::asio::async_write(*connectedSocket_, boost::asio::buffer(buf, bufLen),
                                  boost::bind(&AtlasPubSubAgent::handleWrite, this, _1));
+}
+
+void AtlasPubSubAgent::installFirewallRule(const std::string &clientId, uint16_t qos, uint16_t ppm, uint16_t payloadLen)
+{
+
+    ATLAS_LOGGER_DEBUG("Get firewall rule and forward through publish-subscribe agent");
+
+    AtlasCommandBatch cmdBatchInner, cmdBatchOuter;
+
+    qos = htons(qos);
+    ppm = htons(ppm);
+    payloadLen = htons(payloadLen);
+
+    AtlasCommand cmd1(ATLAS_CMD_PUB_SUB_CLIENT_ID, clientId.length(), (uint8_t *)clientId.c_str());
+    AtlasCommand cmd2(ATLAS_CMD_PUB_SUB_MAX_QOS, sizeof(qos), (uint8_t *)&qos);
+    AtlasCommand cmd3(ATLAS_CMD_PUB_SUB_PPM, sizeof(ppm), (uint8_t *)&ppm);
+    AtlasCommand cmd4(ATLAS_CMD_PUB_SUB_MAX_PAYLOAD_LEN, sizeof(payloadLen), (uint8_t *)&payloadLen);
+
+    cmdBatchInner.addCommand(cmd1);
+    cmdBatchInner.addCommand(cmd2);
+    cmdBatchInner.addCommand(cmd3);
+    cmdBatchInner.addCommand(cmd4);
+    std::pair<const uint8_t*, size_t> inner = cmdBatchInner.getSerializedAddedCommands();
+
+    AtlasCommand cmd5(ATLAS_CMD_PUB_SUB_INSTALL_FIREWALL_RULE, inner.second, inner.first);
+    cmdBatchOuter.addCommand(cmd5);
+    std::pair<const uint8_t*, size_t> outer = cmdBatchOuter.getSerializedAddedCommands();
+
+    write(outer.first, outer.second);
 }
 
 } // namespace atlas

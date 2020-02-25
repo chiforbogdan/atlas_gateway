@@ -34,6 +34,7 @@ public:
     */
     inline void setPsk(const std::string &psk) { psk_ = psk; }
 
+
     /**
     * @brief Set IP for client device
     * @param[in] ip address

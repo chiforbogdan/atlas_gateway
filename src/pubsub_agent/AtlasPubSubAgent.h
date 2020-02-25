@@ -13,6 +13,13 @@ class AtlasPubSubAgent
 {
 
 public:
+
+    /**
+     * @brief Get singleton instance
+     * @return Singleton instance
+     */
+    static AtlasPubSubAgent& getInstance();
+
     /**
     * @brief Ctor for publish-subscribe agent
     * @return none
@@ -30,6 +37,12 @@ public:
     * @return none
     */
     void start();
+
+    /**
+    * @brief Install firewall rule
+    * @return none
+    */
+    void installFirewallRule(const std::string &clientId, uint16_t qos, uint16_t ppm, uint16_t payloadLen);
 
 private:
     /**

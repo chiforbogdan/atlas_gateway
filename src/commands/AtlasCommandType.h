@@ -84,6 +84,18 @@ enum AtlasCommandType {
     ATLAS_CMD_PUB_SUB_MAX_QOS, ATLAS_CMD_PUB_SUB_PPM, ATLAS_CMD_PUB_SUB_MAX_PAYLOAD_LEN,*/
     ATLAS_CMD_PUB_SUB_INSTALL_FIREWALL_RULE,
 
+    /* ClientID command: payload is the client id */
+    ATLAS_CMD_DATA_PLANE_POLICY_CLIENTID,
+    
+    /* Policy command: payload is the policy max_qos value */
+    ATLAS_CMD_DATA_PLANE_POLICY_MAX_QOS,
+
+    /* Policy command: payload is the policy packets_per_minute value */
+    ATLAS_CMD_DATA_PLANE_POLICY_PACKETS_PER_MINUTE,
+    
+    /* Policy command: payload is the policy packets_max_length value */
+    ATLAS_CMD_DATA_PLANE_POLICY_PACKETS_MAXLEN,
+
     /* Remove publish-subscribe firewall rule: payload is ATLAS_CMD_PUB_SUB_CLIENT_ID */
     ATLAS_CMD_PUB_SUB_REMOVE_FIREWALL_RULE,
 
