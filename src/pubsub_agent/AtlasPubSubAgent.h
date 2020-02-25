@@ -13,6 +13,13 @@ class AtlasPubSubAgent
 {
 
 public:
+
+    /**
+     * @brief Get singleton instance
+     * @return Singleton instance
+     */
+    static AtlasPubSubAgent& getInstance();
+
     /**
     * @brief Ctor for publish-subscribe agent
     * @return none

@@ -1,5 +1,6 @@
 #include <string>
 #include <boost/bind.hpp>
+#include <boost/optional.hpp>
 #include "AtlasPolicy.h"
 #include "../coap/AtlasCoapServer.h"
 #include "../logger/AtlasLogger.h"
@@ -23,14 +24,13 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
                                                   const uint8_t* reqPayload, size_t reqPayloadLen,
                                                   uint8_t **respPayload, size_t *respPayloadLen)
 {
-    atlas::AtlasPubSubAgent pubSubAgent;
     AtlasCommandBatch cmdBatch;
     std::vector<AtlasCommand> cmd;
     std::string clientId = "";
-
-    uint16_t *qos = nullptr;
-    uint16_t *ppm = nullptr;
-    uint16_t *payloadLen = nullptr;
+    uint16_t tmp;
+    boost::optional<uint16_t> qos;
+    boost::optional<uint16_t> ppm;
+    boost::optional<uint16_t> payloadLen;
     
     ATLAS_LOGGER_DEBUG("Firewall policy callback executed...");
 
@@ -50,9 +50,6 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
         ATLAS_LOGGER_ERROR("Firewall policy end-point called with empty command set");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
-
-    /* Start publish-subscribe agent */
-    pubSubAgent.start();
 
     for (AtlasCommand &cmdEntry : cmd) 
     {
@@ -78,8 +75,8 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
 
-            qos = new uint16_t[cmdEntry.getLen()];
-            memcpy(qos, cmdEntry.getVal(), cmdEntry.getLen());
+            memcpy(&tmp, cmdEntry.getVal(), cmdEntry.getLen());
+	    qos = ntohs(tmp);
         }
         else if (cmdEntry.getType() == ATLAS_CMD_DATA_PLANE_POLICY_PACKETS_PER_MINUTE) 
         {
@@ -91,8 +88,8 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
 
-            ppm = new uint16_t[cmdEntry.getLen()];
-            memcpy(ppm, cmdEntry.getVal(), cmdEntry.getLen());
+            memcpy(&tmp, cmdEntry.getVal(), cmdEntry.getLen());
+	    ppm = ntohs(tmp);
         }
         else if (cmdEntry.getType() == ATLAS_CMD_DATA_PLANE_POLICY_PACKETS_MAXLEN) 
         {
@@ -104,8 +101,8 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
 
-            payloadLen = new uint16_t[cmdEntry.getLen()];
-            memcpy(payloadLen, cmdEntry.getVal(), cmdEntry.getLen());
+            memcpy(&tmp, cmdEntry.getVal(), cmdEntry.getLen());
+	    payloadLen = ntohs(tmp);
         }
     }
 
@@ -116,7 +113,7 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
     }
 
     /* Install firewall policy in mosquitto plug-in*/
-    pubSubAgent.installFirewallRule(clientId, *qos, *ppm, *payloadLen);
+    AtlasPubSubAgent::getInstance().installFirewallRule(clientId, *qos, *ppm, *payloadLen);
 
     return ATLAS_COAP_RESP_OK;
 }

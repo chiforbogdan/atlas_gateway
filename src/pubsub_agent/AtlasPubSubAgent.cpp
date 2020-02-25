@@ -9,6 +9,14 @@
 
 namespace atlas {
 
+
+AtlasPubSubAgent& AtlasPubSubAgent::getInstance()
+{
+    static AtlasPubSubAgent instance;
+
+    return instance;
+}
+
 AtlasPubSubAgent::AtlasPubSubAgent() : acceptor_(AtlasScheduler::getInstance().getService()),
                                        acceptingSocket_(nullptr), connectedSocket_(nullptr)
 {
