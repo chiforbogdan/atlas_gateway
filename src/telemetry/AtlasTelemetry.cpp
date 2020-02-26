@@ -24,8 +24,8 @@ const std::string ATLAS_TELEMETRY_SYSINFO_FREEHIGH_URI  = "gateway/telemetry/sys
 const std::string ATLAS_TELEMETRY_SYSINFO_LOAD1_URI     = "gateway/telemetry/sysinfo/load1";
 const std::string ATLAS_TELEMETRY_SYSINFO_LOAD5_URI     = "gateway/telemetry/sysinfo/load5";
 const std::string ATLAS_TELEMETRY_SYSINFO_LOAD15_URI    = "gateway/telemetry/sysinfo/load15";
-const std::string ATLAS_TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE_URI    = "gateway/telemetry/packets_info/packets_per_minute";
-const std::string ATLAS_TELEMETRY_PACKETS_INFO_PACKETS_AVG_URI    = "gateway/telemetry/packets_info/packets_avg";
+const std::string ATLAS_TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE_URI    = "gateway/telemetry/packets_per_minute";
+const std::string ATLAS_TELEMETRY_PACKETS_INFO_PACKETS_AVG_URI    = "gateway/telemetry/packets_avg";
 
 
 AtlasTelemetry::AtlasTelemetry() : hostnameResource_(ATLAS_TELEMETRY_HOSTNAME_URI,
@@ -129,18 +129,6 @@ std::pair<std::string,std::string> AtlasTelemetry::getFeature(const std::string 
         ATLAS_LOGGER_ERROR("Telemetry end-point called with invalid feature length");
         return ret;
     }
-    if(cmd.getType() == ATLAS_CMD_TELEMETRY_PACKETS_PER_MINUTE){
-        ATLAS_LOGGER_DEBUG("****************PACKETS_PER_MINUTE*******************");
-        }
-    if(cmd.getType() == ATLAS_CMD_TELEMETRY_SYSINFO_FREERAM){
-        ATLAS_LOGGER_DEBUG("****************FREERAM*******************");
-        }
-    if(cmd.getType() == ATLAS_CMD_TELEMETRY_SYSINFO_UPTIME){
-        ATLAS_LOGGER_DEBUG("****************UPTIME*******************");
-        }
-    if(cmd.getType() == ATLAS_CMD_TELEMETRY_SYSINFO_PROCS){
-        ATLAS_LOGGER_DEBUG("****************PROCS*******************");
-        }
     if (std::strstr(path.c_str(), ATLAS_TELEMETRY_HOSTNAME_URI.c_str()) &&
         cmd.getType() == ATLAS_CMD_TELEMETRY_HOSTNAME)
         ret.first = TELEMETRY_HOSTNAME;
