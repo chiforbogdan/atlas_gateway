@@ -22,7 +22,7 @@ void AtlasDevice::installDefaultAlerts()
     AtlasThresholdAlert *thresholdAlert;
 
     ATLAS_LOGGER_INFO1("Install default telemetry alerts for client with identity ", identity_);
-
+    
     /* Install default push alerts */
     pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_SYSINFO_PROCS, identity_);
     pushAlerts_[TELEMETRY_SYSINFO_PROCS] = std::unique_ptr<AtlasAlert>(pushAlert);
@@ -30,9 +30,15 @@ void AtlasDevice::installDefaultAlerts()
     pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_SYSINFO_UPTIME, identity_);
     pushAlerts_[TELEMETRY_SYSINFO_UPTIME] = std::unique_ptr<AtlasAlert>(pushAlert);
 
+    pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE, identity_);
+    pushAlerts_[TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE] = std::unique_ptr<AtlasAlert>(pushAlert);
+
     /* Install default threshold alerts */
     thresholdAlert = AtlasAlertFactory::getThresholdAlert(TELEMETRY_SYSINFO_PROCS, identity_);
     thresholdAlerts_[TELEMETRY_SYSINFO_PROCS] = std::unique_ptr<AtlasAlert>(thresholdAlert);
+
+    thresholdAlert = AtlasAlertFactory::getThresholdAlert(TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE, identity_);
+    thresholdAlerts_[TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE] = std::unique_ptr<AtlasAlert>(thresholdAlert);
 }
 
 void AtlasDevice::pushAlerts()

@@ -20,6 +20,8 @@ const std::string TELEMETRY_SYSINFO_FREEHIGH = "sysinfo-freehigh";
 const std::string TELEMETRY_SYSINFO_LOAD1 = "sysinfo-load1";
 const std::string TELEMETRY_SYSINFO_LOAD5 = "sysinfo-load5";
 const std::string TELEMETRY_SYSINFO_LOAD15 = "sysinfo-load15";
+const std::string TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE = "packets_per_minute";
+const std::string TELEMETRY_PACKETS_INFO_PACKETS_AVG = "packets_avg_length";
 
 class AtlasTelemetryInfo
 {
