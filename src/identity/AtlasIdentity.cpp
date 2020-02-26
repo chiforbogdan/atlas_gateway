@@ -1,7 +1,9 @@
 #include "AtlasIdentity.h"
 #include "../logger/AtlasLogger.h"
+#include <fstream>
+#include <experimental/filesystem>
 
-
+namespace fs = std::experimental::filesystem; 
 
 namespace atlas {
 
@@ -26,26 +28,26 @@ AtlasIdentity &AtlasIdentity::getInstance()
 
 bool AtlasIdentity::generateIdentity()
 {
-    int fd;
+    std::fstream fd;
     uuid_t uuid;
 
     ATLAS_LOGGER_DEBUG("Generate identity...");
 
-    fd = open(ATLAS_IDENTITY_FILE, O_WRONLY | O_CREAT | O_TRUNC,
-              S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    if (fd < 0) {
+    fd.open(ATLAS_IDENTITY_FILE, std::fstream::in | std::fstream::out | std::fstream::trunc);
+    if (!fd.is_open()) {
         ATLAS_LOGGER_DEBUG("Error when opening the identity file");
         return false;
     }
+    fs::path file = ATLAS_IDENTITY_FILE;
+    fs::permissions(file, fs::perms::owner_read | fs::perms::owner_write | fs::perms::group_read | fs::perms::others_read);
 
    /* Generate identity */
     uuid_generate(uuid);
     uuid_unparse_lower(uuid, identity);
     identity_ = (char*)malloc(ATLAS_IDENTITY_LEN + 1);
     strncpy(identity_, identity, ATLAS_IDENTITY_LEN + 1);
-    write(fd, identity, strlen(identity));
-
-    close(fd);
+    fd << identity;
+    fd.close();
 
     ATLAS_LOGGER_DEBUG("Identity was generated");
 
@@ -73,30 +75,30 @@ void AtlasIdentity::to_base64(const uint8_t *in, size_t in_len, char *out, size_
 
 bool AtlasIdentity::generatePsk()
 {
-    int fd;
+    std::fstream fd;
     uint8_t rand_bytes[ATLAS_PSK_LEN/2];
 
     ATLAS_LOGGER_DEBUG("Generate PSK...");
 
-    fd = open(ATLAS_PSK_FILE, O_WRONLY | O_CREAT | O_TRUNC,
-              S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    if (fd < 0) {
+    fd.open(ATLAS_PSK_FILE, std::fstream::in | std::fstream::out | std::fstream::trunc);
+    if (!fd.is_open()) {
         ATLAS_LOGGER_DEBUG("Error when opening the PSK file");
         return false;
     }
+    fs::path file = ATLAS_PSK_FILE;
+    fs::permissions(file, fs::perms::owner_read | fs::perms::owner_write | fs::perms::group_read | fs::perms::others_read);
 
     /* Generate PSK */
     if (RAND_bytes(rand_bytes, sizeof(rand_bytes)) != 1) {
-        close(fd);
+        fd.close();
 	return false;
     }
     memset(psk, 0, sizeof(psk));
     to_base64(rand_bytes, sizeof(rand_bytes), psk, sizeof(psk) - 1);
     psk_ = (char*)malloc(ATLAS_PSK_LEN + 1);
     strncpy(psk_, psk, ATLAS_PSK_LEN + 1);
-    write(fd, psk, sizeof(psk));
-
-    close(fd);
+    fd << psk;
+    fd.close();
 
     return true;
 }
@@ -104,14 +106,14 @@ bool AtlasIdentity::generatePsk()
 bool AtlasIdentity::initIdentity()
 {
     bool status = false;
-    int fd;
+    std::ifstream fd;
     int len;
 
     ATLAS_LOGGER_DEBUG("Identity init...");
 
     /* Get identity */
-    fd = open(ATLAS_IDENTITY_FILE, O_RDONLY);
-    if (fd < 0) {
+    fd.open(ATLAS_IDENTITY_FILE, std::ios::binary | std::ios::ate);
+    if (!fd.is_open()) {
         ATLAS_LOGGER_DEBUG("Identity file does not exist, generating an identity...");
         status = generateIdentity();
 	if (status != true) {
@@ -120,8 +122,9 @@ bool AtlasIdentity::initIdentity()
 	}
     } else {
         memset(identity, 0, sizeof(identity));
-        len = read(fd, identity, sizeof(identity) - 1);
-        close (fd);
+        fd >> identity;
+        len = fd.tellg();
+        fd.close();
         if (len <= 0) {
             ATLAS_LOGGER_ERROR("Error encountered when reading from the identity file");
             status = false;
@@ -130,8 +133,8 @@ bool AtlasIdentity::initIdentity()
     }
 
     /* Get PSK */
-    fd = open(ATLAS_PSK_FILE, O_RDONLY);
-    if (fd < 0) {
+    fd.open(ATLAS_PSK_FILE, std::ios::binary | std::ios::ate);
+    if (!fd.is_open()) {
         ATLAS_LOGGER_DEBUG("PSK file does not exist, generating a PSK...");
         status = generatePsk();
         if (status != true) {
@@ -140,8 +143,9 @@ bool AtlasIdentity::initIdentity()
 	}	
     } else {
         memset(psk, 0, sizeof(psk));
-        len = read(fd, psk, sizeof(psk) - 1);
-        close(fd);
+        fd >> psk;
+        len = fd.tellg();
+        fd.close();
         if (len <= 0) {
             ATLAS_LOGGER_ERROR("Error encountered when reading from the PSK file");
             status = false;

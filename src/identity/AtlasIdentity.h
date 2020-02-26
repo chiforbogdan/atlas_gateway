@@ -1,14 +1,7 @@
 #ifndef __ATLAS_IDENTITY_H__
 #define __ATLAS_IDENTITY_H__
 
-#include <string>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <uuid/uuid.h>
-#include <string.h>
 #include <openssl/rand.h>
 #include <openssl/evp.h>
 #include <openssl/bio.h>
