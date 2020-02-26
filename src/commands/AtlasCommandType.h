@@ -73,6 +73,10 @@ enum AtlasCommandType {
     /* Telemetry alert threshold value: payload is a string indicating the threshold
        value. This string will be parsed by each telemetry feature (application specific) */
     ATLAS_CMD_TELEMETRY_ALERT_THRESHOLD,
+    
+    ATLAS_CMD_TELEMETRY_PACKETS_PER_MINUTE,
+
+    ATLAS_CMD_TELEMETRY_PACKETS_AVG,
 
 
     /* COMMANDS SHARED WITH THE PUBLISH-SUBSCRIBE AGENT*/

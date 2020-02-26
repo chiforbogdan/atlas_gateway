@@ -86,6 +86,12 @@ private:
 
     /* Sysinfo load15 telemetry CoAP resource*/
     AtlasCoapResource load15Resource_;
+    
+    /* Packets info packets_per_minute telemetry CoAP resource*/
+    AtlasCoapResource packetsPerMinuteResource_;
+    
+    /* Packets info packets_avg telemetry CoAP resource*/
+    AtlasCoapResource packetsAvgResource_;
 };
 
 } // namespace atlas

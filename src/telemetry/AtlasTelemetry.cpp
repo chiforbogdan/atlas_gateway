@@ -24,6 +24,9 @@ const std::string ATLAS_TELEMETRY_SYSINFO_FREEHIGH_URI  = "gateway/telemetry/sys
 const std::string ATLAS_TELEMETRY_SYSINFO_LOAD1_URI     = "gateway/telemetry/sysinfo/load1";
 const std::string ATLAS_TELEMETRY_SYSINFO_LOAD5_URI     = "gateway/telemetry/sysinfo/load5";
 const std::string ATLAS_TELEMETRY_SYSINFO_LOAD15_URI    = "gateway/telemetry/sysinfo/load15";
+const std::string ATLAS_TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE_URI    = "gateway/telemetry/packets_per_minute";
+const std::string ATLAS_TELEMETRY_PACKETS_INFO_PACKETS_AVG_URI    = "gateway/telemetry/packets_avg";
+
 
 AtlasTelemetry::AtlasTelemetry() : hostnameResource_(ATLAS_TELEMETRY_HOSTNAME_URI,
                                                      ATLAS_COAP_METHOD_PUT,
@@ -84,6 +87,14 @@ AtlasTelemetry::AtlasTelemetry() : hostnameResource_(ATLAS_TELEMETRY_HOSTNAME_UR
                                    load15Resource_(ATLAS_TELEMETRY_SYSINFO_LOAD15_URI,
                                                    ATLAS_COAP_METHOD_PUT,
                                                    boost::bind(&AtlasTelemetry::featureCallback,
+                                                               this, _1, _2, _3, _4, _5, _6, _7, _8)),
+                                   packetsPerMinuteResource_(ATLAS_TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE_URI,
+                                                   ATLAS_COAP_METHOD_PUT,
+                                                   boost::bind(&AtlasTelemetry::featureCallback,
+                                                               this, _1, _2, _3, _4, _5, _6, _7, _8)),
+                                   packetsAvgResource_(ATLAS_TELEMETRY_PACKETS_INFO_PACKETS_AVG_URI,
+                                                   ATLAS_COAP_METHOD_PUT,
+                                                   boost::bind(&AtlasTelemetry::featureCallback,
                                                                this, _1, _2, _3, _4, _5, _6, _7, _8))
 {
     ATLAS_LOGGER_DEBUG("Start telemetry module");
@@ -104,6 +115,8 @@ AtlasTelemetry::AtlasTelemetry() : hostnameResource_(ATLAS_TELEMETRY_HOSTNAME_UR
     AtlasCoapServer::getInstance().addResource(load1Resource_);
     AtlasCoapServer::getInstance().addResource(load5Resource_);
     AtlasCoapServer::getInstance().addResource(load15Resource_);
+    AtlasCoapServer::getInstance().addResource(packetsPerMinuteResource_);
+    AtlasCoapServer::getInstance().addResource(packetsAvgResource_);
 }
 
 std::pair<std::string,std::string> AtlasTelemetry::getFeature(const std::string &path, AtlasCommand &cmd)
@@ -116,7 +129,6 @@ std::pair<std::string,std::string> AtlasTelemetry::getFeature(const std::string 
         ATLAS_LOGGER_ERROR("Telemetry end-point called with invalid feature length");
         return ret;
     }
- 
     if (std::strstr(path.c_str(), ATLAS_TELEMETRY_HOSTNAME_URI.c_str()) &&
         cmd.getType() == ATLAS_CMD_TELEMETRY_HOSTNAME)
         ret.first = TELEMETRY_HOSTNAME;
@@ -162,6 +174,12 @@ std::pair<std::string,std::string> AtlasTelemetry::getFeature(const std::string 
     else if (std::strstr(path.c_str(), ATLAS_TELEMETRY_SYSINFO_LOAD15_URI.c_str()) &&
              cmd.getType() == ATLAS_CMD_TELEMETRY_SYSINFO_LOAD15)
         ret.first = TELEMETRY_SYSINFO_LOAD15;
+    else if (std::strstr(path.c_str(), ATLAS_TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE_URI.c_str()) &&
+             cmd.getType() == ATLAS_CMD_TELEMETRY_PACKETS_PER_MINUTE)
+        ret.first = TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE;
+    else if (std::strstr(path.c_str(), ATLAS_TELEMETRY_PACKETS_INFO_PACKETS_AVG_URI.c_str()) &&
+             cmd.getType() == ATLAS_CMD_TELEMETRY_PACKETS_AVG)
+        ret.first = TELEMETRY_PACKETS_INFO_PACKETS_AVG;
  
     ret.second.assign((char *)cmd.getVal(), cmd.getLen());
 
@@ -201,6 +219,7 @@ AtlasCoapResponse AtlasTelemetry::featureCallback(const std::string &path, const
         if (cmdEntry.getType() == ATLAS_CMD_IDENTITY) {
             if (!cmdEntry.getLen()) {
                 ATLAS_LOGGER_ERROR("Telemetry end-point called with empty IDENTITY command");
+                printf("Am primit\n");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
             
