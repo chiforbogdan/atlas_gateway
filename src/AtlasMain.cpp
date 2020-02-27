@@ -10,13 +10,30 @@
 #include "register/AtlasRegister.h"
 #include "policy/AtlasPolicy.h"
 #include "pubsub_agent/AtlasPubSubAgent.h"
+#include "mqtt_client/AtlasMqttClient.h"
+#include "identity/AtlasIdentity.h"
 
 int main(int argc, char **argv)
 {
     atlas::AtlasRegister reg;
     atlas::AtlasPolicy policy;
-    
+
     atlas::initLog();
+    
+    if(!atlas::AtlasIdentity::getInstance().initIdentity()) {
+        ATLAS_LOGGER_ERROR("Error in generating gateway identity!");
+        return 1;
+    }
+
+    ATLAS_LOGGER_DEBUG("Identity generated with success!");
+
+    if (argc == 2) {        
+        atlas::AtlasMqttClient::getInstance().connect(argv[1]);
+    } else {
+        ATLAS_LOGGER_ERROR("Too few arguments used when atlas_gateway was executed!");
+        std::cout << "Incorrect number of parameters." << std::endl << "Correct usage: atlas_gateway <cloud_hostname>" << std::endl;
+        return 1;
+    }
 
     atlas::AtlasCoapServer::getInstance().start(10100, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 
 

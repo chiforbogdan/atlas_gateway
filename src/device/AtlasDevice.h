@@ -5,6 +5,7 @@
 #include <memory>
 #include "../telemetry/AtlasTelemetryInfo.h"
 #include "../telemetry/AtlasAlert.h"
+#include "../commands/AtlasCommandType.h"
 
 namespace atlas {
 
@@ -107,6 +108,13 @@ public:
     * @return Client device URL
     */
     inline std::string getUrl() const { return ATLAS_COAPS_SCHEME + ipPort_; }
+
+    /**
+    * @brief Put all device info in json format
+    * @param[in] feature name
+    * @return string
+    */
+    std::string toJSON(const std::string &feature = "");
 
 private:
     /**

@@ -129,6 +129,11 @@ enum AtlasCommandType {
     /* Publish-subscribe number of accepted packets by a firewall rule: payload is 4 byte
     number of accepted packtes */
     ATLAS_CMD_PUB_SUB_PKT_PASS,
+
+    /* COMMANDS SHARED WITH THE CLOUD PUBLISH-SUBSCRIBE AGENT*/
+
+    /* publish all device informations*/
+    ATLAS_CMD_CLIENT_INFO_UPDATE = 2000,
 };
 
 } // namespace atlas

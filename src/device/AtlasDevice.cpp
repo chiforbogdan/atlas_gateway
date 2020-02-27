@@ -99,5 +99,37 @@ void AtlasDevice::keepAliveExpired()
         registered_ = false;
     }
 }
+std::string AtlasDevice::toJSON(const std::string &feature)
+{
+    std::string featureString = "\n{\n";
+    featureString += "\"commandType\":\"" + std::to_string(ATLAS_CMD_CLIENT_INFO_UPDATE) + "\"\n";
+    featureString += "\"commandPayload\": {\n";
+    featureString += "\"identity\":\"" + identity_ + "\",\n";
+    if(feature == "")
+    {
+        featureString += "\"sysinfoLoad15\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_LOAD15) + "\",\n";
+        featureString += "\"sysinfoLoad1\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_LOAD1) + "\",\n";
+        featureString += "\"sysinfoFreehigh\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_FREEHIGH) + "\",\n";
+        featureString += "\"sysinfoTotalhigh\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_TOTALHIGH) + "\",\n";
+        featureString += "\"sysinfoFreeswap\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_FREESWAP) + "\",\n";
+        featureString += "\"sysinfoLoad5\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_LOAD5) + "\",\n";
+        featureString += "\"sysinfoBufferram\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_BUFFERRAM) + "\",\n";
+        featureString += "\"sysinfoProcs\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_PROCS) + "\",\n";
+        featureString += "\"sysinfoUptime\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_UPTIME) + "\",\n";
+        featureString += "\"hostname\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_HOSTNAME) + "\",\n";
+        featureString += "\"sysinfoFreeram\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_FREESWAP) + "\",\n";
+        featureString += "\"sysinfoTotalswap\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_TOTALSWAP) + "\",\n";
+        featureString += "\"sysinfoTotalram\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_TOTALRAM) + "\",\n";
+        featureString += "\"sysinfoSharedram\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_SHAREDRAM) + "\"\n";
+    }
+    else
+    {
+        featureString += "\"" + feature +"\":\"" + telemetryInfo_.getFeature(feature) + "\"\n";
+    }
+    
+    featureString += "}\n}";
+
+    return featureString;
+}
 
 } // namespace atlas
