@@ -1,22 +1,19 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <experimental/filesystem>
 #include "AtlasIdentity.h"
 #include "../logger/AtlasLogger.h"
-#include <fstream>
-#include <experimental/filesystem>
 
 namespace fs = std::experimental::filesystem; 
 
 namespace atlas {
 
 namespace {
-
-    const char *ATLAS_IDENTITY_FILE   = "atlas_gateway.identity";
-    const char *ATLAS_PSK_FILE        = "atlas_gateway.psk";
+    const std::string ATLAS_IDENTITY_FILE   = "atlas_gateway.identity";
+    const std::string ATLAS_PSK_FILE        = "atlas_gateway.psk";
     const int ATLAS_IDENTITY_LEN = 64;
     const int ATLAS_PSK_LEN      = 64;
-
-    static char identity[ATLAS_IDENTITY_LEN + 1];
-    static char psk[ATLAS_PSK_LEN + 1];
-
 } // anonymous namespace
 
 AtlasIdentity &AtlasIdentity::getInstance()
@@ -30,7 +27,8 @@ bool AtlasIdentity::generateIdentity()
 {
     std::fstream fd;
     uuid_t uuid;
-
+    char identity[ATLAS_IDENTITY_LEN + 1]  = { 0 };
+    
     ATLAS_LOGGER_DEBUG("Generate identity...");
 
     fd.open(ATLAS_IDENTITY_FILE, std::fstream::in | std::fstream::out | std::fstream::trunc);
@@ -44,8 +42,7 @@ bool AtlasIdentity::generateIdentity()
    /* Generate identity */
     uuid_generate(uuid);
     uuid_unparse_lower(uuid, identity);
-    identity_ = (char*)malloc(ATLAS_IDENTITY_LEN + 1);
-    strncpy(identity_, identity, ATLAS_IDENTITY_LEN + 1);
+    identity_.assign(identity);
     fd << identity;
     fd.close();
 
@@ -77,7 +74,8 @@ bool AtlasIdentity::generatePsk()
 {
     std::fstream fd;
     uint8_t rand_bytes[ATLAS_PSK_LEN/2];
-
+    char psk[ATLAS_PSK_LEN + 1] = { 0 };
+    
     ATLAS_LOGGER_DEBUG("Generate PSK...");
 
     fd.open(ATLAS_PSK_FILE, std::fstream::in | std::fstream::out | std::fstream::trunc);
@@ -93,10 +91,9 @@ bool AtlasIdentity::generatePsk()
         fd.close();
 	return false;
     }
-    memset(psk, 0, sizeof(psk));
+
     to_base64(rand_bytes, sizeof(rand_bytes), psk, sizeof(psk) - 1);
-    psk_ = (char*)malloc(ATLAS_PSK_LEN + 1);
-    strncpy(psk_, psk, ATLAS_PSK_LEN + 1);
+    psk_.assign(psk);
     fd << psk;
     fd.close();
 
@@ -105,50 +102,43 @@ bool AtlasIdentity::generatePsk()
 
 bool AtlasIdentity::initIdentity()
 {
-    bool status = false;
     std::ifstream fd;
     int len;
 
     ATLAS_LOGGER_DEBUG("Identity init...");
 
     /* Get identity */
-    fd.open(ATLAS_IDENTITY_FILE, std::ios::binary | std::ios::ate);
+    fd.open(ATLAS_IDENTITY_FILE);
     if (!fd.is_open()) {
         ATLAS_LOGGER_DEBUG("Identity file does not exist, generating an identity...");
-        status = generateIdentity();
-	if (status != true) {
-            status = false;
+        if (!generateIdentity())
             goto ERR;
-	}
     } else {
-        memset(identity, 0, sizeof(identity));
-        fd >> identity;
-        len = fd.tellg();
-        fd.close();
+        std::stringstream strStream;
+        strStream << fd.rdbuf();
+        identity_ = strStream.str();
+	len = fd.tellg();
+	fd.close();
         if (len <= 0) {
             ATLAS_LOGGER_ERROR("Error encountered when reading from the identity file");
-            status = false;
             goto ERR;
         }
     }
 
     /* Get PSK */
-    fd.open(ATLAS_PSK_FILE, std::ios::binary | std::ios::ate);
+    fd.open(ATLAS_PSK_FILE);
     if (!fd.is_open()) {
         ATLAS_LOGGER_DEBUG("PSK file does not exist, generating a PSK...");
-        status = generatePsk();
-        if (status != true) {
-	    status = false;
+        if (!generatePsk())
             goto ERR;
-	}	
     } else {
-        memset(psk, 0, sizeof(psk));
-        fd >> psk;
+        std::stringstream strStream;
+        strStream << fd.rdbuf();
+	psk_ = strStream.str();
         len = fd.tellg();
         fd.close();
         if (len <= 0) {
             ATLAS_LOGGER_ERROR("Error encountered when reading from the PSK file");
-            status = false;
             goto ERR;
         }
     }
@@ -156,10 +146,10 @@ bool AtlasIdentity::initIdentity()
     return true;
 
 ERR:
-    remove(ATLAS_IDENTITY_FILE);
-    remove(ATLAS_PSK_FILE);
+    std::remove(ATLAS_IDENTITY_FILE.c_str());
+    std::remove(ATLAS_PSK_FILE.c_str());
 
-    return status;
+    return false;
 }
 
 } // namespace atlas

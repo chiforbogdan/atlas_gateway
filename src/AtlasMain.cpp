@@ -17,7 +17,14 @@ int main(int argc, char **argv)
 {
     atlas::AtlasRegister reg;
     atlas::AtlasPubSubAgent pubSubAgent;
-    
+
+    if(!atlas::AtlasIdentity::getInstance().initIdentity()) {
+        ATLAS_LOGGER_ERROR("Error in generating gateway identity!");
+        return 1;
+    }
+
+    ATLAS_LOGGER_DEBUG("Identity generated with success!");
+
     if (argc == 2) {        
         atlas::AtlasMqttClient::getInstance().connect(argv[1]);
     } else {
@@ -25,12 +32,6 @@ int main(int argc, char **argv)
         std::cout << "Incorrect number of parameters." << std::endl << "Correct usage: atlas_gateway <cloud_hostname>" << std::endl;
         return 1;
     }
-
-    if(!atlas::AtlasIdentity::getInstance().initIdentity()) {
-        ATLAS_LOGGER_ERROR("Error in generating gateway identity!");
-        return 1;
-    }
-    ATLAS_LOGGER_DEBUG("Identity generated with success!");
     
     // bool ans;
     // for (int i=0; i< 30; i++)

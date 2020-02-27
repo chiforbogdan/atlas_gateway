@@ -67,10 +67,10 @@ private:
     void to_base64(const uint8_t *, size_t, char *, size_t);
 
     /* Gateway identity */
-    char* identity_;
+    std::string identity_;
 
     /* Gateway pre-shared key */
-    char* psk_;
+    std::string psk_;
 };
 
 } // namespace atlas
