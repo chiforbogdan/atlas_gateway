@@ -6,6 +6,7 @@
 #include "../telemetry/AtlasTelemetryInfo.h"
 #include "../telemetry/AtlasAlert.h"
 #include "../commands/AtlasCommandType.h"
+#include "../cloud/AtlasDeviceCloud.h"
 
 namespace atlas {
 
@@ -24,9 +25,10 @@ public:
     /**
     * @brief Ctor for client device
     * @param[in] identity Client device identity
+    * @param[in] deviceCloud Cloud back-end manager
     * @return none
     */
-    AtlasDevice(const std::string &identity);
+    AtlasDevice(const std::string &identity, std::shared_ptr<AtlasDeviceCloud> deviceCloud);
 
     /**
     * @brief Set PSK for client device
@@ -35,13 +37,12 @@ public:
     */
     inline void setPsk(const std::string &psk) { psk_ = psk; }
 
-
     /**
     * @brief Set IP for client device
     * @param[in] ip address
     * @return none
     */
-    inline void setIpPort(const std::string &ipPort) { ipPort_ = ipPort; }
+    void setIpPort(const std::string &ipPort);
 
     /**
     * @brief Get client device identity
@@ -92,12 +93,6 @@ public:
     inline bool isRegistered() const { return registered_; }
 
     /**
-    * @brief Get telemetry info
-    * @return Reference to telemetry info
-    */
-    inline AtlasTelemetryInfo& getTelemetryInfo() { return telemetryInfo_; }
-
-    /**
     * @brief Push all telemetry alerts on client device
     * @return none
     */
@@ -110,11 +105,43 @@ public:
     inline std::string getUrl() const { return ATLAS_COAPS_SCHEME + ipPort_; }
 
     /**
+    * @brief Set feature value
+    * @param[in] featureType Feature type
+    * @param[in] featureValue Feature value
+    * @return none
+    */
+    void setFeature(const std::string &featureType, const std::string &featureValue);
+
+    /**
     * @brief Put all device info in json format
     * @param[in] feature name
     * @return string
     */
-    std::string toJSON(const std::string &feature = "");
+    std::string toJSON();
+
+    /**
+    * @brief Serialize telemetry info to JSON
+    * @return JSON serialized telemetry info
+    */
+    std::string telemetryInfoToJSON();
+
+    /**
+    * @brief Indicates if a full cloud sync is required
+    * @return True if a sync is required, false otherwise
+    */
+    inline bool isSyncRequired() const { return syncRequired_; }
+
+    /**
+    * @brief Enable full cloud sync
+    * @return none
+    */
+    inline void setSyncRequired() { syncRequired_ = true; };
+
+    /**
+    * @brief Disable full cloud sync
+    * @return none
+    */
+    inline void clearSyncRequired() { syncRequired_ = false; }
 
 private:
     /**
@@ -122,6 +149,24 @@ private:
     * @return none
     */
     void installDefaultAlerts();
+
+    /**
+    * @brief Serialize register event to JSON
+    * @return JSON serialized register event
+    */
+    std::string registerEventToJSON();
+
+    /**
+    * @brief Serialize keepalive event to JSON
+    * @return JSON serialized keepalive event
+    */
+    std::string keepaliveEventToJSON();
+
+    /**
+    * @brief Serialize client IP and port to JSON
+    * @return JSON serialized IP and port
+    */
+    std::string ipPortToJSON();
 
     /* IoT client identity */
     std::string identity_;
@@ -138,11 +183,17 @@ private:
     /* Keep-alive timestamp */
     std::string keepAliveTime_;
 
+    /* Cloud back-end manager */
+    std::shared_ptr<AtlasDeviceCloud> deviceCloud_;
+
     /* Indicates if the device is registered */
     bool registered_;
 
     /* Keep-alive counter. When this counter reaches 0, the device is de-registered */
     uint8_t kaCtr_;
+
+    /* Indicates if a cloud back-end full sync is required */
+    bool syncRequired_;
 
     /* Telemetry info */
     AtlasTelemetryInfo telemetryInfo_;

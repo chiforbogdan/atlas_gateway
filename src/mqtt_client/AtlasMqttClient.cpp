@@ -74,7 +74,7 @@ bool AtlasMqttClient::tryPublishMessage(const std::string &topic, const std::str
             ATLAS_LOGGER_ERROR("No existing connection for client [" + client_->get_client_id() + "]. PUBLISH aborted.");
             return false;
         } else {
-            if (!client_->is_connected()){ //non-blocking task --> exit with false and wait for a re-call of publish            
+            if (!client_->is_connected()) { //non-blocking task --> exit with false and wait for a re-call of publish            
                 ATLAS_LOGGER_ERROR("Previous CONNECT action has not yet finished for client [" + client_->get_client_id() + "]. PUBLISH should be delayed.");
                 return false;
             } else {

@@ -2,8 +2,11 @@
 #define __ATLAS_DEVICE_MANAGER_H__
 
 #include <unordered_map>
+#include <memory>
+#include <functional>
 #include <boost/asio.hpp>
 #include "AtlasDevice.h"
+#include "../cloud/AtlasDeviceCloud.h"
 #include "../telemetry/AtlasTelemetry.h"
 
 namespace atlas {
@@ -26,6 +29,13 @@ public:
     */
     AtlasDevice& getDevice(const std::string& identity);
 
+    /**
+    * @brief Parse each device
+    * @param[in] cb For each callback
+    * @return none
+    */
+    void forEachDevice(std::function<void(AtlasDevice&)> cb);
+
     AtlasDeviceManager(const AtlasDeviceManager&) = delete;
     AtlasDeviceManager& operator=(const AtlasDeviceManager&) = delete;
 
@@ -36,21 +46,14 @@ private:
     */
     AtlasDeviceManager();
 
-    /**
-    * @brief Internal keep-alive timer handler
-    * @param[in] ec Error code
-    * @return none
-    */
-    void kaTimerHandler(const boost::system::error_code& ec);
-
     /* Client devices */
     std::unordered_map<std::string, AtlasDevice> devices_;
 
-    /* Keep-alive timer  */
-    boost::asio::deadline_timer kaTimer_;
-
     /* Telemetry manager which handles the telemetry CoAP resources and pushes the data into the devices */
     AtlasTelemetry telemetry_;
+
+    /* Cloud back-end manager */
+    std::shared_ptr<AtlasDeviceCloud> deviceCloud_;
 };
 
 } // namespace atlas

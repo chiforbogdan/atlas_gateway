@@ -28,6 +28,12 @@ class AtlasTelemetryInfo
 
 public:
     /**
+    * @brief Ctor for telemetry info
+    * @return none
+    */
+    AtlasTelemetryInfo();
+
+    /**
     * @brief Set telemetry feature
     * @param[in] feature Telemetry feature name
     * @param[in] value Telemetry feature value
@@ -41,12 +47,19 @@ public:
     * @return Telemetry feature value
     */
     inline std::string getFeature(const std::string &feature) { return features_[feature]; }
+
+    /**
+    * @brief Clear telemetry features
+    * @return none
+    */
+    void clearFeatures();
    
     /**
-    * @brief Convert telemetry info to human-readable string
+    * @brief Convert telemetry info to JSON string
+    * @param[in] feature Convert to JSON only the given feature. If this is empty all the features will be serialized
     * @return String containing all the key-value telemetry feature pairs
     */ 
-    std::string toString();
+    std::string toJSON(const std::string &feature = "");
 
 private:
     /* Telemetry features */

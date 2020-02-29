@@ -4,10 +4,12 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
 
-#define ATLAS_LOGGER_DEBUG(MSG) BOOST_LOG_SEV(atlas::logger, boost::log::trivial::debug) << (MSG)
-#define ATLAS_LOGGER_ERROR(MSG) BOOST_LOG_SEV(atlas::logger, boost::log::trivial::error) << (MSG)
-#define ATLAS_LOGGER_INFO(MSG) BOOST_LOG_SEV(atlas::logger, boost::log::trivial::info) << (MSG)
-#define ATLAS_LOGGER_INFO1(MSG, PARAM1) BOOST_LOG_SEV(atlas::logger, boost::log::trivial::info) << (MSG) << (PARAM1)
+#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+
+#define ATLAS_LOGGER_DEBUG(MSG) BOOST_LOG_SEV(atlas::logger, boost::log::trivial::debug) << "[" << __FILENAME__ << "] " << (MSG)
+#define ATLAS_LOGGER_ERROR(MSG) BOOST_LOG_SEV(atlas::logger, boost::log::trivial::error) << "[" << __FILENAME__ << "] " << (MSG)
+#define ATLAS_LOGGER_INFO(MSG) BOOST_LOG_SEV(atlas::logger, boost::log::trivial::info) << "[" << __FILENAME__ << "] " << (MSG)
+#define ATLAS_LOGGER_INFO1(MSG, PARAM1) BOOST_LOG_SEV(atlas::logger, boost::log::trivial::info) << "[" << __FILENAME__ << "] " << (MSG) << (PARAM1)
 
 namespace atlas {
 

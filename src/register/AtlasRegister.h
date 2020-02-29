@@ -52,11 +52,20 @@ private:
                                         AtlasCoapMethod method, const uint8_t* reqPayload, size_t reqPayloadLen,
                                         uint8_t **respPayload, size_t *respPayloadLen);
 
+    /**
+    * @brief Keep-alive alarm callback
+    * @return none
+    */
+    void keepaliveAlarmCallback();
+
     /* REGISTER command CoAP resource*/
     AtlasCoapResource registerResource_;
 
     /* KEEPALIVE command CoAP resource*/
     AtlasCoapResource keepAliveResource_;
+
+    /* Keep-alive alarm */
+    AtlasAlarm kaAlarm_;
 };
 
 } // namespace atlas

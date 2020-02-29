@@ -6,10 +6,27 @@
 
 namespace atlas {
 
+namespace {
+
 /* Keep-alive counter initial value */
 const int ATLAS_KEEP_ALIVE_COUNTER = 6;
 
-AtlasDevice::AtlasDevice(const std::string &identity) : identity_(identity), registered_(false)
+/* JSON register event key */
+const std::string ATLAS_REGISTER_JSON_KEY = "registered";
+
+/* JSON last register time key */
+const std::string ATLAS_LAST_REGISTER_TIME_JSON_KEY = "lastRegisterTime";
+
+/* JSON last keep-alive time key */
+const std::string ATLAS_LAST_KEEPALIVE_TIME_JSON_KEY = "lastKeepAliveTime";
+
+/* JSON IP and port key */
+const std::string ATLAS_IP_PORT_JSON_KEY = "ipPort";
+
+} // anonymous namespace
+
+AtlasDevice::AtlasDevice(const std::string &identity, std::shared_ptr<AtlasDeviceCloud> deviceCloud) : identity_(identity), deviceCloud_(deviceCloud),
+                                                                                                       registered_(false)
 {
     installDefaultAlerts();
 }
@@ -66,6 +83,16 @@ void AtlasDevice::pushAlerts()
     }
 }
 
+void AtlasDevice::setIpPort(const std::string &ipPort)
+{
+    if (ipPort_ != ipPort) {
+        ipPort_ = ipPort;
+
+        /* Update the client IP and port to cloud */
+        deviceCloud_->updateDevice(identity_, ipPortToJSON());
+    }
+}
+
 void AtlasDevice::registerNow()
 {
     boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
@@ -74,7 +101,13 @@ void AtlasDevice::registerNow()
     registered_ = true;
     kaCtr_ = ATLAS_KEEP_ALIVE_COUNTER;
 
+    /* Reset all telemetry features to default, the client should provide an update */
+    telemetryInfo_.clearFeatures();
+
     ATLAS_LOGGER_INFO1("Client device registered at ", regTime_);
+
+    /* Update registration event to cloud */
+    deviceCloud_->updateDevice(identity_, toJSON());
 }
 
 void AtlasDevice::keepAliveNow()
@@ -85,6 +118,9 @@ void AtlasDevice::keepAliveNow()
     kaCtr_ = ATLAS_KEEP_ALIVE_COUNTER;
 
     ATLAS_LOGGER_INFO1("Client device sent a keep-alive at ", keepAliveTime_);
+
+    /* Update keep-alive event to cloud */
+    deviceCloud_->updateDevice(identity_, keepaliveEventToJSON());
 }
 
 void AtlasDevice::keepAliveExpired()
@@ -97,39 +133,71 @@ void AtlasDevice::keepAliveExpired()
     if (!kaCtr_) {
         ATLAS_LOGGER_INFO1("Keep-alive counter expired for client with identity ", identity_);
         registered_ = false;
+        /* Update un-registration event to cloud */
+        deviceCloud_->updateDevice(identity_, registerEventToJSON());
     }
 }
-std::string AtlasDevice::toJSON(const std::string &feature)
-{
-    std::string featureString = "\n{\n";
-    featureString += "\"commandType\":\"" + std::to_string(ATLAS_CMD_CLIENT_INFO_UPDATE) + "\"\n";
-    featureString += "\"commandPayload\": {\n";
-    featureString += "\"identity\":\"" + identity_ + "\",\n";
-    if(feature == "")
-    {
-        featureString += "\"sysinfoLoad15\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_LOAD15) + "\",\n";
-        featureString += "\"sysinfoLoad1\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_LOAD1) + "\",\n";
-        featureString += "\"sysinfoFreehigh\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_FREEHIGH) + "\",\n";
-        featureString += "\"sysinfoTotalhigh\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_TOTALHIGH) + "\",\n";
-        featureString += "\"sysinfoFreeswap\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_FREESWAP) + "\",\n";
-        featureString += "\"sysinfoLoad5\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_LOAD5) + "\",\n";
-        featureString += "\"sysinfoBufferram\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_BUFFERRAM) + "\",\n";
-        featureString += "\"sysinfoProcs\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_PROCS) + "\",\n";
-        featureString += "\"sysinfoUptime\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_UPTIME) + "\",\n";
-        featureString += "\"hostname\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_HOSTNAME) + "\",\n";
-        featureString += "\"sysinfoFreeram\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_FREESWAP) + "\",\n";
-        featureString += "\"sysinfoTotalswap\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_TOTALSWAP) + "\",\n";
-        featureString += "\"sysinfoTotalram\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_TOTALRAM) + "\",\n";
-        featureString += "\"sysinfoSharedram\":\"" + telemetryInfo_.getFeature(atlas::TELEMETRY_SYSINFO_SHAREDRAM) + "\"\n";
-    }
-    else
-    {
-        featureString += "\"" + feature +"\":\"" + telemetryInfo_.getFeature(feature) + "\"\n";
-    }
-    
-    featureString += "}\n}";
 
-    return featureString;
+std::string AtlasDevice::registerEventToJSON()
+{
+    std::string regEvent;
+    
+    if (registered_)
+        regEvent = "\"" + ATLAS_REGISTER_JSON_KEY + "\": " + "\"true\",";
+    else
+        regEvent = "\"" + ATLAS_REGISTER_JSON_KEY + "\": " + "\"false\",";
+
+    regEvent += "\n\"" + ATLAS_LAST_REGISTER_TIME_JSON_KEY + "\": \"" + regTime_ + "\"";
+    
+    return regEvent;
+}
+
+std::string AtlasDevice::keepaliveEventToJSON()
+{
+    return "\"" + ATLAS_LAST_KEEPALIVE_TIME_JSON_KEY + "\": \"" + keepAliveTime_ + "\"";
+}
+
+std::string AtlasDevice::ipPortToJSON()
+{
+    return "\"" + ATLAS_IP_PORT_JSON_KEY + "\": \"" + ipPort_ + "\"";
+}
+
+std::string AtlasDevice::toJSON()
+{
+    std::string jsonDevice;
+
+    /* Add registration state */
+    jsonDevice += registerEventToJSON() + ",";
+    
+    /* Add keep-alive state */
+    jsonDevice += "\n" + keepaliveEventToJSON() + ",";
+    
+    /* Add IP and port */
+    jsonDevice += "\n" + ipPortToJSON()+ ",";
+
+    /* Add telemetry info */
+    jsonDevice += "\n" + telemetryInfo_.toJSON();
+
+    return jsonDevice;
+}
+
+std::string AtlasDevice::telemetryInfoToJSON()
+{
+    return telemetryInfo_.toJSON();
+}
+
+void AtlasDevice::setFeature(const std::string &featureType, const std::string &featureValue)
+{
+    if (featureType == "") {
+        ATLAS_LOGGER_ERROR("Invalid feature type");
+        return;
+    }
+
+    if (telemetryInfo_.getFeature(featureType) != featureValue) {
+        ATLAS_LOGGER_INFO("Update cloud with information for feature " + featureType);
+        telemetryInfo_.setFeature(featureType, featureValue);
+        deviceCloud_->updateDevice(identity_, telemetryInfo_.toJSON(featureType));
+    }
 }
 
 } // namespace atlas

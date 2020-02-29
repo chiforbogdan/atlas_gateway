@@ -7,7 +7,6 @@
 #include "../device/AtlasDeviceManager.h"
 #include "../commands/AtlasCommandType.h"
 #include "../identity/AtlasIdentity.h"
-#include "../mqtt_client/AtlasMqttClient.h"
 
 namespace atlas {
 
@@ -244,14 +243,9 @@ AtlasCoapResponse AtlasTelemetry::featureCallback(const std::string &path, const
     }
 
     /* Set device telemetry feature */
-    device.getTelemetryInfo().setFeature(feature.first, feature.second);
+    device.setFeature(feature.first, feature.second);
 
-    /* Send to cloud last update info of a registered node*/
-    AtlasMqttClient::getInstance().tryPublishMessage(AtlasIdentity::getInstance().getPsk(),
-                                                    AtlasDeviceManager::getInstance().getDevice(identity).toJSON(feature.first),
-                                                    1);
-
-    ATLAS_LOGGER_INFO1("Device telemetry state changed to ", device.getTelemetryInfo().toString());
+    ATLAS_LOGGER_INFO1("Device telemetry state for identity " + identity + " changed to ", device.telemetryInfoToJSON());
     
     return ATLAS_COAP_RESP_OK;
 }

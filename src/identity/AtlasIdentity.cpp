@@ -54,6 +54,7 @@ void AtlasIdentity::to_base64(const uint8_t *in, size_t in_len, char *out, size_
 {
     BIO *bmem, *b64;
     BUF_MEM *bptr;
+    size_t i;
 
     b64 = BIO_new(BIO_f_base64());
     BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
@@ -66,6 +67,12 @@ void AtlasIdentity::to_base64(const uint8_t *in, size_t in_len, char *out, size_
 
     memcpy(out, bptr->data,
            out_len > bptr->length ? bptr->length : out_len);
+
+    /* Sanitize base64 psk: replace '/' and '+' characters, as these have a role in
+       the MQTT topic (PSK is used as MQTT topic)*/
+    for (i = 0; i < out_len; i++)
+        if (out[i] == '+' || out[i] == '/')
+            out[i] = 'A';
 
     BIO_free_all(b64);
 }

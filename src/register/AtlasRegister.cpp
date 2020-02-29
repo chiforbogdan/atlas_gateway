@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include <boost/bind.hpp>
 #include "AtlasRegister.h"
@@ -9,15 +10,32 @@
 
 namespace atlas {
 
+namespace {
+
+const int ATLAS_KEEP_ALIVE_INTERVAL_MS = 20000;
 const std::string ATLAS_REGISTER_URI = "gateway/register";
 const std::string ATLAS_KEEPALIVE_URI = "gateway/keepalive";
+
+} // anonymous namespace
 
 AtlasRegister::AtlasRegister() : registerResource_(ATLAS_REGISTER_URI,
                                                    ATLAS_COAP_METHOD_POST,
                                                    boost::bind(&AtlasRegister::registerCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)),
                                  keepAliveResource_(ATLAS_KEEPALIVE_URI,
                                                     ATLAS_COAP_METHOD_PUT,
-                                                    boost::bind(&AtlasRegister::keepaliveCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)){}
+                                                    boost::bind(&AtlasRegister::keepaliveCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)),
+                                 kaAlarm_(ATLAS_KEEP_ALIVE_INTERVAL_MS, false, boost::bind(&AtlasRegister::keepaliveAlarmCallback, this)) {}
+
+void AtlasRegister::keepaliveAlarmCallback()
+{
+    ATLAS_LOGGER_INFO("Keep-alive alarm callback");
+
+    AtlasDeviceManager::getInstance().forEachDevice([] (AtlasDevice& device)
+                                                        { 
+                                                            if (device.isRegistered())
+                                                                device.keepAliveExpired();
+                                                        });
+}
 
 AtlasCoapResponse AtlasRegister::keepaliveCallback(const std::string &path, const std::string &pskIdentity,
                                                    const std::string& psk, AtlasCoapMethod method,
@@ -163,17 +181,12 @@ AtlasCoapResponse AtlasRegister::registerCallback(const std::string &path, const
 
     ATLAS_LOGGER_INFO1("New ATLAS client registered with identity ", identity);
 
-    /* Create device (if necessary) and set PSK, set IP */
-    AtlasDeviceManager::getInstance().getDevice(identity).setIpPort(ipPort);
+    /* Create device (if necessary) and set IP */
     AtlasDeviceManager::getInstance().getDevice(identity).registerNow();
+    AtlasDeviceManager::getInstance().getDevice(identity).setIpPort(ipPort);
 
     /* Install alerts on client device */
     AtlasDeviceManager::getInstance().getDevice(identity).pushAlerts();
-
-    /* Send to cloud the info of new registered node*/
-    AtlasMqttClient::getInstance().tryPublishMessage(AtlasIdentity::getInstance().getPsk(),
-                                                     AtlasDeviceManager::getInstance().getDevice(identity).toJSON(),
-                                                     1);
 
     return ATLAS_COAP_RESP_OK;
 }
@@ -187,14 +200,21 @@ void AtlasRegister::start()
        registration phase and for keepalive pings after that.*/
     AtlasCoapServer::getInstance().addResource(registerResource_);
     AtlasCoapServer::getInstance().addResource(keepAliveResource_);
+
+    /* Start keep-alive alarm */
+    kaAlarm_.start();
 }
 
 void AtlasRegister::stop()
 {
     ATLAS_LOGGER_DEBUG("Stop registration module");
     
+    /* Unregister CoAP resources */
     AtlasCoapServer::getInstance().delResource(registerResource_);
     AtlasCoapServer::getInstance().delResource(keepAliveResource_);
+
+    /* Stop keep-alive alarm */
+    kaAlarm_.cancel();
 }
 
 } // namespace atlas

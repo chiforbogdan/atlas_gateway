@@ -54,7 +54,7 @@ public:
      * @param[in] QoS for message publishing
      * @return True on publish succes, False otherwise 
     */
-    bool tryPublishMessage(const std::string &topic, const std::string &message, const int QoS);
+    bool tryPublishMessage(const std::string &topic, const std::string &message, const int QoS = 2);
 
     AtlasMqttClient(const AtlasMqttClient &) = delete;
     AtlasMqttClient & operator = (const AtlasMqttClient &) = delete;
