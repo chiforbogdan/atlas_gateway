@@ -1,10 +1,12 @@
 #ifndef __ATLAS_MQTT_CLIENT_CALLBACK_H__
 #define __ATLAS_MQTT_CLIENT_CALLBACK_H__
 
+#include <vector>
 #include <mqtt/async_client.h>
 #include <stdlib.h>
 #include <string>
 #include <boost/bind.hpp>
+#include "IAtlasMqttState.h"
 #include "../alarm/AtlasAlarm.h"
 
 namespace atlas
@@ -21,6 +23,20 @@ public:
      * @return none
     */
     AtlasMqttClient_callback(mqtt::async_client& client, mqtt::connect_options& connOpts);
+
+    /**
+    * @brief Add connection state callback
+    * @param[in] connCb COnnection state callback
+    * @return none
+    */
+    void addConnectionCb(IAtlasMqttState *connCb);
+
+    /**
+    * @brief Remove connection state callback
+    * @param[in] connCb Connection state callback
+    * @return none
+    */
+    void removeConnectionCb(IAtlasMqttState *connCb);
 
 private:
     /**
@@ -49,13 +65,7 @@ private:
      * @param[in] Token of the succeded connection
      * @return none
     */
-    void on_success(const mqtt::token&) override {}
-
-    /**
-     * @brief Reconnects to the most recent known Atlas Cloud module
-     * @return none
-    */
-    void reconnect();
+    void on_success(const mqtt::token&) override;
 	
     /**
      * @brief Callback for reconnect alarm
@@ -71,6 +81,9 @@ private:
 
     /* MQTT reconnect alarm */
     AtlasAlarm alarm_;
+
+    /* Connection callbacks */
+    std::vector<IAtlasMqttState*> connCb_;
 };
 
 } //namespace atlas

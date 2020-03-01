@@ -6,22 +6,22 @@
 namespace atlas {
 
 const std::string TELEMETRY_HOSTNAME = "hostname";
-const std::string TELEMETRY_KERN_INFO = "kernel-info";
-const std::string TELEMETRY_SYSINFO_UPTIME = "sysinfo-uptime";
-const std::string TELEMETRY_SYSINFO_TOTALRAM = "sysinfo-totalram";
-const std::string TELEMETRY_SYSINFO_FREERAM = "sysinfo-freeram";
-const std::string TELEMETRY_SYSINFO_SHAREDRAM = "sysinfo-sharedram";
-const std::string TELEMETRY_SYSINFO_BUFFERRAM = "sysinfo-bufferram";
-const std::string TELEMETRY_SYSINFO_TOTALSWAP = "sysinfo-totalswap";
-const std::string TELEMETRY_SYSINFO_FREESWAP = "sysinfo-freeswap";
-const std::string TELEMETRY_SYSINFO_PROCS = "sysinfo-procs";
-const std::string TELEMETRY_SYSINFO_TOTALHIGH = "sysinfo-totalhigh";
-const std::string TELEMETRY_SYSINFO_FREEHIGH = "sysinfo-freehigh";
-const std::string TELEMETRY_SYSINFO_LOAD1 = "sysinfo-load1";
-const std::string TELEMETRY_SYSINFO_LOAD5 = "sysinfo-load5";
-const std::string TELEMETRY_SYSINFO_LOAD15 = "sysinfo-load15";
-const std::string TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE = "packets_per_minute";
-const std::string TELEMETRY_PACKETS_INFO_PACKETS_AVG = "packets_avg_length";
+const std::string TELEMETRY_KERN_INFO = "kernelInfo";
+const std::string TELEMETRY_SYSINFO_UPTIME = "sysinfoUptime";
+const std::string TELEMETRY_SYSINFO_TOTALRAM = "sysinfoTotalram";
+const std::string TELEMETRY_SYSINFO_FREERAM = "sysinfoFreeram";
+const std::string TELEMETRY_SYSINFO_SHAREDRAM = "sysinfoSharedram";
+const std::string TELEMETRY_SYSINFO_BUFFERRAM = "sysinfoBufferram";
+const std::string TELEMETRY_SYSINFO_TOTALSWAP = "sysinfoTotalswap";
+const std::string TELEMETRY_SYSINFO_FREESWAP = "sysinfoFreeswap";
+const std::string TELEMETRY_SYSINFO_PROCS = "sysinfoProcs";
+const std::string TELEMETRY_SYSINFO_TOTALHIGH = "sysinfoTotalhigh";
+const std::string TELEMETRY_SYSINFO_FREEHIGH = "sysinfoFreehigh";
+const std::string TELEMETRY_SYSINFO_LOAD1 = "sysinfoLoad1";
+const std::string TELEMETRY_SYSINFO_LOAD5 = "sysinfoLoad5";
+const std::string TELEMETRY_SYSINFO_LOAD15 = "sysinfoLoad15";
+const std::string TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE = "packetsPerMinute";
+const std::string TELEMETRY_PACKETS_INFO_PACKETS_AVG = "packetsAvgLength";
 
 class AtlasTelemetryInfo
 {

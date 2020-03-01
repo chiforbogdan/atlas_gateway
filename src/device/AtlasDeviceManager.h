@@ -22,6 +22,12 @@ public:
     static AtlasDeviceManager& getInstance();
 
     /**
+    * @brief Get device cloud back-end manager
+    * @return Device cloud back-end manager
+    */
+    std::shared_ptr<AtlasDeviceCloud> getDeviceCloud() { return deviceCloud_; }
+
+    /**
     * @brief Get the client device associated with the given identity. If the client
     * device does not exist, then it will be created.
     * @param[in] identity Client device identity

@@ -1,5 +1,7 @@
 #include <iostream>
 #include "AtlasDeviceCloud.h"
+#include "AtlasRegisterCloud.h"
+#include "AtlasCommandsCloud.h"
 #include "../logger/AtlasLogger.h"
 #include "../mqtt_client/AtlasMqttClient.h"
 #include "../identity/AtlasIdentity.h"
@@ -11,11 +13,7 @@ namespace {
 
 const int ATLAS_SYNC_TIMER_INTERVAL_MS = 10000;
 
-const std::string ATLAS_CMD_TYPE_JSON_KEY = "commandType";
-const std::string ATLAS_CMD_PAYLOAD_JSON_KEY = "commandPayload";
 const std::string ATLAS_CMD_IDENTITY_JSON_KEY = "identity";
-
-const std::string ATLAS_CMD_CLIENT_INFO_UPDATE = "ATLAS_CMD_CLIENT_INFO_UPDATE";
 
 } // anonymous namespace
 
@@ -25,6 +23,11 @@ AtlasDeviceCloud::AtlasDeviceCloud() : syncAlarm_(ATLAS_SYNC_TIMER_INTERVAL_MS, 
 void AtlasDeviceCloud::updateDevice(const std::string &identity, const std::string &jsonInfo)
 {
     ATLAS_LOGGER_INFO("Update to cloud back-end information for device with identity " + identity);
+
+    if (!AtlasRegisterCloud::getInstance().isRegistered()) {
+        ATLAS_LOGGER_ERROR("Cannot send a device update command to the cloud if the cloud module is not registered");
+        return;
+    }
 
     std::string cmd = "{\n";
 
@@ -62,13 +65,21 @@ void AtlasDeviceCloud::syncAlarmCallback()
 
     syncScheduled_ = false;
     
-    AtlasDeviceManager::getInstance().forEachDevice([this] (AtlasDevice& device)
-                                                       {
-                                                           ATLAS_LOGGER_INFO("Executing full cloud sync for device with identity " + device.getIdentity());
-                                                           this->updateDevice(device.getIdentity(), device.toJSON());
-                                                       }
-                                                   );
+    allDevicesUpdate();
 
+}
+
+void AtlasDeviceCloud::allDevicesUpdate()
+{
+
+    ATLAS_LOGGER_INFO("Update information for all devices to the cloud back-end");
+
+    AtlasDeviceManager::getInstance().forEachDevice([this] (AtlasDevice& device)
+                                                           {
+                                                               ATLAS_LOGGER_INFO("Executing full cloud sync for device with identity " + device.getIdentity());
+                                                               this->updateDevice(device.getIdentity(), device.toJSON());
+                                                           }
+                                                   );
 }
 
 } // namespace atlas

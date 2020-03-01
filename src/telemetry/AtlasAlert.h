@@ -25,6 +25,11 @@ public:
     */
     void push();
 
+    /**
+    * @brief Dtor for alert
+    * @return none
+    */
+    virtual ~AtlasAlert() {}
 protected:
      /**
     * @brief CoAP response callbacl

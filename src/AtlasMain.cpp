@@ -12,6 +12,7 @@
 #include "pubsub_agent/AtlasPubSubAgent.h"
 #include "mqtt_client/AtlasMqttClient.h"
 #include "identity/AtlasIdentity.h"
+#include "cloud/AtlasRegisterCloud.h"
 
 int main(int argc, char **argv)
 {
@@ -35,6 +36,9 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    /* Start cloud register module */
+    atlas::AtlasRegisterCloud::getInstance().start();
+
     atlas::AtlasCoapServer::getInstance().start(10100, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 
 
     ATLAS_LOGGER_DEBUG("Starting Atlas gateway...");
@@ -50,6 +54,9 @@ int main(int argc, char **argv)
 
     /* Start scheduler */
     atlas::AtlasScheduler::getInstance().run();
+
+    /* Stop cloud register module */
+    atlas::AtlasRegisterCloud::getInstance().stop();
 
     /* Stop policy module */
     policy.stop();

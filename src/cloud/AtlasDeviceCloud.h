@@ -23,6 +23,12 @@ public:
     */
     void updateDevice(const std::string &identity, const std::string &jsonInfo);
 
+    /**
+    * @brief Update information for all device to the cloud back-end
+    * @return none
+    */
+    void allDevicesUpdate();
+
 private:
     /**
     * @brief Sync alarm callback

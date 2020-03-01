@@ -6,6 +6,7 @@
 #include <mqtt/async_client.h>
 #include "AtlasMqttClient_callback.h"
 #include "AtlasMqttClient_actionListener.h"
+#include "IAtlasMqttState.h"
 
 namespace atlas
 {
@@ -77,6 +78,21 @@ public:
      * @return Gateway ID as std::string
     */
     std::string getClientID() { return clientID_; }
+
+    /**
+    * @brief Add connection state callback
+    * @param[in] connCb COnnection state callback
+    * @return none
+    */
+    void addConnectionCb(IAtlasMqttState *connCb);
+    
+     /**
+    * @brief Remove connection state callback
+    * @param[in] connCb Connection state callback
+    * @return none
+    */
+    void removeConnectionCb(IAtlasMqttState *connCb);
+
 private:	
     std::string cloudHost_;
     std::string clientID_;

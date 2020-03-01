@@ -125,7 +125,6 @@ bool AtlasMqttClient::subscribeTopic(const std::string &topic, const int QoS)
     return true;
 }
 
-
 void AtlasMqttClient::disconnect()
 {
     try {
@@ -149,6 +148,23 @@ void AtlasMqttClient::disconnect()
     }  
 }
 
+void AtlasMqttClient::addConnectionCb(IAtlasMqttState *connCb)
+{
+    /* If callback is invalid or client callback is not created yet */
+    if (!connCb || !cb_)
+        return;
+
+    cb_->addConnectionCb(connCb);
+}
+
+void AtlasMqttClient::removeConnectionCb(IAtlasMqttState *connCb)
+{
+    /* If callback is invalid or client callback is not created yet */
+    if (!connCb || !cb_)
+        return;
+    
+    cb_->removeConnectionCb(connCb);
+}
 
 AtlasMqttClient::~AtlasMqttClient()
 {
