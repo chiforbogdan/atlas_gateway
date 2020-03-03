@@ -26,13 +26,6 @@ public:
      * @return none
     */
     void connect(const std::string &address, const std::string &clientID);
-    
-    /**
-     * @brief Connect to a Atlas Cloud module with command line arguments
-     * @param[in] First command line argument (IP address of the Atlas Cloud module)
-     * @return none
-    */
-    void connect(const char *arg);
 
     /**
      * @brief Subscribe to a topic on the Atlas Cloud module

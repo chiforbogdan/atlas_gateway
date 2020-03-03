@@ -23,13 +23,6 @@ AtlasMqttClient& AtlasMqttClient::getInstance()
     return instance;
 }
 
-void AtlasMqttClient::connect(const char *arg)
-{
-    cloudHost_ = std::string(arg);
-    ATLAS_LOGGER_DEBUG("Setting cloudID = " + cloudHost_);
-    connect(cloudHost_, clientID_);
-}
-
 void AtlasMqttClient::connect(const std::string &address, const std::string &clientID)
 {
     ATLAS_LOGGER_INFO("Initializing client (" + clientID + ") connection to server (" + address + ")");

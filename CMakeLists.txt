@@ -18,7 +18,7 @@ find_package(OpenSSL REQUIRED)
 # Link with dynamic version of Boost (for logging)
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 
-find_package(Boost 1.65.0 REQUIRED system log)
+find_package(Boost 1.65.0 REQUIRED system log program_options)
 
 include_directories(include)
 # Add CoAP headers
@@ -43,7 +43,7 @@ target_link_libraries(${PROJECT_NAME} paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES}
 target_link_libraries(atlas_gateway_cli paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto -lstdc++fs)
 
 #Add CoAP and Boost library
-target_link_libraries(${PROJECT_NAME} ${SQLITE_LIBRARIES} ${COAP_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${SQLITE_LIBRARIES} ${COAP_LIBRARIES} ${Boost_LIBRARIES} ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(atlas_gateway_cli ${SQLITE_LIBRARIES} ${COAP_LIBRARIES} ${Boost_LIBRARIES})
 
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall)

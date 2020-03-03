@@ -1,4 +1,5 @@
 #include <iostream>
+#include <boost/program_options.hpp>
 #include "scheduler/AtlasScheduler.h"
 #include "coap/AtlasCoapServer.h"
 #include "coap/AtlasCoapResource.h"
@@ -14,10 +15,68 @@
 #include "identity/AtlasIdentity.h"
 #include "cloud/AtlasRegisterCloud.h"
 
+namespace {
+
+const std::string ATLAS_GATEWAY_DESC = "Atlas gateway";
+const int ATLAS_COAP_MAX_PORT = 65535;
+
+/* Cloud back-end hostname*/
+std::string cloudHostname;
+
+/* CoAP listen port for the client connection */
+int coapPort;
+
+} // anonymous namespace
+
+void parse_options(int argc, char **argv)
+{
+    boost::program_options::options_description desc(ATLAS_GATEWAY_DESC);
+    boost::program_options::variables_map vm;
+    
+    desc.add_options()
+    ("help", "Display help message")
+    ("cloud,c", boost::program_options::value<std::string>(&cloudHostname), "IP address for the cloud broker - used to connect the gateway with the cloud back-end")
+    ("listen,l", boost::program_options::value<int>(&coapPort), "Listen port number for the gateway CoAP server - used to connect the gateway with the client");
+
+
+    try {
+
+        boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
+                                      .options(desc).run(), vm);
+        
+        if (vm.count("help")) {
+            std::cout << desc << std::endl;
+            exit(1);
+        }
+
+        boost::program_options::notify(vm);
+    
+        /* Port validation */
+        if (coapPort <= 0 || coapPort > ATLAS_COAP_MAX_PORT) {
+            std::cout << "ERROR: Invalid listening port" << std::endl;
+            std::cout << desc << std::endl;
+            exit(1);
+        }
+
+        /* Cloud hostname validation */
+        if (cloudHostname == "") {
+            std::cout << "ERROR: Invalid cloud back-end hostname" << std::endl;
+            std::cout << desc << std::endl;
+            exit(1);
+        }
+
+    } catch(boost::program_options::error& e) {
+        std::cout << desc << std::endl;
+        exit(1);
+    }
+}
+
 int main(int argc, char **argv)
 {
     atlas::AtlasRegister reg;
     atlas::AtlasPolicy policy;
+
+    parse_options(argc, argv);
 
     atlas::initLog();
     
@@ -26,20 +85,15 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    ATLAS_LOGGER_DEBUG("Identity generated with success!");
-
-    if (argc == 2) {        
-        atlas::AtlasMqttClient::getInstance().connect(argv[1]);
-    } else {
-        ATLAS_LOGGER_ERROR("Too few arguments used when atlas_gateway was executed!");
-        std::cout << "Incorrect number of parameters." << std::endl << "Correct usage: atlas_gateway <cloud_hostname>" << std::endl;
-        return 1;
-    }
+    /* Connect to cloud back-end */
+    atlas::AtlasMqttClient::getInstance().connect(cloudHostname,
+                                                  atlas::AtlasIdentity::getInstance().getIdentity());
 
     /* Start cloud register module */
     atlas::AtlasRegisterCloud::getInstance().start();
 
-    atlas::AtlasCoapServer::getInstance().start(10100, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 
+    /* Start internal CoAP server */
+    atlas::AtlasCoapServer::getInstance().start(coapPort, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 
 
     ATLAS_LOGGER_DEBUG("Starting Atlas gateway...");
 
