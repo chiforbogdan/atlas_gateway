@@ -1,8 +1,11 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/lexical_cast.hpp>
+#include <string>
 #include "AtlasDevice.h"
 #include "../logger/AtlasLogger.h"
 #include "../telemetry/AtlasTelemetryInfo.h"
 #include "../telemetry/AtlasAlertFactory.h"
+#include "../pubsub_agent/AtlasPubSubAgent.h"
 
 namespace atlas {
 
@@ -23,15 +26,39 @@ const std::string ATLAS_LAST_KEEPALIVE_TIME_JSON_KEY = "lastKeepAliveTime";
 /* JSON IP and port key */
 const std::string ATLAS_IP_PORT_JSON_KEY = "ipPort";
 
+/* JSON policy key */
+const std::string ATLAS_POLICY_JSON_KEY = "policy";
+
+/* JSON policy-cliendId key */
+const std::string ATLAS_POLICY_CLIENTID_JSON_KEY = "clientId";
+
+/* JSON policy-qos key */
+const std::string ATLAS_POLICY_QOS_JSON_KEY = "qos";
+
+/* JSON policy-ppm key */
+const std::string ATLAS_POLICY_PPM_JSON_KEY = "ppm";
+
+/* JSON policy-payloadLen key */
+const std::string ATLAS_POLICY_PAYLOADLEN_JSON_KEY = "payloadLen";
+
+/* JSON firewall stat key */
+const std::string ATLAS_FIREWALLSTAT_JSON_KEY = "firewallStatistic";
+
+/* JSON firewall stat-droppedPkts key */
+const std::string ATLAS_FIREWALLSTAT_DROPPEDPKTS_JSON_KEY = "droppedPkts";
+
+/* JSON firewall stat-passedPkts key */
+const std::string ATLAS_FIREWALLSTAT_PASSEDPKTS_JSON_KEY = "passedPkts";
+
 } // anonymous namespace
 
 AtlasDevice::AtlasDevice(const std::string &identity, std::shared_ptr<AtlasDeviceCloud> deviceCloud) : identity_(identity), deviceCloud_(deviceCloud),
-                                                                                                       registered_(false)
+                                                                                                       clientId_(""), registered_(false)
 {
     installDefaultAlerts();
 }
 
-AtlasDevice::AtlasDevice() : identity_(""), registered_(false) {}
+AtlasDevice::AtlasDevice() : identity_(""), clientId_(""), registered_(false) {}
 
 void AtlasDevice::installDefaultAlerts()
 {
@@ -93,6 +120,25 @@ void AtlasDevice::setIpPort(const std::string &ipPort)
     }
 }
 
+void AtlasDevice::setPolicyInfo(const std::string &clientId, uint16_t qos, uint16_t ppm, uint16_t payloadLen)
+{
+        if (clientId_ != clientId || qos_ != qos || ppm_ != ppm || payloadLen_ != payloadLen) {
+        clientId_ = clientId;
+        qos_ = qos;
+        ppm_ = ppm;
+        payloadLen_ = payloadLen;
+        /* Send policy to cloud */
+        deviceCloud_->updateDevice(identity_, policyToJSON());
+    }
+}
+
+void AtlasDevice::setFirewallRuleStat(uint32_t droppedPkts, uint32_t passedPkts)
+{
+    droppedPkts_ = droppedPkts;
+    passedPkts_ = passedPkts;
+    /* Send firewall policy statistic to cloud */
+    deviceCloud_->updateDevice(identity_, firewallStatToJSON());
+}
 void AtlasDevice::registerNow()
 {
     boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
@@ -162,6 +208,26 @@ std::string AtlasDevice::ipPortToJSON()
     return "\"" + ATLAS_IP_PORT_JSON_KEY + "\": \"" + ipPort_ + "\"";
 }
 
+std::string AtlasDevice::policyToJSON()
+{
+    return "\"" + ATLAS_POLICY_JSON_KEY + "\": \n" 
+                + "{"
+                + "\n\"" + ATLAS_POLICY_CLIENTID_JSON_KEY + "\": \"" + clientId_ + "\","
+                + "\n\"" + ATLAS_POLICY_QOS_JSON_KEY + "\": \"" + std::to_string(qos_) + "\","
+                + "\n\"" + ATLAS_POLICY_PPM_JSON_KEY + "\": \"" + std::to_string(ppm_) + "\","
+                + "\n\"" + ATLAS_POLICY_PAYLOADLEN_JSON_KEY + "\": \"" + std::to_string(payloadLen_) + "\""
+                + "\n}";
+}
+
+std::string AtlasDevice::firewallStatToJSON()
+{
+    return "\"" + ATLAS_FIREWALLSTAT_JSON_KEY + "\": \n" 
+                + "{"
+                + "\n\"" + ATLAS_FIREWALLSTAT_DROPPEDPKTS_JSON_KEY + "\": \"" + std::to_string(droppedPkts_) + "\","
+                + "\n\"" + ATLAS_FIREWALLSTAT_PASSEDPKTS_JSON_KEY + "\": \"" + std::to_string(passedPkts_) + "\""
+                + "\n}";
+}
+
 std::string AtlasDevice::toJSON()
 {
     std::string jsonDevice;
@@ -198,6 +264,18 @@ void AtlasDevice::setFeature(const std::string &featureType, const std::string &
         telemetryInfo_.setFeature(featureType, featureValue);
         deviceCloud_->updateDevice(identity_, telemetryInfo_.toJSON(featureType));
     }
+}
+
+void AtlasDevice::installPolicy()
+{
+    if(clientId_ != "")
+        AtlasPubSubAgent::getInstance().installFirewallRule(clientId_, identity_, qos_, ppm_, payloadLen_);
+}
+
+void AtlasDevice::getFirewallRuleStats()
+{
+    if(clientId_ != "")
+        AtlasPubSubAgent::getInstance().getFirewallRuleStats(clientId_);
 }
 
 } // namespace atlas

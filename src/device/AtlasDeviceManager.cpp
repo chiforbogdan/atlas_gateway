@@ -6,6 +6,12 @@
 
 namespace atlas {
 
+namespace {
+
+const int ATLAS_FIREWALL_STATISTICS_INTERVAL_MS = 60000;
+
+} // anonymous namespace
+
 AtlasDeviceManager& AtlasDeviceManager::getInstance()
 {
     static AtlasDeviceManager instance;
@@ -13,7 +19,28 @@ AtlasDeviceManager& AtlasDeviceManager::getInstance()
     return instance;
 }
 
-AtlasDeviceManager::AtlasDeviceManager(): deviceCloud_(new AtlasDeviceCloud()) {}
+AtlasDeviceManager::AtlasDeviceManager(): deviceCloud_(new AtlasDeviceCloud()),
+                                          fsAlarm_(ATLAS_FIREWALL_STATISTICS_INTERVAL_MS, false, boost::bind(&AtlasDeviceManager::firewallStatisticsAlarmCallback, this)) {}
+
+void AtlasDeviceManager::firewallStatisticsAlarmCallback()
+{
+    ATLAS_LOGGER_INFO("Firewall-statistics alarm callback");
+
+    AtlasDeviceManager::getInstance().forEachDevice([] (AtlasDevice& device)
+                                                        { 
+                                                            device.getFirewallRuleStats();
+                                                        });
+} 
+
+void AtlasDeviceManager::startFirewallStatisticsAlarm()
+{
+    fsAlarm_.start();
+}
+
+void AtlasDeviceManager::stopFirewallStatisticsAlarm()
+{
+    fsAlarm_.cancel();
+}
 
 AtlasDevice& AtlasDeviceManager::getDevice(const std::string& identity)
 {

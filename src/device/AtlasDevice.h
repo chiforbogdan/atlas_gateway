@@ -3,6 +3,7 @@
 
 #include <string>
 #include <memory>
+#include <boost/optional.hpp>
 #include "../telemetry/AtlasTelemetryInfo.h"
 #include "../telemetry/AtlasAlert.h"
 #include "../commands/AtlasCommandType.h"
@@ -43,6 +44,24 @@ public:
     * @return none
     */
     void setIpPort(const std::string &ipPort);
+
+    /**
+    * @brief Set policy info for client device
+    * @param[in] client id
+    * @param[in] qos
+    * @param[in] ppm
+    * @param[in] payloadLen
+    * @return none
+    */
+    void setPolicyInfo(const std::string &clientId, uint16_t qos, uint16_t ppm, uint16_t payloadLen);
+
+    /**
+    * @brief Set firewall statistic for client device
+    * @param[in] dropped packets
+    * @param[in] passed packets
+    * @return none
+    */
+    void setFirewallRuleStat(uint32_t droppedPkts, uint32_t passedPkts);
 
     /**
     * @brief Get client device identity
@@ -143,6 +162,18 @@ public:
     */
     inline void clearSyncRequired() { syncRequired_ = false; }
 
+    /**
+    * @brief Install policy
+    * @return none
+    */
+    void installPolicy();
+
+    /**
+    * @brief Get firewall policy statistics
+    * @return none
+    */
+    void getFirewallRuleStats();
+
 private:
     /**
     * @brief Install default telemetry alerts
@@ -167,6 +198,18 @@ private:
     * @return JSON serialized IP and port
     */
     std::string ipPortToJSON();
+
+    /**
+    * @brief Serialize client policy to JSON
+    * @return JSON serialized policy
+    */
+    std::string policyToJSON();
+
+    /**
+    * @brief Serialize client firewall statistic to JSON
+    * @return JSON serialized statistic
+    */
+    std::string firewallStatToJSON();
 
     /* IoT client identity */
     std::string identity_;
@@ -203,6 +246,24 @@ private:
 
     /* Telemetry threshold alerts */
     std::unordered_map<std::string, std::unique_ptr<AtlasAlert> > thresholdAlerts_;
+
+    /* Policy info - clientid*/
+    std::string clientId_;
+
+    /* Policy info - qos*/
+    uint16_t qos_;
+
+    /* Policy info - ppm*/
+    uint16_t ppm_;
+
+    /* Policy info - payloadLen*/
+    uint16_t payloadLen_;
+
+    /* Firewall statistic param - droppedPkts*/
+    uint32_t droppedPkts_;
+
+    /* Firewall statistic param - passedPkts*/
+    uint32_t passedPkts_;
 };
 
 } // namespace atlas

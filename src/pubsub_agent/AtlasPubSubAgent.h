@@ -2,6 +2,7 @@
 #define __ATLAS_PUBSUB_AGENT_H__
 
 #include <stdint.h>
+#include <unordered_map>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
@@ -34,9 +35,21 @@ public:
 
     /**
     * @brief Install firewall rule
+    * @param[in] clientId Publish-subscribe Client id
+    * @param[in] device identity
+    * @param[in] policy qos
+    * @param[in] policy ppm
+    * @param[in] policy payloadLen
     * @return none
     */
-    void installFirewallRule(const std::string &clientId, uint16_t qos, uint16_t ppm, uint16_t payloadLen);
+    void installFirewallRule(const std::string &clientId, const std::string &identity, uint16_t qos, uint16_t ppm, uint16_t payloadLen);
+
+    /**
+    * @brief Get firewall rule statistics for client id
+    * @param[in] clientId Publish-subscribe Client id
+    * @return none
+    */
+    void getFirewallRuleStats(const std::string &clientId);
 
     AtlasPubSubAgent(const AtlasPubSubAgent&) = delete;
     AtlasPubSubAgent& operator=(const AtlasPubSubAgent&) = delete;
@@ -64,13 +77,6 @@ private:
     * @return none
     */
     void processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t cmdLen);
-
-    /**
-    * @brief Get firewall rule statistics for client id
-    * @param[in] clientId Publish-subscribe Client id
-    * @return none
-    */
-    void getFirewallRuleStats(const std::string &clientId);
  
     /**
     * @brief Remove firewall rule for client id
@@ -125,6 +131,9 @@ private:
 
     /* Read data buffer */
     uint8_t data_[ATLAS_PUB_SUB_AGENT_BUF_LEN];
+
+    /* Cache for all devices that installed policies in firewall - <clientId-Identity> */
+    std::unordered_map<std::string, std::string> policyDevices_;
 };
 
 } // namespace atlas

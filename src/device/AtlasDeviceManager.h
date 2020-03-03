@@ -22,6 +22,18 @@ public:
     static AtlasDeviceManager& getInstance();
 
     /**
+    * @brief Start firewall statistics alarm
+    * @return none
+    */
+    void startFirewallStatisticsAlarm();
+
+    /**
+    * @brief Stop firewall statistics alarm
+    * @return none
+    */
+    void stopFirewallStatisticsAlarm();
+
+    /**
     * @brief Get device cloud back-end manager
     * @return Device cloud back-end manager
     */
@@ -52,6 +64,12 @@ private:
     */
     AtlasDeviceManager();
 
+    /**
+    * @brief Firewall-statistics alarm callback
+    * @return none
+    */
+    void firewallStatisticsAlarmCallback();
+
     /* Client devices */
     std::unordered_map<std::string, AtlasDevice> devices_;
 
@@ -60,6 +78,9 @@ private:
 
     /* Cloud back-end manager */
     std::shared_ptr<AtlasDeviceCloud> deviceCloud_;
+
+    /* Firewall-statistics alarm */
+    AtlasAlarm fsAlarm_;
 };
 
 } // namespace atlas

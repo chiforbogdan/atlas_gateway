@@ -113,8 +113,11 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
 
+    /* Set policy info in this device*/
+    device.setPolicyInfo(clientId, *qos, *ppm, *payloadLen);
+
     /* Install firewall policy in mosquitto plug-in*/
-    AtlasPubSubAgent::getInstance().installFirewallRule(clientId, *qos, *ppm, *payloadLen);
+    AtlasPubSubAgent::getInstance().installFirewallRule(clientId, pskIdentity, *qos, *ppm, *payloadLen);
 
     return ATLAS_COAP_RESP_OK;
 }
