@@ -13,11 +13,13 @@
 #include "mqtt_client/AtlasMqttClient.h"
 #include "identity/AtlasIdentity.h"
 #include "cloud/AtlasRegisterCloud.h"
+#include "bayes_network_connector/AtlasFeatureReputation.h"
 
 int main(int argc, char **argv)
 {
     atlas::AtlasRegister reg;
     atlas::AtlasPolicy policy;
+    atlas::AtlasFeatureReputation feature;
 
     atlas::initLog();
     
@@ -45,9 +47,12 @@ int main(int argc, char **argv)
 
     /* Start policy module */
     policy.start();
-
+    
     /* Start registration module */
     reg.start();
+
+    /*Start feature value request */
+    feature.start();
 
     /* Start publish-subscribe agent */
     atlas::AtlasPubSubAgent::getInstance().start();
@@ -57,6 +62,7 @@ int main(int argc, char **argv)
 
     /* Stop cloud register module */
     atlas::AtlasRegisterCloud::getInstance().stop();
+
 
     /* Stop policy module */
     policy.stop();

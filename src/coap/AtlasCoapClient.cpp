@@ -281,7 +281,7 @@ void AtlasCoapClient::sendRequest(const std::string &uri, AtlasCoapMethod method
             throw "Cannot create CoAP context for client request";
 
         /* Register handlers */
-	coap_register_response_handler(ctx, &AtlasCoapClient::messageHandler);
+	    coap_register_response_handler(ctx, &AtlasCoapClient::messageHandler);
         coap_register_event_handler(ctx, &AtlasCoapClient::eventHandler);
         coap_register_nack_handler(ctx, &AtlasCoapClient::nackHandler);
 

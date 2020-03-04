@@ -74,8 +74,10 @@ enum AtlasCommandType {
        value. This string will be parsed by each telemetry feature (application specific) */
     ATLAS_CMD_TELEMETRY_ALERT_THRESHOLD,
     
+    /* Telemetry packets per minute command: payload is the number of packets received in 1 minute */
     ATLAS_CMD_TELEMETRY_PACKETS_PER_MINUTE,
 
+    /* Telemetry packets average command: payload is the average length of received packets in 1 minute */
     ATLAS_CMD_TELEMETRY_PACKETS_AVG,
 
 
@@ -129,6 +131,8 @@ enum AtlasCommandType {
     /* Publish-subscribe number of accepted packets by a firewall rule: payload is 4 byte
     number of accepted packtes */
     ATLAS_CMD_PUB_SUB_PKT_PASS,
+
+    ATLAS_CMD_FEATURE_REQUEST = 1500,
 };
 
 } // namespace atlas
