@@ -94,8 +94,7 @@ void AtlasPubSubAgent::removeFirewallRule(const std::string &clientId)
 
     std::pair<const uint8_t*, size_t> outerCmd = cmdBatchOuter.getSerializedAddedCommands();
 
-    if(policyDevices_.find(clientId) != policyDevices_.end())
-        policyDevices_.erase(clientId);
+    policyDevices_.erase(clientId);
 
     /* Write command to publish-subscribe agent */
     write(outerCmd.first, outerCmd.second);
@@ -103,13 +102,10 @@ void AtlasPubSubAgent::removeFirewallRule(const std::string &clientId)
 
 void AtlasPubSubAgent::getAllFirewallRules()
 {
-
+    /* This is called by plug-in when it is up*/
     ATLAS_LOGGER_DEBUG("Get all firewall rules for publish-subscribe agent");
 
-    AtlasDeviceManager::getInstance().forEachDevice([] (AtlasDevice& device)
-                                                    { 
-                                                        device.installPolicy();
-                                                    });
+    AtlasDeviceManager::getInstance().installAllPolicies();
 }
 
 void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t cmdLen)
@@ -166,7 +162,11 @@ void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t c
         return;
     }
     else
-        AtlasDeviceManager::getInstance().getDevice(policyDevices_[clientId]).setFirewallRuleStat(droppedPkts, passedPkts);
+    {
+        AtlasDeviceManager::getInstance()
+                            .getDevice(policyDevices_[clientId])
+                            .setFirewallStats(std::unique_ptr<AtlasFirewallStats>(new AtlasFirewallStats(clientId, droppedPkts, passedPkts)));
+    }
 }
 
 void AtlasPubSubAgent::processCommand(size_t cmdLen)

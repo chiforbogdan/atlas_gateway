@@ -4,6 +4,7 @@
 #include "../coap/AtlasCoapResponse.h"
 #include "../coap/AtlasCoapMethod.h"
 #include "../coap/AtlasCoapResource.h"
+#include "AtlasFirewallPolicy.h"
 
 namespace atlas {
 

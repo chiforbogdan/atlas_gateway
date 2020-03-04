@@ -43,9 +43,6 @@ int main(int argc, char **argv)
 
     ATLAS_LOGGER_DEBUG("Starting Atlas gateway...");
 
-    /* Start firewall statistics alarm */
-    atlas::AtlasDeviceManager::getInstance().startFirewallStatisticsAlarm();
-
     /* Start policy module */
     policy.start();
 
@@ -66,9 +63,6 @@ int main(int argc, char **argv)
 
     /* Stop registration module */
     reg.stop();
-
-    /* Stop firewall statistics alarm */
-    atlas::AtlasDeviceManager::getInstance().stopFirewallStatisticsAlarm();
 
     ATLAS_LOGGER_DEBUG("Stopping Atlas gateway...");
 

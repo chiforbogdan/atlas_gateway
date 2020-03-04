@@ -22,16 +22,16 @@ public:
     static AtlasDeviceManager& getInstance();
 
     /**
-    * @brief Start firewall statistics alarm
+    * @brief Install all policies for all devices
     * @return none
     */
-    void startFirewallStatisticsAlarm();
+    void installAllPolicies();
 
     /**
-    * @brief Stop firewall statistics alarm
+    * @brief Get firewall policy statistics
     * @return none
     */
-    void stopFirewallStatisticsAlarm();
+    void getFirewallStats();
 
     /**
     * @brief Get device cloud back-end manager
@@ -63,6 +63,24 @@ private:
     * @return none
     */
     AtlasDeviceManager();
+
+    /**
+    * @brief Start firewall statistics alarm
+    * @return none
+    */
+    void startFirewallStatisticsAlarm();
+
+    /**
+    * @brief Stop firewall statistics alarm
+    * @return none
+    */
+    void stopFirewallStatisticsAlarm();
+    
+    /**
+    * @brief Dtor for device manager
+    * @return none
+    */
+    ~AtlasDeviceManager();
 
     /**
     * @brief Firewall-statistics alarm callback

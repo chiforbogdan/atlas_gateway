@@ -114,7 +114,7 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
     }
 
     /* Set policy info in this device*/
-    device.setPolicyInfo(clientId, *qos, *ppm, *payloadLen);
+    device.setPolicyInfo(std::unique_ptr<AtlasFirewallPolicy>(new AtlasFirewallPolicy(clientId, *qos, *ppm, *payloadLen)));
 
     /* Install firewall policy in mosquitto plug-in*/
     AtlasPubSubAgent::getInstance().installFirewallRule(clientId, pskIdentity, *qos, *ppm, *payloadLen);

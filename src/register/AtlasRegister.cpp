@@ -193,7 +193,6 @@ AtlasCoapResponse AtlasRegister::registerCallback(const std::string &path, const
 
 void AtlasRegister::start()
 {
-
     ATLAS_LOGGER_DEBUG("Start registration module");
 
     /* Add REGISTER and KEEPALIVE resource to CoAP server. This is called by the IoT device in the 

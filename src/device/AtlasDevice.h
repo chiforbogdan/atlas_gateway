@@ -8,6 +8,8 @@
 #include "../telemetry/AtlasAlert.h"
 #include "../commands/AtlasCommandType.h"
 #include "../cloud/AtlasDeviceCloud.h"
+#include "../policy/AtlasFirewallPolicy.h"
+#include "../statistics/AtlasFirewallStats.h"
 
 namespace atlas {
 
@@ -47,21 +49,17 @@ public:
 
     /**
     * @brief Set policy info for client device
-    * @param[in] client id
-    * @param[in] qos
-    * @param[in] ppm
-    * @param[in] payloadLen
+    * @param[in] policy pointer
     * @return none
     */
-    void setPolicyInfo(const std::string &clientId, uint16_t qos, uint16_t ppm, uint16_t payloadLen);
+    void setPolicyInfo(std::unique_ptr<AtlasFirewallPolicy> policy);
 
     /**
     * @brief Set firewall statistic for client device
-    * @param[in] dropped packets
-    * @param[in] passed packets
+    * @param[in] statistics pointer
     * @return none
     */
-    void setFirewallRuleStat(uint32_t droppedPkts, uint32_t passedPkts);
+    void setFirewallStats(std::unique_ptr<AtlasFirewallStats> stats);
 
     /**
     * @brief Get client device identity
@@ -86,6 +84,18 @@ public:
     * @return Client device registration time
     */
     inline std::string getRegTime() const { return regTime_; }
+
+    /**
+    * @brief Get client device policy
+    * @return Client device policy
+    */
+    inline AtlasFirewallPolicy &getPolicy() const { return *policy_; }
+
+    /**
+    * @brief Get client device firewall stats
+    * @return Client device firewall stats
+    */
+    inline AtlasFirewallStats &getFirewallStats() const { return *stats_; }
 
     /**
     * @brief Indicate that a client device just registered
@@ -133,7 +143,6 @@ public:
 
     /**
     * @brief Put all device info in json format
-    * @param[in] feature name
     * @return string
     */
     std::string toJSON();
@@ -162,18 +171,6 @@ public:
     */
     inline void clearSyncRequired() { syncRequired_ = false; }
 
-    /**
-    * @brief Install policy
-    * @return none
-    */
-    void installPolicy();
-
-    /**
-    * @brief Get firewall policy statistics
-    * @return none
-    */
-    void getFirewallRuleStats();
-
 private:
     /**
     * @brief Install default telemetry alerts
@@ -198,18 +195,6 @@ private:
     * @return JSON serialized IP and port
     */
     std::string ipPortToJSON();
-
-    /**
-    * @brief Serialize client policy to JSON
-    * @return JSON serialized policy
-    */
-    std::string policyToJSON();
-
-    /**
-    * @brief Serialize client firewall statistic to JSON
-    * @return JSON serialized statistic
-    */
-    std::string firewallStatToJSON();
 
     /* IoT client identity */
     std::string identity_;
@@ -247,23 +232,11 @@ private:
     /* Telemetry threshold alerts */
     std::unordered_map<std::string, std::unique_ptr<AtlasAlert> > thresholdAlerts_;
 
-    /* Policy info - clientid*/
-    std::string clientId_;
+    /* Policy*/
+    std::unique_ptr<AtlasFirewallPolicy> policy_;
 
-    /* Policy info - qos*/
-    uint16_t qos_;
-
-    /* Policy info - ppm*/
-    uint16_t ppm_;
-
-    /* Policy info - payloadLen*/
-    uint16_t payloadLen_;
-
-    /* Firewall statistic param - droppedPkts*/
-    uint32_t droppedPkts_;
-
-    /* Firewall statistic param - passedPkts*/
-    uint32_t passedPkts_;
+    /* Firewall statistic*/
+    std::unique_ptr<AtlasFirewallStats> stats_;
 };
 
 } // namespace atlas

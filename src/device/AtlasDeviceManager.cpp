@@ -20,16 +20,17 @@ AtlasDeviceManager& AtlasDeviceManager::getInstance()
 }
 
 AtlasDeviceManager::AtlasDeviceManager(): deviceCloud_(new AtlasDeviceCloud()),
-                                          fsAlarm_(ATLAS_FIREWALL_STATISTICS_INTERVAL_MS, false, boost::bind(&AtlasDeviceManager::firewallStatisticsAlarmCallback, this)) {}
+                                          fsAlarm_(ATLAS_FIREWALL_STATISTICS_INTERVAL_MS, false, boost::bind(&AtlasDeviceManager::firewallStatisticsAlarmCallback, this)) 
+{
+    /* Start firewall statistics alarm */
+    startFirewallStatisticsAlarm();
+}
 
 void AtlasDeviceManager::firewallStatisticsAlarmCallback()
 {
     ATLAS_LOGGER_INFO("Firewall-statistics alarm callback");
 
-    AtlasDeviceManager::getInstance().forEachDevice([] (AtlasDevice& device)
-                                                        { 
-                                                            device.getFirewallRuleStats();
-                                                        });
+    getFirewallStats();
 } 
 
 void AtlasDeviceManager::startFirewallStatisticsAlarm()
@@ -56,6 +57,36 @@ void AtlasDeviceManager::forEachDevice(std::function<void(AtlasDevice&)> cb)
 {
     for (auto it = devices_.begin(); it != devices_.end(); ++it)
         cb(it->second); 
+}
+
+void AtlasDeviceManager::installAllPolicies()
+{
+    forEachDevice([] (AtlasDevice& device)
+                    { 
+                        if(device.getPolicy().getClientId() != "")
+                        {
+                            AtlasPubSubAgent::getInstance().installFirewallRule(device.getPolicy().getClientId(), 
+                                                                                device.getIdentity(),
+                                                                                device.getPolicy().getQOS(),
+                                                                                device.getPolicy().getPPM(),
+                                                                                device.getPolicy().getPayloadLen());
+                        }
+                    });
+    
+}
+
+void AtlasDeviceManager::getFirewallStats()
+{
+    forEachDevice([] (AtlasDevice& device)
+                    { 
+                        AtlasPubSubAgent::getInstance().getFirewallRuleStats((device.getPolicy().getClientId()));
+                    });
+}
+
+AtlasDeviceManager::~AtlasDeviceManager()
+{
+    /* Stop firewall statistics alarm */
+    stopFirewallStatisticsAlarm();
 }
 
 } // namespace atlas
