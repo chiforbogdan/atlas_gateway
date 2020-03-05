@@ -9,6 +9,7 @@
 #include "coap/AtlasCoapClient.h"
 #include "register/AtlasRegister.h"
 #include "pubsub_agent/AtlasPubSubAgent.h"
+#include "reputation/AtlasReputation_Tester.h"
 
 int main(int argc, char **argv)
 {
@@ -20,18 +21,21 @@ int main(int argc, char **argv)
     atlas::AtlasCoapServer::getInstance().start(10100, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 
 
     ATLAS_LOGGER_DEBUG("Starting Atlas gateway...");
+
+    atlas::AtlasReputationTester::simulateScenario_1(10, 3);
+    //atlas::AtlasReputationTester::simulateScenario_2(10, 3);
     
     /* Start registration module */
-    reg.start();
+    //reg.start();
 
     /* Start publish-subscribe agent */
-    pubSubAgent.start();
+    //pubSubAgent.start();
 
     /* Start scheduler */
-    atlas::AtlasScheduler::getInstance().run();
+    //atlas::AtlasScheduler::getInstance().run();
 
     /* Stop registration module */
-    reg.stop();
+    //reg.stop();
 
     ATLAS_LOGGER_DEBUG("Stopping Atlas gateway...");
 

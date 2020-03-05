@@ -1,43 +1,74 @@
 #include "AtlasReputation_NaiveBayes.h"
 #include "../logger/AtlasLogger.h"
+#include <iostream>
+#include <string>
 
 namespace atlas
 {
 
-float AtlasReputationNaiveBayes::computeForFeature(AtlasDeviceFeatureManager& manager, AtlasDeviceFeatureType type, int newFeedback)
-{
-    manager[type].addFeedbackValue(newFeedback);
-    manager[type].updateTotalInteractions();
-    int tmpScore = 0;
+double AtlasReputationNaiveBayes::computeForFeature(AtlasDeviceFeatureManager& manager, AtlasDeviceFeatureType type, double newFeedback, bool firstFeature)
+{   
+    if (firstFeature) 
+        manager.updateTotalTransactions();
 
-    if ( newFeedback >= manager[type].getFeedbackThreshold()){
-        manager[type].updateSuccessInteractions();
-        manager[type].updateCPT();
+    if ( newFeedback >= manager[type].getFeedbackThreshold()) {
+        manager[type].updateSuccessfulTransactions();
+        if (firstFeature)
+            manager.updateTotalSuccessfulTransactions();       
     }
 
-    if ((manager[type].getTotalInteractions() == 0) || (manager[type].getSuccessInteractions() == 0)) {
-        manager[type].updateReputation(0);
+    if ((manager.getTotalTransactions() == 0) || (manager[type].getSuccessfulTransactions() == 0)) {
+        double retVal = manager[type].getReputation() * 0.95;
+        manager[type].updateReputation(retVal);
         ATLAS_LOGGER_INFO("AtlasReputationNaiveBayes_computeForFeature: Reputation could not be calculated!");
-        return 0;
+        return retVal;
     }
 
-    float trustProb = manager[type].getSuccessInteractions() / manager[type].getTotalInteractions();
-    float featureProb = manager[type].getCPT() / manager[type].getTotalInteractions();
-
-    manager[type].updateReputation(featureProb / trustProb);
+    double trustProb = 0;
+    if ((manager.getTotalSuccessfulTransactions() != 0) && (manager.getTotalTransactions() != 0)) {
+        trustProb = (double)manager.getTotalSuccessfulTransactions() / (double)manager.getTotalTransactions();
+    }
+    
+    double featureProb = 0;
+    if ((manager[type].getSuccessfulTransactions() != 0) && (manager.getTotalTransactions() != 0)) {        
+        featureProb = (double)manager[type].getSuccessfulTransactions() / (double)manager.getTotalTransactions();
+        manager[type].updateCPT(featureProb);
+    }
+    double val = 0;
+    if ((featureProb != 0) && (trustProb != 0)) {
+        //val = manager[type].getReputation() * (featureProb / trustProb);
+        val = featureProb / trustProb;
+        manager[type].updateReputation(val);
+    } else {
+        manager[type].updateReputation(manager[type].getReputation() * 0.95);
+    }
+    
     ATLAS_LOGGER_INFO("AtlasReputationNaiveBayes_computeForFeature: Reputation calculated successfully!");
-    return (featureProb / trustProb);
+    return (val);
 }
 
-std::vector<float> AtlasReputationNaiveBayes::computeForDevice(AtlasDeviceFeatureManager& manager, std::unordered_map<AtlasDeviceFeatureType, int>& newFeedbackMatrix)
+double AtlasReputationNaiveBayes::computeForDevice(AtlasDeviceFeatureManager& manager, std::unordered_map<AtlasDeviceFeatureType, double>& newFeedbackMatrix)
 {
-    std::vector<float> tmpReputation;
+    bool firstFeature = true;
     for (auto it = newFeedbackMatrix.begin(); it != newFeedbackMatrix.end(); it++) {
-        tmpReputation.push_back(computeForFeature(manager, (*it).first, (*it).second));
+        std::cout << "Feature " << (int)(*it).first << std::endl;
+        computeForFeature(manager, (*it).first, (*it).second, firstFeature);
+        firstFeature = false;
     }
 
+    double retVal = 1;
+    for (auto it = manager.getDeviceFeatures().begin(); it != manager.getDeviceFeatures().end(); it++) {
+        retVal = retVal * ((*it).getSuccessfulTransactions() / manager.getTotalSuccessfulTransactions());
+        /*Other option:
+        retVal += (*it).getReputation();
+        */
+    }
+    /*Other option (continued):
+    retVal = retVal / manager.getDeviceFeatures().size();
+    */
+    retVal = retVal * (manager.getTotalSuccessfulTransactions() / manager.getTotalTransactions());
     ATLAS_LOGGER_INFO("AtlasReputationNaiveBayes_computeForDevice: Reputation calculated successfully!");
-    return tmpReputation;
+    return retVal;
 }
 
 } //namespace atlas

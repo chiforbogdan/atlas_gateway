@@ -4,17 +4,17 @@
 namespace atlas
 {
 
-void AtlasDeviceFeatureManager::addFeature(AtlasDeviceFeatureType &type, int feedbackThreshold)
+void AtlasDeviceFeatureManager::addFeature(AtlasDeviceFeatureType type, int feedbackThreshold)
 {
     bool found = false;
     if (features_.size() > 0) {
         for (auto it = features_.begin(); it != features_.end(); it++) {
             if ((*it).getFeatureType() == type) {
                 if ((*it).getFeedbackThreshold() == feedbackThreshold) {
-                    ATLAS_LOGGER_INFO("Feature already added with same value");
+                    ATLAS_LOGGER_INFO("AtlasDeviceFeatureManager: Feature already added with same value");
                     found = true;
                 } else {
-                    ATLAS_LOGGER_INFO("Feature already added. Updating value");
+                    ATLAS_LOGGER_INFO("AtlasDeviceFeatureManager: Feature already added. Updating value");
                     (*it).setFeedbackThreshold(feedbackThreshold);
                     found = true;
                 }                        
@@ -22,15 +22,15 @@ void AtlasDeviceFeatureManager::addFeature(AtlasDeviceFeatureType &type, int fee
         }
         if (!found) {
             features_.push_back(AtlasDeviceFeature(type, feedbackThreshold));
-            ATLAS_LOGGER_INFO("New feature added to device");
+            ATLAS_LOGGER_INFO("AtlasDeviceFeatureManager: New feature added to device");
         }
     } else {
         features_.push_back(AtlasDeviceFeature(type, feedbackThreshold));
-        ATLAS_LOGGER_INFO("New feature added to device");
+        ATLAS_LOGGER_INFO("AtlasDeviceFeatureManager: New feature added to device");
     }
 }
 
-bool AtlasDeviceFeatureManager::removeFeature(AtlasDeviceFeatureType &type)
+bool AtlasDeviceFeatureManager::removeFeature(AtlasDeviceFeatureType type)
 {
     if (features_.size() > 0) {        
         int index = -1;
@@ -40,13 +40,13 @@ bool AtlasDeviceFeatureManager::removeFeature(AtlasDeviceFeatureType &type)
         }
         if (index != -1) {
             features_.erase(features_.cbegin() + index);
-            ATLAS_LOGGER_INFO("Feature deleted successfully");    
-            return true;         
+            ATLAS_LOGGER_INFO("AtlasDeviceFeatureManager: Feature deleted successfully");         
         }
     } else {        
-        ATLAS_LOGGER_INFO("No features available for device. Delete operation aborted!");
+        ATLAS_LOGGER_INFO("AtlasDeviceFeatureManager: No features available for device. Delete operation aborted!");
         return false;
     }
+    return true;
 }
 
 int AtlasDeviceFeatureManager::getDeviceReputation()
@@ -70,9 +70,8 @@ int AtlasDeviceFeatureManager::getDeviceFeatureReputation(AtlasDeviceFeatureType
             if (tmp.getFeatureType() == type)
                 return tmp.getReputation();
         }
-    } else {
-        return 0;
     }
+    return 0;
 }
 
 AtlasDeviceFeature& AtlasDeviceFeatureManager::operator [] (AtlasDeviceFeatureType type) 

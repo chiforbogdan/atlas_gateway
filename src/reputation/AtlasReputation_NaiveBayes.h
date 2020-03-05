@@ -9,8 +9,8 @@ namespace atlas
 class AtlasReputationNaiveBayes
 {
 public:
-    static float computeForFeature(AtlasDeviceFeatureManager&, AtlasDeviceFeatureType, int);
-    static std::vector<float> computeForDevice(AtlasDeviceFeatureManager&, std::unordered_map<AtlasDeviceFeatureType, int>&);
+    static double computeForFeature(AtlasDeviceFeatureManager&, AtlasDeviceFeatureType, double, bool firstFeature = true);
+    static double computeForDevice(AtlasDeviceFeatureManager&, std::unordered_map<AtlasDeviceFeatureType, double>&);
 };
 
 } //namespace atlas
