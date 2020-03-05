@@ -14,13 +14,10 @@ double AtlasReputationTester::generateFeedback(double targetVal, double errorVal
         sign = -1;
     tmpRand = ((double)rand() / RAND_MAX);
 
-    std::cout << "Sign: " << sign << " . Random value: " << tmpRand << std::endl;
-    std::cout << "####################################################" << std::endl;
-
     return (targetVal + (sign * tmpRand * errorVal));
 }
 
-void AtlasReputationTester::simulateScenario_1(double targetVal, double errorVal)
+void AtlasReputationTester::simulateScenario_1(double targetVal, double errorVal, int noOfIterations)
 {
     AtlasDeviceFeatureManager manager;
     manager.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC, (targetVal - errorVal + 1));
@@ -29,19 +26,17 @@ void AtlasReputationTester::simulateScenario_1(double targetVal, double errorVal
     if (fileOut != nullptr)
     {
         double rez = 0, genFB = 0;
-        for (int i=0; i<10; i++)
+        for (int i = 0; i < noOfIterations; i++)
         {
             genFB = generateFeedback(targetVal, errorVal);
             rez = AtlasReputationNaiveBayes::computeForFeature(manager, AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC, genFB);
-            std::cout << "Rezultatul reputatiei: " << rez << std::endl;
-            std::cout << "##################################################" << std::endl;
             fprintf(fileOut, "%f\n", rez);
         }
         fclose(fileOut);
     }
 }
 
-void AtlasReputationTester::simulateScenario_2(double targetVal, double errorVal)
+void AtlasReputationTester::simulateScenario_2(double targetVal, double errorVal, int noOfIterations)
 {   
     AtlasDeviceFeatureManager manager;
     manager.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_CO2, (targetVal - errorVal + 1));
@@ -51,7 +46,7 @@ void AtlasReputationTester::simulateScenario_2(double targetVal, double errorVal
     if (fileOut != nullptr)
     {
         double rez = 0, genFB = 0;
-        for (int i=0; i<10; i++)
+        for (int i = 0; i < noOfIterations; i++)
         {
             std::unordered_map<AtlasDeviceFeatureType, double> fbMatrix;
             for (size_t j=0; j < manager.getDeviceFeatures().size(); j++)//(auto it = manager.getDeviceFeatures().cbegin(); it != manager.getDeviceFeatures().cend(); it++) 

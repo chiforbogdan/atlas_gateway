@@ -51,7 +51,6 @@ double AtlasReputationNaiveBayes::computeForDevice(AtlasDeviceFeatureManager& ma
 {
     bool firstFeature = true;
     for (auto it = newFeedbackMatrix.begin(); it != newFeedbackMatrix.end(); it++) {
-        std::cout << "Feature " << (int)(*it).first << std::endl;
         computeForFeature(manager, (*it).first, (*it).second, firstFeature);
         firstFeature = false;
     }

@@ -9,8 +9,8 @@ class AtlasReputationTester
 {
 public:
     static double generateFeedback(double, double);
-    static void simulateScenario_1(double targetVal, double errorVal);
-    static void simulateScenario_2(double targetVal, double errorVal);
+    static void simulateScenario_1(double, double, int);
+    static void simulateScenario_2(double, double, int);
 };
 
 } //namespace atlas

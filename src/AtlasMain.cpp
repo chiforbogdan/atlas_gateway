@@ -14,6 +14,7 @@
 #include "mqtt_client/AtlasMqttClient.h"
 #include "identity/AtlasIdentity.h"
 #include "cloud/AtlasRegisterCloud.h"
+#include "reputation/AtlasReputation_Tester.h"
 
 namespace {
 
@@ -86,34 +87,37 @@ int main(int argc, char **argv)
     }
 
     /* Connect to cloud back-end */
-    atlas::AtlasMqttClient::getInstance().connect(cloudHostname,
-                                                  atlas::AtlasIdentity::getInstance().getIdentity());
+    //atlas::AtlasMqttClient::getInstance().connect(cloudHostname,
+                                                  //atlas::AtlasIdentity::getInstance().getIdentity());
 
     /* Start cloud register module */
-    atlas::AtlasRegisterCloud::getInstance().start();
+    //atlas::AtlasRegisterCloud::getInstance().start();
 
     /* Start internal CoAP server */
-    atlas::AtlasCoapServer::getInstance().start(coapPort, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 
+    //atlas::AtlasCoapServer::getInstance().start(coapPort, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 
 
     ATLAS_LOGGER_DEBUG("Starting Atlas gateway...");
 
+    //atlas::AtlasReputationTester::simulateScenario_1(10, 3, 100);
+    atlas::AtlasReputationTester::simulateScenario_2(10, 3, 100);
+
     /* Start policy module */
-    policy.start();
+    //policy.start();
 
     /* Start registration module */
     //reg.start();
 
     /* Start publish-subscribe agent */
-    atlas::AtlasPubSubAgent::getInstance().start();
+    //atlas::AtlasPubSubAgent::getInstance().start();
 
     /* Start scheduler */
     //atlas::AtlasScheduler::getInstance().run();
 
     /* Stop cloud register module */
-    atlas::AtlasRegisterCloud::getInstance().stop();
+    //atlas::AtlasRegisterCloud::getInstance().stop();
 
     /* Stop policy module */
-    policy.stop();
+    //policy.stop();
 
     /* Stop registration module */
     //reg.stop();
