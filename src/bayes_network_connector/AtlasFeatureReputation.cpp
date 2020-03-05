@@ -64,7 +64,21 @@ AtlasCoapResponse AtlasFeatureReputation::featureReputationCallback(const std::s
         else if(cmdEntry.getType() == ATLAS_CMD_FEATURE_REQUEST){
             feature.assign((char *)cmdEntry.getVal(), cmdEntry.getLen());
             std::cout << "Sending random value for feature " << feature << std::endl;
-            sendReputationValue();
+            //sendReputationValue();
+            AtlasCommandBatch cmdBatch;
+            uint16_t featureReputation = 20;
+            featureReputation = htons(featureReputation);
+            std::pair<const uint8_t*, size_t> cmdBuf;
+
+            ATLAS_LOGGER_DEBUG("Sending feature reputation to device...");
+
+            /* Add feature command */
+            AtlasCommand cmdPush(ATLAS_CMD_FEATURE_REQUEST, sizeof(uint16_t), (uint8_t *) &featureReputation);
+
+            cmdBatch.addCommand(cmdPush);
+            cmdBuf = cmdBatch.getSerializedAddedCommands();
+            *respPayload = (uint8_t*) cmdBuf.first;
+            *respPayloadLen = cmdBuf.second;
         }
     }
 
