@@ -101,13 +101,13 @@ int main(int argc, char **argv)
     policy.start();
 
     /* Start registration module */
-    reg.start();
+    //reg.start();
 
     /* Start publish-subscribe agent */
     atlas::AtlasPubSubAgent::getInstance().start();
 
     /* Start scheduler */
-    atlas::AtlasScheduler::getInstance().run();
+    //atlas::AtlasScheduler::getInstance().run();
 
     /* Stop cloud register module */
     atlas::AtlasRegisterCloud::getInstance().stop();
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
     policy.stop();
 
     /* Stop registration module */
-    reg.stop();
+    //reg.stop();
 
     ATLAS_LOGGER_DEBUG("Stopping Atlas gateway...");
 
