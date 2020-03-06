@@ -28,7 +28,7 @@ include_directories(${COAP_INCLUDE_DIRS})
 include_directories(${SQLITE_INCLUDE_DIRS})
 
 # Atlas gateway files
-file(GLOB ATLAS_GATEWAY_SOURCES "src/*.cpp" "src/sql/AtlasSQLite.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp" "src/pubsub_agent/*.cpp" "src/device/*.cpp" "src/telemetry/*.cpp" "src/policy/*.cpp" "src/mqtt_client/*.cpp" "src/identity/*.cpp" "src/cloud/*.cpp" "src/bayes_network_connector/*.cpp")
+file(GLOB ATLAS_GATEWAY_SOURCES "src/*.cpp" "src/sql/AtlasSQLite.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp" "src/pubsub_agent/*.cpp" "src/device/*.cpp" "src/telemetry/*.cpp" "src/policy/*.cpp" "src/mqtt_client/*.cpp" "src/identity/*.cpp" "src/cloud/*.cpp" "src/reputation/*.cpp")
 
 # Atlas_gateway_cli files
 file(GLOB ATLAS_GATEWAY_CLI_SOURCES "src/sql/*.cpp" "src/logger/*.cpp")

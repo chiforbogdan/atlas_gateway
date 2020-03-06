@@ -11,18 +11,28 @@ class AtlasFeatureReputation
 {
 
 public:
+    /**
+    * @brief Ctor for feature reputation
+    * @return none
+    */
     AtlasFeatureReputation();
 
+    /**
+    * @brief Register feature reputation resource
+    * @return none
+    */
     void start();
 
-    void sendReputationValue();
+    /**
+    * @brief Un-register feature reputation resource
+    * @return none
+    */
+    void stop();
 
 private:
 
-    std::string identity = "";
-    std::string feature = "";
     /**
-    * @brief Telemetry feature client callback
+    * @brief Feature reputation client callback
     * @param[in] path CoAP URI path
     * @param[in] pskIdentity PSK identity (extracted from the DTLS transport layer)
     * @param[in] psk Pre-shared key
@@ -34,8 +44,8 @@ private:
     * @return CoAP response status
     */
     AtlasCoapResponse featureReputationCallback(const std::string &path, const std::string &identity, const std::string &psk,
-                                       AtlasCoapMethod method, const uint8_t* reqPayload, size_t reqPayloadLen,
-                                       uint8_t **respPayload, size_t *respPayloadLen);
+                                                AtlasCoapMethod method, const uint8_t* reqPayload, size_t reqPayloadLen,
+                                                uint8_t **respPayload, size_t *respPayloadLen);
 
     /* FEATURE command CoAP resource*/
     AtlasCoapResource featureReputationResource_;
