@@ -1,8 +1,11 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/lexical_cast.hpp>
+#include <string>
 #include "AtlasDevice.h"
 #include "../logger/AtlasLogger.h"
 #include "../telemetry/AtlasTelemetryInfo.h"
 #include "../telemetry/AtlasAlertFactory.h"
+#include "../pubsub_agent/AtlasPubSubAgent.h"
 
 namespace atlas {
 
@@ -23,6 +26,15 @@ const std::string ATLAS_LAST_KEEPALIVE_TIME_JSON_KEY = "lastKeepAliveTime";
 /* JSON IP and port key */
 const std::string ATLAS_IP_PORT_JSON_KEY = "ipPort";
 
+/* JSON firewall stat key */
+const std::string ATLAS_FIREWALLSTAT_JSON_KEY = "firewallStatistic";
+
+/* JSON firewall stat-droppedPkts key */
+const std::string ATLAS_FIREWALLSTAT_DROPPEDPKTS_JSON_KEY = "droppedPkts";
+
+/* JSON firewall stat-passedPkts key */
+const std::string ATLAS_FIREWALLSTAT_PASSEDPKTS_JSON_KEY = "passedPkts";
+
 } // anonymous namespace
 
 AtlasDevice::AtlasDevice(const std::string &identity, std::shared_ptr<AtlasDeviceCloud> deviceCloud) : identity_(identity), deviceCloud_(deviceCloud),
@@ -32,6 +44,17 @@ AtlasDevice::AtlasDevice(const std::string &identity, std::shared_ptr<AtlasDevic
 }
 
 AtlasDevice::AtlasDevice() : identity_(""), registered_(false) {}
+
+void AtlasDevice::uninstallPolicy()
+{
+    AtlasPubSubAgent::getInstance().removeFirewallRule(policy_->getClientId());
+
+    /* Explicit delete policy */
+    policy_.reset();
+
+    /* Explicit delete firewall statistic */
+    stats_.reset();
+}
 
 void AtlasDevice::installDefaultAlerts()
 {
@@ -93,6 +116,31 @@ void AtlasDevice::setIpPort(const std::string &ipPort)
     }
 }
 
+void AtlasDevice::setPolicyInfo(std::unique_ptr<AtlasFirewallPolicy> policy)
+{
+    if(!policy) {
+        ATLAS_LOGGER_ERROR("Received an empty policy!");
+        return;
+    }
+
+    if((!policy_) || (!(*policy_ == *policy))) {
+        policy_ = std::move(policy);
+        deviceCloud_->updateDevice(identity_, policy_->toJSON());
+    }
+}
+
+void AtlasDevice::setFirewallStats(std::unique_ptr<AtlasFirewallStats> stats)
+{
+    if(!stats) {
+        ATLAS_LOGGER_ERROR("Received an empty firewall statistic!");
+        return;
+    }
+
+    if((!stats_) || (!(*stats_ == *stats))) {
+        stats_ = std::move(stats);
+        deviceCloud_->updateDevice(identity_, stats_->toJSON());
+    }    
+}
 void AtlasDevice::registerNow()
 {
     boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
@@ -133,6 +181,9 @@ void AtlasDevice::keepAliveExpired()
     if (!kaCtr_) {
         ATLAS_LOGGER_INFO1("Keep-alive counter expired for client with identity ", identity_);
         registered_ = false;
+        
+        uninstallPolicy();
+
         /* Update un-registration event to cloud */
         deviceCloud_->updateDevice(identity_, registerEventToJSON());
     }

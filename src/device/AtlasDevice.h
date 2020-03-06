@@ -3,10 +3,13 @@
 
 #include <string>
 #include <memory>
+#include <boost/optional.hpp>
 #include "../telemetry/AtlasTelemetryInfo.h"
 #include "../telemetry/AtlasAlert.h"
 #include "../commands/AtlasCommandType.h"
 #include "../cloud/AtlasDeviceCloud.h"
+#include "../policy/AtlasFirewallPolicy.h"
+#include "../statistics/AtlasFirewallStats.h"
 
 namespace atlas {
 
@@ -45,6 +48,20 @@ public:
     void setIpPort(const std::string &ipPort);
 
     /**
+    * @brief Set policy info for client device
+    * @param[in] policy pointer
+    * @return none
+    */
+    void setPolicyInfo(std::unique_ptr<AtlasFirewallPolicy> policy);
+
+    /**
+    * @brief Set firewall statistic for client device
+    * @param[in] statistics pointer
+    * @return none
+    */
+    void setFirewallStats(std::unique_ptr<AtlasFirewallStats> stats);
+
+    /**
     * @brief Get client device identity
     * @return Client device identity
     */
@@ -67,6 +84,18 @@ public:
     * @return Client device registration time
     */
     inline std::string getRegTime() const { return regTime_; }
+
+    /**
+    * @brief Get client device policy
+    * @return Client device policy
+    */
+    inline const AtlasFirewallPolicy* getPolicy() const { return policy_.get(); }
+
+    /**
+    * @brief Get client device firewall stats
+    * @return Client device firewall stats
+    */
+    inline const AtlasFirewallStats* getFirewallStats() const { return stats_.get(); }
 
     /**
     * @brief Indicate that a client device just registered
@@ -114,7 +143,6 @@ public:
 
     /**
     * @brief Put all device info in json format
-    * @param[in] feature name
     * @return string
     */
     std::string toJSON();
@@ -144,6 +172,12 @@ public:
     inline void clearSyncRequired() { syncRequired_ = false; }
 
 private:
+    /**
+    * @brief Install default telemetry alerts
+    * @return none
+    */
+    void uninstallPolicy();
+
     /**
     * @brief Install default telemetry alerts
     * @return none
@@ -203,6 +237,12 @@ private:
 
     /* Telemetry threshold alerts */
     std::unordered_map<std::string, std::unique_ptr<AtlasAlert> > thresholdAlerts_;
+
+    /* Policy*/
+    std::unique_ptr<AtlasFirewallPolicy> policy_;
+
+    /* Firewall statistic*/
+    std::unique_ptr<AtlasFirewallStats> stats_;
 };
 
 } // namespace atlas

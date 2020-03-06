@@ -257,12 +257,16 @@ void AtlasFilter::handleWrite(const boost::system::error_code& error)
 
 void AtlasFilter::gatewayConnect()
 {
+    mutex_.lock();
+    ATLAS_LOGGER_INFO("Remove all unmanaged rules in firewall");
+    rules_.clear();
+    mutex_.unlock();
+
     while(true) {
         try {
             boost::asio::local::stream_protocol::endpoint ep(ATLAS_PUB_SUB_AGENT_SOCK);
             delete socket_;
             socket_ = new boost::asio::local::stream_protocol::socket(ioService_);
-    
             /* Connect to gateway */
             socket_->connect(ep);
         

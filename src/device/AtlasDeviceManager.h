@@ -22,6 +22,12 @@ public:
     static AtlasDeviceManager& getInstance();
 
     /**
+    * @brief Install all policies for all devices
+    * @return none
+    */
+    void installAllPolicies();
+
+    /**
     * @brief Get device cloud back-end manager
     * @return Device cloud back-end manager
     */
@@ -51,6 +57,18 @@ private:
     * @return none
     */
     AtlasDeviceManager();
+    
+    /**
+    * @brief Dtor for device manager
+    * @return none
+    */
+    ~AtlasDeviceManager();
+
+    /**
+    * @brief Firewall-statistics alarm callback
+    * @return none
+    */
+    void firewallStatisticsAlarmCallback();
 
     /* Client devices */
     std::unordered_map<std::string, AtlasDevice> devices_;
@@ -60,6 +78,9 @@ private:
 
     /* Cloud back-end manager */
     std::shared_ptr<AtlasDeviceCloud> deviceCloud_;
+
+    /* Firewall-statistics alarm */
+    AtlasAlarm fsAlarm_;
 };
 
 } // namespace atlas

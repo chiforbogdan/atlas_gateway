@@ -6,6 +6,8 @@
 #include "../commands/AtlasCommandType.h"
 #include "../commands/AtlasCommand.h"
 #include "../utils/AtlasUtils.h"
+#include "../device/AtlasDeviceManager.h"
+#include "../policy/AtlasFirewallPolicy.h"
 
 namespace atlas {
 
@@ -93,69 +95,18 @@ void AtlasPubSubAgent::removeFirewallRule(const std::string &clientId)
 
     std::pair<const uint8_t*, size_t> outerCmd = cmdBatchOuter.getSerializedAddedCommands();
 
+    policyDevices_.erase(clientId);
+
     /* Write command to publish-subscribe agent */
     write(outerCmd.first, outerCmd.second);
 }
 
 void AtlasPubSubAgent::getAllFirewallRules()
 {
-
+    /* This is called by plug-in when it is up*/
     ATLAS_LOGGER_DEBUG("Get all firewall rules for publish-subscribe agent");
 
-    /* Fixme REMOVE THIS */
-    AtlasCommandBatch cmdBatchInner, cmdBatchOuter;
-    std::string clientId = "test1";
-    uint16_t qos = 1;
-    uint16_t ppm = 4;
-    uint16_t payloadLen = 5;
-
-    qos = htons(qos);
-    ppm = htons(ppm);
-    payloadLen = htons(payloadLen);
-
-    AtlasCommand cmd1(ATLAS_CMD_PUB_SUB_CLIENT_ID, clientId.length(), (uint8_t *)clientId.c_str());
-    AtlasCommand cmd2(ATLAS_CMD_PUB_SUB_MAX_QOS, sizeof(qos), (uint8_t *)&qos);
-    AtlasCommand cmd3(ATLAS_CMD_PUB_SUB_PPM, sizeof(ppm), (uint8_t *)&ppm);
-    AtlasCommand cmd4(ATLAS_CMD_PUB_SUB_MAX_PAYLOAD_LEN, sizeof(payloadLen), (uint8_t *)&payloadLen);
-
-    cmdBatchInner.addCommand(cmd1);
-    cmdBatchInner.addCommand(cmd2);
-    cmdBatchInner.addCommand(cmd3);
-    cmdBatchInner.addCommand(cmd4);
-    std::pair<const uint8_t*, size_t> inner = cmdBatchInner.getSerializedAddedCommands();
-
-    AtlasCommand cmd5(ATLAS_CMD_PUB_SUB_INSTALL_FIREWALL_RULE, inner.second, inner.first);
-    cmdBatchOuter.addCommand(cmd5);
-    std::pair<const uint8_t*, size_t> outer = cmdBatchOuter.getSerializedAddedCommands();
-
-    write(outer.first, outer.second);
-    
-    AtlasCommandBatch cmdBatchInner1, cmdBatchOuter1;
-    clientId = "test2";
-    qos = 0;
-    ppm = 3;
-    payloadLen = 4;
-
-    qos = htons(qos);
-    ppm = htons(ppm);
-    payloadLen = htons(payloadLen);
-
-    AtlasCommand cmd11(ATLAS_CMD_PUB_SUB_CLIENT_ID, clientId.length(), (uint8_t *)clientId.c_str());
-    AtlasCommand cmd12(ATLAS_CMD_PUB_SUB_MAX_QOS, sizeof(qos), (uint8_t *)&qos);
-    AtlasCommand cmd13(ATLAS_CMD_PUB_SUB_PPM, sizeof(ppm), (uint8_t *)&ppm);
-    AtlasCommand cmd14(ATLAS_CMD_PUB_SUB_MAX_PAYLOAD_LEN, sizeof(payloadLen), (uint8_t *)&payloadLen);
-
-    cmdBatchInner1.addCommand(cmd11);
-    cmdBatchInner1.addCommand(cmd12);
-    cmdBatchInner1.addCommand(cmd13);
-    cmdBatchInner1.addCommand(cmd14);
-    std::pair<const uint8_t*, size_t> inner1 = cmdBatchInner1.getSerializedAddedCommands();
-
-    AtlasCommand cmd15(ATLAS_CMD_PUB_SUB_INSTALL_FIREWALL_RULE, inner1.second, inner1.first);
-    cmdBatchOuter1.addCommand(cmd15);
-    std::pair<const uint8_t*, size_t> outer1 = cmdBatchOuter1.getSerializedAddedCommands();
-
-    write(outer1.first, outer1.second);
+    AtlasDeviceManager::getInstance().installAllPolicies();
 }
 
 void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t cmdLen)
@@ -206,7 +157,19 @@ void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t c
         return;
     }
 
-    /* TODO update IoT device */
+    if(policyDevices_.find(clientId) == policyDevices_.end()) {
+        ATLAS_LOGGER_ERROR("ClientId is not found in agent cache when processing firewall rule statistics command");
+        return;
+    } else {
+        std::unique_ptr<AtlasFirewallStats> statsAux(new AtlasFirewallStats());
+        statsAux->setClientId(clientId);
+        statsAux->setDroppedPkts(droppedPkts);
+        statsAux->setPassedPkts(passedPkts);
+
+        AtlasDeviceManager::getInstance()
+                            .getDevice(policyDevices_[clientId])
+                            .setFirewallStats(std::move(statsAux));
+    }
 }
 
 void AtlasPubSubAgent::processCommand(size_t cmdLen)
@@ -292,16 +255,24 @@ void AtlasPubSubAgent::write(const uint8_t *buf, size_t bufLen)
                                  boost::bind(&AtlasPubSubAgent::handleWrite, this, _1));
 }
 
-void AtlasPubSubAgent::installFirewallRule(const std::string &clientId, uint16_t qos, uint16_t ppm, uint16_t payloadLen)
+void AtlasPubSubAgent::installFirewallRule(const std::string &identity, const AtlasFirewallPolicy *policy)
 {
+    if(!policy) {
+        ATLAS_LOGGER_ERROR("Received an empty policy!");
+        return;
+    }
 
     ATLAS_LOGGER_DEBUG("Get firewall rule and forward through publish-subscribe agent");
 
     AtlasCommandBatch cmdBatchInner, cmdBatchOuter;
 
-    qos = htons(qos);
-    ppm = htons(ppm);
-    payloadLen = htons(payloadLen);
+    uint16_t qos, ppm, payloadLen;
+    std::string clientId;
+
+    clientId = policy->getClientId();
+    qos = htons(policy->getQOS());
+    ppm = htons(policy->getPPM());
+    payloadLen = htons(policy->getPayloadLen());
 
     AtlasCommand cmd1(ATLAS_CMD_PUB_SUB_CLIENT_ID, clientId.length(), (uint8_t *)clientId.c_str());
     AtlasCommand cmd2(ATLAS_CMD_PUB_SUB_MAX_QOS, sizeof(qos), (uint8_t *)&qos);
@@ -317,6 +288,8 @@ void AtlasPubSubAgent::installFirewallRule(const std::string &clientId, uint16_t
     AtlasCommand cmd5(ATLAS_CMD_PUB_SUB_INSTALL_FIREWALL_RULE, inner.second, inner.first);
     cmdBatchOuter.addCommand(cmd5);
     std::pair<const uint8_t*, size_t> outer = cmdBatchOuter.getSerializedAddedCommands();
+
+    policyDevices_[clientId] = identity;
 
     write(outer.first, outer.second);
 }
