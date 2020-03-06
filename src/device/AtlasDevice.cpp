@@ -45,6 +45,17 @@ AtlasDevice::AtlasDevice(const std::string &identity, std::shared_ptr<AtlasDevic
 
 AtlasDevice::AtlasDevice() : identity_(""), registered_(false) {}
 
+void AtlasDevice::uninstallPolicy()
+{
+    AtlasPubSubAgent::getInstance().removeFirewallRule(policy_->getClientId());
+
+    /* Explicit delete policy */
+    policy_.reset();
+
+    /* Explicit delete firewall statistic */
+    stats_.reset();
+}
+
 void AtlasDevice::installDefaultAlerts()
 {
     AtlasPushAlert *pushAlert;
@@ -170,6 +181,9 @@ void AtlasDevice::keepAliveExpired()
     if (!kaCtr_) {
         ATLAS_LOGGER_INFO1("Keep-alive counter expired for client with identity ", identity_);
         registered_ = false;
+        
+        uninstallPolicy();
+
         /* Update un-registration event to cloud */
         deviceCloud_->updateDevice(identity_, registerEventToJSON());
     }

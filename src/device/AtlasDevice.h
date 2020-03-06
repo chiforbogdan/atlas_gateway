@@ -176,6 +176,12 @@ private:
     * @brief Install default telemetry alerts
     * @return none
     */
+    void uninstallPolicy();
+
+    /**
+    * @brief Install default telemetry alerts
+    * @return none
+    */
     void installDefaultAlerts();
 
     /**
