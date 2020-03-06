@@ -157,13 +157,10 @@ void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t c
         return;
     }
 
-    if(policyDevices_.find(clientId) == policyDevices_.end())
-    {
+    if(policyDevices_.find(clientId) == policyDevices_.end()) {
         ATLAS_LOGGER_ERROR("ClientId is not found in agent cache when processing firewall rule statistics command");
         return;
-    }
-    else
-    {
+    } else {
         std::unique_ptr<AtlasFirewallStats> statsAux(new AtlasFirewallStats());
         statsAux->setClientId(clientId);
         statsAux->setDroppedPkts(droppedPkts);
@@ -258,8 +255,12 @@ void AtlasPubSubAgent::write(const uint8_t *buf, size_t bufLen)
                                  boost::bind(&AtlasPubSubAgent::handleWrite, this, _1));
 }
 
-void AtlasPubSubAgent::installFirewallRule(const std::string &identity, const AtlasFirewallPolicy *f)
+void AtlasPubSubAgent::installFirewallRule(const std::string &identity, const AtlasFirewallPolicy *policy)
 {
+    if(!policy) {
+        ATLAS_LOGGER_ERROR("Received an empty policy!");
+        return;
+    }
 
     ATLAS_LOGGER_DEBUG("Get firewall rule and forward through publish-subscribe agent");
 
@@ -268,10 +269,10 @@ void AtlasPubSubAgent::installFirewallRule(const std::string &identity, const At
     uint16_t qos, ppm, payloadLen;
     std::string clientId;
 
-    clientId = f->getClientId();
-    qos = htons(f->getQOS());
-    ppm = htons(f->getPPM());
-    payloadLen = htons(f->getPayloadLen());
+    clientId = policy->getClientId();
+    qos = htons(policy->getQOS());
+    ppm = htons(policy->getPPM());
+    payloadLen = htons(policy->getPayloadLen());
 
     AtlasCommand cmd1(ATLAS_CMD_PUB_SUB_CLIENT_ID, clientId.length(), (uint8_t *)clientId.c_str());
     AtlasCommand cmd2(ATLAS_CMD_PUB_SUB_MAX_QOS, sizeof(qos), (uint8_t *)&qos);

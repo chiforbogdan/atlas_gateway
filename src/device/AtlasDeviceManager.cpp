@@ -30,8 +30,7 @@ void AtlasDeviceManager::firewallStatisticsAlarmCallback()
 {
     ATLAS_LOGGER_INFO("Firewall-statistics alarm callback");
 
-    forEachDevice([] (AtlasDevice& device)
-                { 
+    forEachDevice([] (AtlasDevice& device) { 
                     if(device.getPolicy())
                         AtlasPubSubAgent::getInstance().getFirewallRuleStats((device.getPolicy()->getClientId()));
                 });
@@ -55,12 +54,9 @@ void AtlasDeviceManager::forEachDevice(std::function<void(AtlasDevice&)> cb)
 
 void AtlasDeviceManager::installAllPolicies()
 {
-    forEachDevice([] (AtlasDevice& device)
-                    { 
+    forEachDevice([] (AtlasDevice& device) { 
                         if(device.getPolicy())
-                        {
                             AtlasPubSubAgent::getInstance().installFirewallRule(device.getIdentity(), device.getPolicy());
-                        }
                     });
     
 }

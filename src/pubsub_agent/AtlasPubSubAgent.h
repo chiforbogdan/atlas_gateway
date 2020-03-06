@@ -43,7 +43,7 @@ public:
     * @param[in] policy payloadLen
     * @return none
     */
-    void installFirewallRule(const std::string &identity, const AtlasFirewallPolicy *f);
+    void installFirewallRule(const std::string &identity, const AtlasFirewallPolicy *policy);
 
     /**
     * @brief Get firewall rule statistics for client id

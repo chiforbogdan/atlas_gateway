@@ -107,13 +107,12 @@ void AtlasDevice::setIpPort(const std::string &ipPort)
 
 void AtlasDevice::setPolicyInfo(std::unique_ptr<AtlasFirewallPolicy> policy)
 {
-    if(!policy_)
-    {
-        policy_ = std::move(policy);
-        deviceCloud_->updateDevice(identity_, policy_->toJSON());
+    if(!policy) {
+        ATLAS_LOGGER_ERROR("Received an empty policy!");
+        return;
     }
-    else if (!(*policy_ == *policy))
-    {
+
+    if((!policy_) || (!(*policy_ == *policy))) {
         policy_ = std::move(policy);
         deviceCloud_->updateDevice(identity_, policy_->toJSON());
     }
@@ -121,13 +120,12 @@ void AtlasDevice::setPolicyInfo(std::unique_ptr<AtlasFirewallPolicy> policy)
 
 void AtlasDevice::setFirewallStats(std::unique_ptr<AtlasFirewallStats> stats)
 {
-    if(!stats_)
-    {
-        stats_ = std::move(stats);
-        deviceCloud_->updateDevice(identity_, stats_->toJSON());
+    if(!stats) {
+        ATLAS_LOGGER_ERROR("Received an empty firewall statistic!");
+        return;
     }
-    else if (!(*stats_ == *stats))
-    {
+
+    if((!stats_) || (!(*stats_ == *stats))) {
         stats_ = std::move(stats);
         deviceCloud_->updateDevice(identity_, stats_->toJSON());
     }    
