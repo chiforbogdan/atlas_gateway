@@ -10,6 +10,7 @@
 #include "../commands/AtlasCommandType.h"
 #include "../mosquitto_plugin/filter/AtlasFilter.h"
 #include "../pubsub_agent/AtlasPubSubAgent.h"
+#include "AtlasFirewallPolicy.h"
 
 namespace atlas {
 
@@ -113,11 +114,18 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
 
+    std::unique_ptr<AtlasFirewallPolicy> policyAux = std::unique_ptr<AtlasFirewallPolicy>(new AtlasFirewallPolicy());
+
+    policyAux->setClientId(clientId);
+    policyAux->setQOS(*qos);
+    policyAux->setPPM(*ppm);
+    policyAux->setPayloadLen(*payloadLen);
+
     /* Set policy info in this device*/
-    device.setPolicyInfo(std::unique_ptr<AtlasFirewallPolicy>(new AtlasFirewallPolicy(clientId, *qos, *ppm, *payloadLen)));
+    device.setPolicyInfo(std::move(policyAux));
 
     /* Install firewall policy in mosquitto plug-in*/
-    AtlasPubSubAgent::getInstance().installFirewallRule(clientId, pskIdentity, *qos, *ppm, *payloadLen);
+    AtlasPubSubAgent::getInstance().installFirewallRule(pskIdentity, device.getPolicy());
 
     return ATLAS_COAP_RESP_OK;
 }

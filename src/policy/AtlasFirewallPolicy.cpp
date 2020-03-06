@@ -38,16 +38,6 @@ bool AtlasFirewallPolicy::operator==(const AtlasFirewallPolicy& c)
         return false;
 }
 
-void AtlasFirewallPolicy::setPolicyInfo(const std::string &clientId, uint16_t qos, uint16_t ppm, uint16_t payloadLen)
-{
-        if (clientId_ != clientId || qos_ != qos || ppm_ != ppm || payloadLen_ != payloadLen) {
-        clientId_ = clientId;
-        qos_ = qos;
-        ppm_ = ppm;
-        payloadLen_ = payloadLen;
-    }
-}
-
 std::string AtlasFirewallPolicy::toJSON()
 {
     return "\"" + ATLAS_POLICY_JSON_KEY + "\": \n" 

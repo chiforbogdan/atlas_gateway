@@ -38,13 +38,12 @@ const std::string ATLAS_FIREWALLSTAT_PASSEDPKTS_JSON_KEY = "passedPkts";
 } // anonymous namespace
 
 AtlasDevice::AtlasDevice(const std::string &identity, std::shared_ptr<AtlasDeviceCloud> deviceCloud) : identity_(identity), deviceCloud_(deviceCloud),
-                                                                                                       registered_(false), policy_(new AtlasFirewallPolicy()), 
-                                                                                                       stats_(new AtlasFirewallStats())
+                                                                                                       registered_(false)
 {
     installDefaultAlerts();
 }
 
-AtlasDevice::AtlasDevice() : identity_(""), registered_(false), policy_(new AtlasFirewallPolicy()), stats_(new AtlasFirewallStats()) {}
+AtlasDevice::AtlasDevice() : identity_(""), registered_(false) {}
 
 void AtlasDevice::installDefaultAlerts()
 {
@@ -108,18 +107,30 @@ void AtlasDevice::setIpPort(const std::string &ipPort)
 
 void AtlasDevice::setPolicyInfo(std::unique_ptr<AtlasFirewallPolicy> policy)
 {
-    policy_ = std::move(policy);
-
-    /* Send policy to cloud */
-    deviceCloud_->updateDevice(identity_, policy_->toJSON());
+    if(!policy_)
+    {
+        policy_ = std::move(policy);
+        deviceCloud_->updateDevice(identity_, policy_->toJSON());
+    }
+    else if (!(*policy_ == *policy))
+    {
+        policy_ = std::move(policy);
+        deviceCloud_->updateDevice(identity_, policy_->toJSON());
+    }
 }
 
 void AtlasDevice::setFirewallStats(std::unique_ptr<AtlasFirewallStats> stats)
 {
-    stats_ = std::move(stats);
-
-    /* Send firewall policy statistic to cloud */
-    deviceCloud_->updateDevice(identity_, stats_->toJSON());
+    if(!stats_)
+    {
+        stats_ = std::move(stats);
+        deviceCloud_->updateDevice(identity_, stats_->toJSON());
+    }
+    else if (!(*stats_ == *stats))
+    {
+        stats_ = std::move(stats);
+        deviceCloud_->updateDevice(identity_, stats_->toJSON());
+    }    
 }
 void AtlasDevice::registerNow()
 {

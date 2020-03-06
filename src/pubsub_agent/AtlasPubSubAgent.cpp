@@ -7,6 +7,7 @@
 #include "../commands/AtlasCommand.h"
 #include "../utils/AtlasUtils.h"
 #include "../device/AtlasDeviceManager.h"
+#include "../policy/AtlasFirewallPolicy.h"
 
 namespace atlas {
 
@@ -163,9 +164,14 @@ void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t c
     }
     else
     {
+        std::unique_ptr<AtlasFirewallStats> statsAux(new AtlasFirewallStats());
+        statsAux->setClientId(clientId);
+        statsAux->setDroppedPkts(droppedPkts);
+        statsAux->setPassedPkts(passedPkts);
+
         AtlasDeviceManager::getInstance()
                             .getDevice(policyDevices_[clientId])
-                            .setFirewallStats(std::unique_ptr<AtlasFirewallStats>(new AtlasFirewallStats(clientId, droppedPkts, passedPkts)));
+                            .setFirewallStats(std::move(statsAux));
     }
 }
 
@@ -252,16 +258,20 @@ void AtlasPubSubAgent::write(const uint8_t *buf, size_t bufLen)
                                  boost::bind(&AtlasPubSubAgent::handleWrite, this, _1));
 }
 
-void AtlasPubSubAgent::installFirewallRule(const std::string &clientId, const std::string &identity, uint16_t qos, uint16_t ppm, uint16_t payloadLen)
+void AtlasPubSubAgent::installFirewallRule(const std::string &identity, const AtlasFirewallPolicy *f)
 {
 
     ATLAS_LOGGER_DEBUG("Get firewall rule and forward through publish-subscribe agent");
 
     AtlasCommandBatch cmdBatchInner, cmdBatchOuter;
 
-    qos = htons(qos);
-    ppm = htons(ppm);
-    payloadLen = htons(payloadLen);
+    uint16_t qos, ppm, payloadLen;
+    std::string clientId;
+
+    clientId = f->getClientId();
+    qos = htons(f->getQOS());
+    ppm = htons(f->getPPM());
+    payloadLen = htons(f->getPayloadLen());
 
     AtlasCommand cmd1(ATLAS_CMD_PUB_SUB_CLIENT_ID, clientId.length(), (uint8_t *)clientId.c_str());
     AtlasCommand cmd2(ATLAS_CMD_PUB_SUB_MAX_QOS, sizeof(qos), (uint8_t *)&qos);

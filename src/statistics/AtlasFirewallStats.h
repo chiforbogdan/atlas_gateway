@@ -17,15 +17,6 @@ public:
     AtlasFirewallStats() : clientId_(""){}
 
     /**
-    * @brief Ctor for firewall statistics
-    * @param[in] clientId 
-    * @param[in] dropped Packets
-    * @param[in] passed Packets
-    * @return none
-    */
-    AtlasFirewallStats(const std::string &clientId, uint32_t droppedPkts, uint32_t passedPkts) : clientId_(clientId), droppedPkts_(droppedPkts), passedPkts_(passedPkts){}
-
-    /**
     * @brief Overwrite = operator
     * @param[in] AtlasFirewallStats reference
     * @return referece to this
@@ -58,13 +49,25 @@ public:
     inline uint32_t getPassedPkts() const { return passedPkts_; }
 
     /**
-    * @brief Set firewall statistics
+    * @brief Set firewall stats clientId
     * @param[in] clientId
-    * @param[in] dropped packets
-    * @param[in] passed packets
     * @return none
     */
-    void setFirewallStats(const std::string &clientId, uint32_t droppedPkts, uint32_t passedPkts);
+    inline void setClientId(const std::string &clientId) { clientId_ = clientId; }
+
+    /**
+    * @brief Set firewall stats droppedPkts
+    * @param[in] droppedPkts
+    * @return none
+    */
+    inline void setDroppedPkts(uint32_t droppedPkts) { droppedPkts_ = droppedPkts; }
+
+    /**
+    * @brief Set firewall stats passedPkts
+    * @param[in] passedPkts
+    * @return none
+    */
+    inline void setPassedPkts(uint32_t passedPkts) { passedPkts_ = passedPkts; }
 
     /**
     * @brief Put all stats info in json format

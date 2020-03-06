@@ -2,7 +2,7 @@
 #define __ATLAS_FIREWALL_POLICY_H__
 
 #include <string>
-#include "../pubsub_agent/AtlasPubSubAgent.h"
+
 
 namespace atlas {
 
@@ -17,17 +17,6 @@ public:
     AtlasFirewallPolicy() : clientId_(""){}
 
     /**
-    * @brief Ctor for firewall policy
-    * @param[in] clientId - rule id
-    * @param[in] qos - rule qos
-    * @param[in] ppm - rule ppm
-    * @param[in] payloadLen - rule payloadLen
-    * @return none
-    */
-    AtlasFirewallPolicy(const std::string &clientId, uint16_t qos, uint16_t ppm, uint16_t payloadLen) : clientId_(clientId), qos_(qos),
-                                                                                                         ppm_(ppm), payloadLen_(payloadLen){}
-
-    /**
     * @brief Overwrite = operator
     * @param[in] AtlasFirewallPolicy reference
     * @return referece to this
@@ -40,16 +29,6 @@ public:
     * @return true or false
     */
     bool operator==(const AtlasFirewallPolicy& c);
-
-    /**
-    * @brief Set policy info for client device
-    * @param[in] client id
-    * @param[in] qos
-    * @param[in] ppm
-    * @param[in] payloadLen
-    * @return none
-    */
-    void setPolicyInfo(const std::string &clientId, uint16_t qos, uint16_t ppm, uint16_t payloadLen);
 
     /**
     * @brief Get policy clientId
@@ -74,6 +53,34 @@ public:
     * @return payloadLen
     */
     inline uint16_t getPayloadLen() const { return payloadLen_; }
+
+    /**
+    * @brief Set policy clientId
+    * @param[in] client id
+    * @return none
+    */
+    inline void setClientId(const std::string &clientId) { clientId_ = clientId; }
+
+    /**
+    * @brief Set policy qos
+    * @param[in] qos
+    * @return none
+    */
+    inline void setQOS(uint16_t qos) { qos_ = qos; }
+
+    /**
+    * @brief Set policy ppm
+    * @param[in] ppm
+    * @return none
+    */
+    inline void setPPM(uint16_t ppm) { ppm_ = ppm; }
+
+    /**
+    * @brief Set policy payloadLen
+    * @param[in] payloadLen
+    * @return none
+    */
+    inline void setPayloadLen(uint16_t payloadLen) { payloadLen_ = payloadLen; }
     
     /**
     * @brief Put all firewall policy info in json format

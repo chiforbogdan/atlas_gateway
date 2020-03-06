@@ -89,13 +89,13 @@ public:
     * @brief Get client device policy
     * @return Client device policy
     */
-    inline AtlasFirewallPolicy &getPolicy() const { return *policy_; }
+    inline const AtlasFirewallPolicy* getPolicy() const { return policy_.get(); }
 
     /**
     * @brief Get client device firewall stats
     * @return Client device firewall stats
     */
-    inline AtlasFirewallStats &getFirewallStats() const { return *stats_; }
+    inline const AtlasFirewallStats* getFirewallStats() const { return stats_.get(); }
 
     /**
     * @brief Indicate that a client device just registered

@@ -34,16 +34,6 @@ bool AtlasFirewallStats::operator==(const AtlasFirewallStats& c)
         return false;
 }
 
-void AtlasFirewallStats::setFirewallStats(const std::string &clientId, uint32_t droppedPkts, uint32_t passedPkts)
-{
-    if((clientId_ != clientId) || (droppedPkts_ != droppedPkts) || (passedPkts_ != passedPkts)){
-        clientId_ = clientId;
-        droppedPkts_ = droppedPkts;
-        passedPkts_ = passedPkts;
-    }
-}
-
-
 std::string AtlasFirewallStats::toJSON()
 {
     return "\"" + ATLAS_FIREWALLSTATS_JSON_KEY + "\": \n" 

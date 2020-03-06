@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include "../policy/AtlasFirewallPolicy.h"
 
 #define ATLAS_PUB_SUB_AGENT_BUF_LEN (2048)
 
@@ -42,7 +43,7 @@ public:
     * @param[in] policy payloadLen
     * @return none
     */
-    void installFirewallRule(const std::string &clientId, const std::string &identity, uint16_t qos, uint16_t ppm, uint16_t payloadLen);
+    void installFirewallRule(const std::string &identity, const AtlasFirewallPolicy *f);
 
     /**
     * @brief Get firewall rule statistics for client id
