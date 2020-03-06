@@ -3,7 +3,6 @@
 #include <boost/bind.hpp>
 #include <boost/optional.hpp>
 #include "AtlasFeatureReputation.h"
-#include "AtlasCoapPush.h"
 #include "../coap/AtlasCoapServer.h"
 #include "../logger/AtlasLogger.h"
 #include "../device/AtlasDeviceManager.h"
@@ -28,6 +27,8 @@ AtlasCoapResponse AtlasFeatureReputation::featureReputationCallback(const std::s
 {
     AtlasCommandBatch cmdBatch;
     std::vector<AtlasCommand> cmd;
+    uint8_t *buf = nullptr;
+    size_t bufLen;
     
     ATLAS_LOGGER_DEBUG("Feature callback executed...");
 
@@ -63,11 +64,10 @@ AtlasCoapResponse AtlasFeatureReputation::featureReputationCallback(const std::s
         } 
         else if(cmdEntry.getType() == ATLAS_CMD_FEATURE_REQUEST){
             feature.assign((char *)cmdEntry.getVal(), cmdEntry.getLen());
-            std::cout << "Sending random value for feature " << feature << std::endl;
-            //sendReputationValue();
+            std::cout << "Sending value for feature " << feature << std::endl;
+
             AtlasCommandBatch cmdBatch;
             uint16_t featureReputation = 20;
-            featureReputation = htons(featureReputation);
             std::pair<const uint8_t*, size_t> cmdBuf;
 
             ATLAS_LOGGER_DEBUG("Sending feature reputation to device...");
@@ -77,8 +77,12 @@ AtlasCoapResponse AtlasFeatureReputation::featureReputationCallback(const std::s
 
             cmdBatch.addCommand(cmdPush);
             cmdBuf = cmdBatch.getSerializedAddedCommands();
-            *respPayload = (uint8_t*) cmdBuf.first;
-            *respPayloadLen = cmdBuf.second;
+            buf = new uint8_t[cmdBuf.second];
+            memcpy(buf, cmdBuf.first, cmdBuf.second);
+            bufLen = cmdBuf.second;
+            *respPayload = buf;
+            *respPayloadLen = bufLen;
+            std::cout << "Sent value " << feature << std::endl;
         }
     }
 
@@ -98,10 +102,5 @@ void AtlasFeatureReputation::start()
     AtlasCoapServer::getInstance().addResource(featureReputationResource_);
 }
 
-void AtlasFeatureReputation::sendReputationValue()
-{
-    AtlasCoapPush *at = new AtlasCoapPush(identity);
-    at->push();
-}
 
 }
