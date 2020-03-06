@@ -1,4 +1,3 @@
-#include <iostream>
 #include <string>
 #include <boost/bind.hpp>
 #include <boost/optional.hpp>
@@ -87,8 +86,6 @@ AtlasCoapResponse AtlasFeatureReputation::featureReputationCallback(const std::s
 
 
     ATLAS_LOGGER_INFO("Device with identity " + identity + " send a reputation request for feature " + feature);
-
-    std::cout << "Sending value for feature " << feature << std::endl;
     
     /* FIXME get response from reputation module (naive bayes) */
 
