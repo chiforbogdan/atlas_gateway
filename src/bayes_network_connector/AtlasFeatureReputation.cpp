@@ -28,7 +28,6 @@ AtlasCoapResponse AtlasFeatureReputation::featureReputationCallback(const std::s
     AtlasCommandBatch cmdBatch;
     std::vector<AtlasCommand> cmd;
     uint8_t *buf = nullptr;
-    size_t bufLen;
     
     ATLAS_LOGGER_DEBUG("Feature callback executed...");
 
@@ -79,9 +78,8 @@ AtlasCoapResponse AtlasFeatureReputation::featureReputationCallback(const std::s
             cmdBuf = cmdBatch.getSerializedAddedCommands();
             buf = new uint8_t[cmdBuf.second];
             memcpy(buf, cmdBuf.first, cmdBuf.second);
-            bufLen = cmdBuf.second;
             *respPayload = buf;
-            *respPayloadLen = bufLen;
+            *respPayloadLen = cmdBuf.second;
             std::cout << "Sent value " << feature << std::endl;
         }
     }
