@@ -5,6 +5,8 @@
 #include <vector>
 #include "AtlasDeviceFeatureType.h"
 
+#define ATLAS_DEVICE_FEATURE_DEFAULT_FEEDBACK_THRESHOLD 0.75
+
 namespace atlas
 {
 class AtlasDeviceFeature {
@@ -13,16 +15,19 @@ public:
      * @brief Default Ctor with FeatureType = GENERIC and Value = 0
      * @return none
     */
-    AtlasDeviceFeature() : featureType_(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC), feedbackThreshold_(0.8), currentReputation_(1), successTrans_(0), cpt_(0) {}
+    AtlasDeviceFeature() : featureType_(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC), weight_(1), feedbackThreshold_(ATLAS_DEVICE_FEATURE_DEFAULT_FEEDBACK_THRESHOLD), 
+                                        currentReputation_(0), successTrans_(0), cptValue_(0) {}
 
     /**
      * @brief Explicit Ctor for FeatureType
      * @param[in] Specific feature from a list of FeatureTypes
+     * @param[in] Weight of feature in device reputation computation
      * @param[in] Initial threshold for feedback
+     * @param[in] Initial threshold for latency
      * @return none
     */
-    AtlasDeviceFeature(AtlasDeviceFeatureType featureType, double feedbackThreshold) : featureType_(featureType), feedbackThreshold_(feedbackThreshold), currentReputation_(1), 
-                                                                                        successTrans_(0), cpt_(0) {}
+    AtlasDeviceFeature(AtlasDeviceFeatureType featureType, double featureWeight, double reputationThreshold) : featureType_(featureType), weight_(featureWeight),
+                                        feedbackThreshold_(reputationThreshold), currentReputation_(0), cptValue_(0), successTrans_(0) {}
 
     /**
      * @brief Get feature type
@@ -37,17 +42,30 @@ public:
     AtlasDeviceFeatureType getFeatureType() const { return featureType_; }
 
     /**
-     * @brief Get Feedback threshold value
-     * @return Current Feedback Threshold value
+     * @brief Get feature Weight value
+     * @return Current Weight value
     */
-    double getFeedbackThreshold() { return feedbackThreshold_; }
+    double getWeight() { return weight_; }
 
     /**
-     * @brief Set Feedback threshold value
-     * @param[in] New Feedback Threshold value
+     * @brief Set feature Weight value
+     * @param[in] New Weight value
      * @return none
     */
-    void setFeedbackThreshold(double feedbackThreshold) { feedbackThreshold_ = feedbackThreshold; }
+    void updateWeight(double newVal) { weight_ = newVal; }
+
+    /**
+     * @brief Get Feedback threshold value
+     * @return Current Feedback threshold value
+    */
+    double getFeedbackThreshold() { return feedbackThreshold_; }
+    
+    /**
+     * @brief Set Feedback threshold value
+     * @param[in] New Feedback threshold value
+     * @return none
+    */
+    void updateFeedbackThreshold(double feedbackThreshold) { feedbackThreshold_ = feedbackThreshold; }
 
     /**
      * @brief Updates the current reputation value and adds the old value in the reputation history
@@ -66,13 +84,13 @@ public:
      * @brief Updates the Conditional Probability variable
      * @return none
     */
-    void updateCPT(double newVal) { cpt_ = newVal; }
+    void updateCPT(double newVal) { cptValue_ = newVal; }
 
     /**
      * @brief Returns the CPT value
      * @return CPT value 
     */
-    double getCPT() { return cpt_; }
+    double getCPT() { return cptValue_; }
 
     /**
      * @brief Updates number of successful transactions (required by Naive Bayes component)
@@ -87,16 +105,18 @@ public:
     int getSuccessfulTransactions() { return successTrans_; }
 
     AtlasDeviceFeature(const AtlasDeviceFeature &src) { featureType_ = src.featureType_; feedbackThreshold_ = src.feedbackThreshold_; currentReputation_ = src.currentReputation_; 
-                                                        successTrans_ = src.successTrans_; cpt_ = src.cpt_; }
+                                                        successTrans_ = src.successTrans_; cptValue_ = src.cptValue_; weight_ = src.weight_; }
                                     
     AtlasDeviceFeature& operator = (const AtlasDeviceFeature& src) { featureType_ = src.featureType_; feedbackThreshold_ = src.feedbackThreshold_; currentReputation_ = src.currentReputation_; 
-                                                                    successTrans_ = src.successTrans_; cpt_ = src.cpt_; return *this;}
+                                                                    successTrans_ = src.successTrans_; cptValue_ = src.cptValue_; weight_ = src.weight_; return *this; }
+
 private:
     AtlasDeviceFeatureType featureType_;
+    double weight_;
     double feedbackThreshold_;
     double currentReputation_;
+    double cptValue_;
     int successTrans_;
-    double cpt_;
 
     //FIXME
     // Add history for reputation values and received feedback, if necessary

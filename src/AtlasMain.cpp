@@ -98,8 +98,10 @@ int main(int argc, char **argv)
 
     ATLAS_LOGGER_DEBUG("Starting Atlas gateway...");
 
-    //atlas::AtlasReputationTester::simulateScenario_1(10, 3, 100);
-    atlas::AtlasReputationTester::simulateScenario_2(10, 3, 100);
+    atlas::AtlasReputationTester::simulateScenario_1(10, 3, 8, 10000);
+    atlas::AtlasReputationTester::simulateScenario_2(10, 3, 8, 10000);
+    atlas::AtlasReputationTester::simulateScenario_3(10, 3, 8, 10000);
+    atlas::AtlasReputationTester::simulateScenario_4(10, 3, 8, 10000);
 
     /* Start policy module */
     //policy.start();

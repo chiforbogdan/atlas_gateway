@@ -4,7 +4,7 @@
 namespace atlas
 {
 
-void AtlasDeviceFeatureManager::addFeature(AtlasDeviceFeatureType type, int feedbackThreshold)
+void AtlasDeviceFeatureManager::addFeature(AtlasDeviceFeatureType type, double featureWeight, double feedbackThreshold)
 {
     bool found = false;
     if (features_.size() > 0) {
@@ -15,17 +15,17 @@ void AtlasDeviceFeatureManager::addFeature(AtlasDeviceFeatureType type, int feed
                     found = true;
                 } else {
                     ATLAS_LOGGER_INFO("AtlasDeviceFeatureManager: Feature already added. Updating value");
-                    (*it).setFeedbackThreshold(feedbackThreshold);
+                    (*it).updateFeedbackThreshold(feedbackThreshold);
                     found = true;
                 }                        
             }        
         }
         if (!found) {
-            features_.push_back(AtlasDeviceFeature(type, feedbackThreshold));
+            features_.push_back(AtlasDeviceFeature(type, featureWeight, feedbackThreshold));
             ATLAS_LOGGER_INFO("AtlasDeviceFeatureManager: New feature added to device");
         }
     } else {
-        features_.push_back(AtlasDeviceFeature(type, feedbackThreshold));
+        features_.push_back(AtlasDeviceFeature(type, featureWeight, feedbackThreshold));
         ATLAS_LOGGER_INFO("AtlasDeviceFeatureManager: New feature added to device");
     }
 }
@@ -49,21 +49,7 @@ bool AtlasDeviceFeatureManager::removeFeature(AtlasDeviceFeatureType type)
     return true;
 }
 
-int AtlasDeviceFeatureManager::getDeviceReputation()
-{
-    int score = 0;
-    if (features_.size() > 0)
-    {        
-        for (auto tmp : features_) {
-            score += tmp.getReputation();
-        }
-    } else {
-        return 0;
-    }
-    return (score / features_.size());
-}
-
-int AtlasDeviceFeatureManager::getDeviceFeatureReputation(AtlasDeviceFeatureType type)
+double AtlasDeviceFeatureManager::getDeviceFeatureReputation(AtlasDeviceFeatureType type)
 {
     if (features_.size() > 0) {
         for (auto tmp : features_) {

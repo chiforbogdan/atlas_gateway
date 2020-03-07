@@ -4,12 +4,12 @@
 namespace atlas
 {
 enum class AtlasDeviceFeatureType {
-    //Some demo features for the simulation
-    ATLAS_DEVICE_FEATURE_GENERIC,
+    //Some demo features for simulation
+    ATLAS_DEVICE_FEATURE_GENERIC = 0,
     ATLAS_DEVICE_FEATURE_CO2,
     ATLAS_DEVICE_FEATURE_TEMPERATURE,
     ATLAS_DEVICE_FEATURE_LIGHT,
-    ATLAS_DEVICE_FEATURE_HUMIDITY
+    ATLAS_DEVICE_FEATURE_HUMIDITY,
 
     /*Extended with various feature of connected sensors.
     This can be upgraded to be manipulated by the administrator or through the Cloud component.*/
