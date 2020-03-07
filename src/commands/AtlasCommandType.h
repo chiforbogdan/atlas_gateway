@@ -133,6 +133,8 @@ enum AtlasCommandType {
     ATLAS_CMD_PUB_SUB_PKT_PASS,
 
     ATLAS_CMD_FEATURE_REQUEST = 1500,
+
+    ATLAS_CMD_FEEDBACK,
 };
 
 } // namespace atlas
