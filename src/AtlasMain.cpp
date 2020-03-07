@@ -14,14 +14,12 @@
 #include "identity/AtlasIdentity.h"
 #include "cloud/AtlasRegisterCloud.h"
 #include "reputation/AtlasFeatureReputation.h"
-#include "reputation/AtlasReceiveFeedback.h"
 
 int main(int argc, char **argv)
 {
     atlas::AtlasRegister reg;
     atlas::AtlasPolicy policy;
     atlas::AtlasFeatureReputation reputation;
-    atlas::AtlasReceiveFeedback feedback;
 
     atlas::initLog();
     
@@ -56,9 +54,6 @@ int main(int argc, char **argv)
     /*Start feature reputation request */
     reputation.start();
 
-    /*Start feedback module */
-    feedback.start();
-
     /* Start publish-subscribe agent */
     atlas::AtlasPubSubAgent::getInstance().start();
 
@@ -71,8 +66,6 @@ int main(int argc, char **argv)
     /* Stop feature reputation module */
     reputation.stop();
 
-    /* Stop feedback module */
-    feedback.stop();
 
     /* Stop policy module */
     policy.stop();
