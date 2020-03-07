@@ -4,20 +4,17 @@ namespace atlas {
 
 namespace {
 
-/* JSON policy key */
-const std::string ATLAS_POLICY_JSON_KEY = "policy";
-
 /* JSON policy-cliendId key */
-const std::string ATLAS_POLICY_CLIENTID_JSON_KEY = "clientId";
+const std::string ATLAS_POLICY_CLIENTID_JSON_KEY = "pubSubClientId";
 
 /* JSON policy-qos key */
-const std::string ATLAS_POLICY_QOS_JSON_KEY = "qos";
+const std::string ATLAS_POLICY_QOS_JSON_KEY = "firewallPolicyQos";
 
 /* JSON policy-ppm key */
-const std::string ATLAS_POLICY_PPM_JSON_KEY = "ppm";
+const std::string ATLAS_POLICY_PPM_JSON_KEY = "firewallPolicyPpm";
 
 /* JSON policy-payloadLen key */
-const std::string ATLAS_POLICY_PAYLOADLEN_JSON_KEY = "payloadLen";
+const std::string ATLAS_POLICY_PAYLOADLEN_JSON_KEY = "firewallPolicyPayloadLen";
 
 } // anonymous namespace
 
@@ -40,13 +37,10 @@ bool AtlasFirewallPolicy::operator==(const AtlasFirewallPolicy& c)
 
 std::string AtlasFirewallPolicy::toJSON()
 {
-    return "\"" + ATLAS_POLICY_JSON_KEY + "\": \n" 
-                + "{"
-                + "\n\"" + ATLAS_POLICY_CLIENTID_JSON_KEY + "\": \"" + clientId_ + "\","
-                + "\n\"" + ATLAS_POLICY_QOS_JSON_KEY + "\": \"" + std::to_string(qos_) + "\","
-                + "\n\"" + ATLAS_POLICY_PPM_JSON_KEY + "\": \"" + std::to_string(ppm_) + "\","
-                + "\n\"" + ATLAS_POLICY_PAYLOADLEN_JSON_KEY + "\": \"" + std::to_string(payloadLen_) + "\""
-                + "\n}";
+    return  "\"" + ATLAS_POLICY_CLIENTID_JSON_KEY + "\": \"" + clientId_ + "\","
+            + "\n\"" + ATLAS_POLICY_QOS_JSON_KEY + "\": \"" + std::to_string(qos_) + "\","
+            + "\n\"" + ATLAS_POLICY_PPM_JSON_KEY + "\": \"" + std::to_string(ppm_) + "\","
+            + "\n\"" + ATLAS_POLICY_PAYLOADLEN_JSON_KEY + "\": \"" + std::to_string(payloadLen_) + "\"";
 }
 
 } // namespace atlas

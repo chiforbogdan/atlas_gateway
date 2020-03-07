@@ -121,10 +121,10 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
     policyAux->setPPM(*ppm);
     policyAux->setPayloadLen(*payloadLen);
 
-    /* Set policy info in this device*/
+    /* Set policy info in this device */
     device.setPolicyInfo(std::move(policyAux));
 
-    /* Install firewall policy in mosquitto plug-in*/
+    /* Install firewall policy in mosquitto plug-in */
     AtlasPubSubAgent::getInstance().installFirewallRule(pskIdentity, device.getPolicy());
 
     return ATLAS_COAP_RESP_OK;

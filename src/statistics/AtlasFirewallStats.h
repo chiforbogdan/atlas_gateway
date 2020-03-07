@@ -37,16 +37,28 @@ public:
     inline std::string getClientId() const { return clientId_; }
 
     /**
+    * @brief Get TX dropped packets
+    * @return droppedPkts
+    */
+    inline uint32_t getTxDroppedPkts() const { return txDroppedPkts_; }
+
+    /**
+    * @brief Get TX passed packets
+    * @return passedPkts
+    */
+    inline uint32_t getTxPassedPkts() const { return txPassedPkts_; }
+
+    /**
     * @brief Get firewall stats droppedPkts
     * @return droppedPkts
     */
-    inline uint32_t getDroppedPkts() const { return droppedPkts_; }
+    inline uint32_t getRuleDroppedPkts() const { return ruleDroppedPkts_; }
 
     /**
     * @brief Get firewall stats passedPkts
     * @return passedPkts
     */
-    inline uint32_t getPassedPkts() const { return passedPkts_; }
+    inline uint32_t getRulePassedPkts() const { return rulePassedPkts_; }
 
     /**
     * @brief Set firewall stats clientId
@@ -60,14 +72,28 @@ public:
     * @param[in] droppedPkts
     * @return none
     */
-    inline void setDroppedPkts(uint32_t droppedPkts) { droppedPkts_ = droppedPkts; }
+    inline void setRuleDroppedPkts(uint32_t ruleDroppedPkts) { ruleDroppedPkts_ = ruleDroppedPkts; }
 
     /**
     * @brief Set firewall stats passedPkts
     * @param[in] passedPkts
     * @return none
     */
-    inline void setPassedPkts(uint32_t passedPkts) { passedPkts_ = passedPkts; }
+    inline void setRulePassedPkts(uint32_t rulePassedPkts) { rulePassedPkts_ = rulePassedPkts; }
+
+    /**
+    * @brief Set TX number of dropped packets
+    * @param[in] txDroppedPackets TX number of dropped packets
+    * @return none
+    */
+    inline void setTxDroppedPkts(uint32_t txDroppedPkts) { txDroppedPkts_ = txDroppedPkts; }
+
+    /**
+    * @brief Set TX number of passed packets
+    * @param[in] txPassedPkts TX number of passed packets
+    * @return none
+    */
+    inline void setTxPassedPkts(uint32_t txPassedPkts) { txPassedPkts_ = txPassedPkts; }
 
     /**
     * @brief Put all stats info in json format
@@ -79,11 +105,17 @@ private:
     /* Policy clientid*/
     std::string clientId_;
 
-    /* Firewall statistic param - droppedPkts*/
-    uint32_t droppedPkts_;
+    /* Firewall statistic param - droppedPkts (ingress) */
+    uint32_t ruleDroppedPkts_;
 
-    /* Firewall statistic param - passedPkts*/
-    uint32_t passedPkts_;
+    /* Firewall statistic param - passedPkts (ingress) */
+    uint32_t rulePassedPkts_;
+
+    /* TX dropped packets from the device with client id (egress) */
+    uint32_t txDroppedPkts_;
+
+    /* TX passed packets from the device with client id (egress) */
+    uint32_t txPassedPkts_;
 };
 
 } // namespace atlas

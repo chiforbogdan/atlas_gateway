@@ -47,12 +47,13 @@ AtlasDevice::AtlasDevice() : identity_(""), registered_(false) {}
 
 void AtlasDevice::uninstallPolicy()
 {
+    /* Remove firewall rule from publish-subscribe broker */
     AtlasPubSubAgent::getInstance().removeFirewallRule(policy_->getClientId());
-
+    
     /* Explicit delete policy */
     policy_.reset();
 
-    /* Explicit delete firewall statistic */
+    /* Explicit delete firewall statistics */
     stats_.reset();
 }
 
@@ -227,7 +228,15 @@ std::string AtlasDevice::toJSON()
     jsonDevice += "\n" + ipPortToJSON()+ ",";
 
     /* Add telemetry info */
-    jsonDevice += "\n" + telemetryInfo_.toJSON();
+    jsonDevice += "\n" + telemetryInfo_.toJSON() + ",";
+
+    /* Add firewall policy info */
+    if (policy_)
+        jsonDevice += "\n" + policy_->toJSON() + ",";
+
+    /* Add firewall statistics info */
+    if (stats_)
+        jsonDevice += "\n" + stats_->toJSON();
 
     return jsonDevice;
 }

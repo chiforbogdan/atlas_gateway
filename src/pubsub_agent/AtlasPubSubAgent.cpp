@@ -1,4 +1,5 @@
 #include <iostream>
+#include <boost/optional.hpp>
 #include "AtlasPubSubAgent.h"
 #include "../scheduler/AtlasScheduler.h"
 #include "../logger/AtlasLogger.h"
@@ -114,10 +115,11 @@ void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t c
     AtlasCommandBatch cmdBatch;
     std::vector<AtlasCommand> cmds;
     std::string clientId = "";
-    uint32_t droppedPkts = 0;
-    uint32_t passedPkts = 0;
-    bool droppedPktsFound = false;
-    bool passedPktsFound = false;
+    boost::optional<uint32_t> ruleDroppedPkts;
+    boost::optional<uint32_t> rulePassedPkts;
+    boost::optional<uint32_t> txDroppedPkts;
+    boost::optional<uint32_t> txPassedPkts;
+    uint32_t tmp;
 
     if (!cmdBuf || !cmdLen)
         return;
@@ -132,13 +134,21 @@ void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t c
         if (cmd.getType() == ATLAS_CMD_PUB_SUB_CLIENT_ID) {
             clientId.assign((char *) cmd.getVal(), cmd.getLen());
         } else if (cmd.getType() == ATLAS_CMD_PUB_SUB_PKT_DROP && cmd.getLen() == sizeof(uint32_t)) {
-            memcpy(&droppedPkts, cmd.getVal(), cmd.getLen());
-            droppedPkts = ntohl(droppedPkts);
-            droppedPktsFound = true;
+            memcpy(&tmp, cmd.getVal(), cmd.getLen());
+            tmp = ntohl(tmp);
+            ruleDroppedPkts = tmp;
         } else if (cmd.getType() == ATLAS_CMD_PUB_SUB_PKT_PASS && cmd.getLen() == sizeof(uint32_t)) {
-            memcpy(&passedPkts, cmd.getVal(), cmd.getLen());
-            passedPkts = ntohl(passedPkts);
-            passedPktsFound = true;
+            memcpy(&tmp, cmd.getVal(), cmd.getLen());
+            tmp = ntohl(tmp);
+            rulePassedPkts = tmp;
+        } else if (cmd.getType() == ATLAS_CMD_PUB_SUB_TX_PKT_DROP && cmd.getLen() == sizeof(uint32_t)) {
+            memcpy(&tmp, cmd.getVal(), cmd.getLen());
+            tmp = ntohl(tmp);
+            txDroppedPkts = tmp;
+        } else if (cmd.getType() == ATLAS_CMD_PUB_SUB_TX_PKT_PASS && cmd.getLen() == sizeof(uint32_t)) {
+            memcpy(&tmp, cmd.getVal(), cmd.getLen());
+            tmp = ntohl(tmp);
+            txPassedPkts = tmp;
         }
     }
 
@@ -147,15 +157,26 @@ void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t c
         return;
     }
 
-    if (!droppedPktsFound) {
+    if (!ruleDroppedPkts) {
         ATLAS_LOGGER_ERROR("Empty dropped packets found when processing firewall rule statistics command");
         return;
     }
 
-    if (!passedPktsFound) {
+    if (!rulePassedPkts) {
         ATLAS_LOGGER_ERROR("Empty accepted packets found when processing firewall rule statistics command");
         return;
     }
+
+    if (!txDroppedPkts) {
+        ATLAS_LOGGER_ERROR("Empty TX dropped packets found when processing firewall rule statistics command");
+        return;
+    }
+
+    if (!txPassedPkts) {
+        ATLAS_LOGGER_ERROR("Empty TX accepted packets found when processing firewall rule statistics command");
+        return;
+    }
+
 
     if(policyDevices_.find(clientId) == policyDevices_.end()) {
         ATLAS_LOGGER_ERROR("ClientId is not found in agent cache when processing firewall rule statistics command");
@@ -163,8 +184,10 @@ void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t c
     } else {
         std::unique_ptr<AtlasFirewallStats> statsAux(new AtlasFirewallStats());
         statsAux->setClientId(clientId);
-        statsAux->setDroppedPkts(droppedPkts);
-        statsAux->setPassedPkts(passedPkts);
+        statsAux->setRuleDroppedPkts(*ruleDroppedPkts);
+        statsAux->setRulePassedPkts(*rulePassedPkts);
+        statsAux->setTxDroppedPkts(*txDroppedPkts);
+        statsAux->setTxPassedPkts(*txPassedPkts);
 
         AtlasDeviceManager::getInstance()
                             .getDevice(policyDevices_[clientId])

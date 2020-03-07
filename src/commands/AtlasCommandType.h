@@ -129,6 +129,12 @@ enum AtlasCommandType {
     /* Publish-subscribe number of accepted packets by a firewall rule: payload is 4 byte
     number of accepted packtes */
     ATLAS_CMD_PUB_SUB_PKT_PASS,
+
+    /* Publish-subscribe number of TX dropped packets: payload is 4 byte number of dropped packets*/
+    ATLAS_CMD_PUB_SUB_TX_PKT_DROP,
+
+    /* Publish-subscribe number of TX passed packets: payload is 4 byte number of dropped packets*/
+    ATLAS_CMD_PUB_SUB_TX_PKT_PASS,
 };
 
 } // namespace atlas

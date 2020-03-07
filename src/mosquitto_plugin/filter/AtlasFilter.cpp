@@ -7,7 +7,6 @@
 #include <arpa/inet.h>
 #include "AtlasFilter.h"
 #include "../logger/AtlasLogger.h"
-#include "../../commands/AtlasCommandType.h"
 #include "../../commands/AtlasCommand.h"
 #include "../../commands/AtlasCommandBatch.h"
 #include "../../utils/AtlasUtils.h"
@@ -53,22 +52,29 @@ void AtlasFilter::timerHandler(const boost::system::error_code& ec)
         ATLAS_LOGGER_ERROR("Timer handler called with error");
 }
 
-void AtlasFilter::writeFirewallRuleStats(const std::string &clientId, uint32_t droppedPkts, uint32_t passedPkts)
+void AtlasFilter::writeFirewallStats(const std::string &clientId, uint32_t ruleDroppedPkts, uint32_t rulePassedPkts,
+                                     uint32_t txDroppedPkts, uint32_t txPassedPkts)
 {
     AtlasCommandBatch cmdBatchInner;
     AtlasCommandBatch cmdBatchOuter;
 
     /* Inner commands */
-    droppedPkts = htonl(droppedPkts);
-    passedPkts = htonl(passedPkts);
+    ruleDroppedPkts = htonl(ruleDroppedPkts);
+    rulePassedPkts = htonl(rulePassedPkts);
+    txDroppedPkts = htonl(txDroppedPkts);
+    txPassedPkts = htonl(txPassedPkts);
 
     AtlasCommand cmdClientId(ATLAS_CMD_PUB_SUB_CLIENT_ID, clientId.length(), (uint8_t *) clientId.c_str());
-    AtlasCommand cmdDroppedPkts(ATLAS_CMD_PUB_SUB_PKT_DROP, sizeof(uint32_t), (uint8_t *) &droppedPkts);
-    AtlasCommand cmdPassedPkts(ATLAS_CMD_PUB_SUB_PKT_PASS, sizeof(uint32_t), (uint8_t *) &passedPkts);
+    AtlasCommand cmdRuleDroppedPkts(ATLAS_CMD_PUB_SUB_PKT_DROP, sizeof(uint32_t), (uint8_t *) &ruleDroppedPkts);
+    AtlasCommand cmdRulePassedPkts(ATLAS_CMD_PUB_SUB_PKT_PASS, sizeof(uint32_t), (uint8_t *) &rulePassedPkts);
+    AtlasCommand cmdTxDroppedPkts(ATLAS_CMD_PUB_SUB_TX_PKT_DROP, sizeof(uint32_t), (uint8_t *) &txDroppedPkts);
+    AtlasCommand cmdTxPassedPkts(ATLAS_CMD_PUB_SUB_TX_PKT_PASS, sizeof(uint32_t), (uint8_t *) &txPassedPkts);
     
     cmdBatchInner.addCommand(cmdClientId);
-    cmdBatchInner.addCommand(cmdDroppedPkts);
-    cmdBatchInner.addCommand(cmdPassedPkts);
+    cmdBatchInner.addCommand(cmdRuleDroppedPkts);
+    cmdBatchInner.addCommand(cmdRulePassedPkts);
+    cmdBatchInner.addCommand(cmdTxDroppedPkts);
+    cmdBatchInner.addCommand(cmdTxPassedPkts);
 
     std::pair<const uint8_t*, size_t> innerCmd = cmdBatchInner.getSerializedAddedCommands();
 
@@ -92,8 +98,10 @@ void AtlasFilter::getFirewallRuleStats(const uint8_t *cmdBuf, uint16_t cmdLen)
     AtlasCommandBatch cmdBatch;
     std::vector<AtlasCommand> cmds;
     std::string clientId = "";
-    uint32_t droppedPkts = 0;
-    uint32_t passedPkts = 0;
+    uint32_t ruleDroppedPkts = 0;
+    uint32_t rulePassedPkts = 0;
+    uint32_t txDroppedPkts = 0;
+    uint32_t txPassedPkts = 0;
 
     ATLAS_LOGGER_DEBUG("Get firewall rule statistics from agent");
     
@@ -106,16 +114,20 @@ void AtlasFilter::getFirewallRuleStats(const uint8_t *cmdBuf, uint16_t cmdLen)
             clientId.assign((char *)cmd.getVal(), cmd.getLen());
     }
     
-    if (clientId != "") {
-        /* Get statistics for firewall rule */
-        mutex_.lock();
-        droppedPkts = rules_[clientId].getStatDroppedPkt();
-        passedPkts = rules_[clientId].getStatPassedPkt();
-        mutex_.unlock();
-    } else
+    if (clientId == "") {
         ATLAS_LOGGER_ERROR("Empty client id in firewall get statistics command");
+        return;
+    }
 
-    writeFirewallRuleStats(clientId, droppedPkts, passedPkts);
+    /* Get statistics for firewall rule */
+    mutex_.lock();
+    ruleDroppedPkts = rules_[clientId].getStatDroppedPkt();
+    rulePassedPkts = rules_[clientId].getStatPassedPkt();
+    txDroppedPkts = txPktStats_[clientId].getDroppedPkts();
+    txPassedPkts = txPktStats_[clientId].getPassedPkts();
+    mutex_.unlock();
+        
+    writeFirewallStats(clientId, ruleDroppedPkts, rulePassedPkts, txDroppedPkts, txPassedPkts);
 } 
 
 void AtlasFilter::removeFirewallRule(const uint8_t *cmdBuf, uint16_t cmdLen)
@@ -142,6 +154,7 @@ void AtlasFilter::removeFirewallRule(const uint8_t *cmdBuf, uint16_t cmdLen)
     /* Remove firewall rule */
     mutex_.lock();
     rules_.erase(clientId);
+    txPktStats_.erase(clientId);
     mutex_.unlock();
 
     ATLAS_LOGGER_INFO("Firewall rule for client id %s was removed", clientId.c_str());
@@ -206,6 +219,7 @@ void AtlasFilter::installFirewallRule(const uint8_t *cmdBuf, uint16_t cmdLen)
     /* Install firewall rule */
     mutex_.lock();
     rules_[clientId] = AtlasPacketPolicer(maxQos, ppm, maxPayloadLen);
+    txPktStats_[clientId] = AtlasPacketStats();
     mutex_.unlock();
     
     ATLAS_LOGGER_INFO("Installed firewall rule for client id %s, Max QoS: %d, PPM: %d, Max payload length: %d",
@@ -312,12 +326,26 @@ bool AtlasFilter::filter(const AtlasPacket &pkt)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     std::string dstClientId = pkt.getDstClientId();
+    bool processPkt = false;
+    
 
     /* If no rule is found for the destination client id, then packet can be processed */
     if (rules_.find(dstClientId) == rules_.end())
-        return true;
+        processPkt = true;
+    else
+        processPkt = rules_[dstClientId].filter(pkt);
 
-    return rules_[dstClientId].filter(pkt);
+    /* Increment TX statistics */
+    if (pkt.getSrcClientId() &&
+        txPktStats_.find(pkt.getSrcClientId()) != txPktStats_.end()) {
+        if (processPkt)
+            txPktStats_[pkt.getSrcClientId()].incPassedPkts();
+        else
+            txPktStats_[pkt.getSrcClientId()].incDroppedPkts();
+    }
+
+
+    return processPkt;
 }
 
 } // namespace atlas

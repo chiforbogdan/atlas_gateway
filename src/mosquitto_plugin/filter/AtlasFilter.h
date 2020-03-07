@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include "AtlasPacket.h"
 #include "AtlasPacketPolicer.h"
+#include "AtlasPacketStats.h"
+#include "../../commands/AtlasCommandType.h"
 
 #define ATLAS_PUB_SUB_AGENT_BUF_LEN (2048)
 
@@ -66,10 +68,12 @@ private:
     /**
     * @brief Write firewall rule statistics to gateway
     * @param[in] clientId Client id associated with the firewall rule
-    * @param[in] droppedPkts Number of dropped packets
-    * @param[in] passedPkts Number of accepted packets
+    * @param[in] ruleDroppedPkts Number of dropped packets by the firewall rule (ingress)
+    * @param[in] rulePassedPkts Number of accepted packets by the firewall rule (ingress)
+    * @param[in] txDroppedPkts Number of dropped packets for the client id associated with the rule (egress)
+    * @param[in] txPassedPkts Number of accepted packets for the client id associated with the rule (egress)
     */
-    void writeFirewallRuleStats(const std::string &clientId, uint32_t droppedPkts, uint32_t passedPkts);
+    void writeFirewallStats(const std::string &clientId,  uint32_t ruleDroppedPkts, uint32_t rulePassedPkts, uint32_t txDroppedPkts, uint32_t txPassedPkts);
 
     /**
     * @brief Get statistics for firewall rule
@@ -134,6 +138,9 @@ private:
 
     /* Filter rules */
     std::unordered_map<std::string, AtlasPacketPolicer> rules_;
+
+    /* TX packet processing statistics */
+    std::unordered_map<std::string, AtlasPacketStats> txPktStats_;
 
     /* Fixed window rate limiting timer object */
     boost::asio::deadline_timer timer_;
