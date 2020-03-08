@@ -15,19 +15,15 @@ public:
      * @brief Default Ctor with FeatureType = GENERIC and Value = 0
      * @return none
     */
-    AtlasDeviceFeature() : featureType_(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC), weight_(1), feedbackThreshold_(ATLAS_DEVICE_FEATURE_DEFAULT_FEEDBACK_THRESHOLD), 
-                                        currentReputation_(0), successTrans_(0), cptValue_(0) {}
+    AtlasDeviceFeature() : featureType_(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC), weight_(1), currentReputation_(0), successTrans_(0) {}
 
     /**
      * @brief Explicit Ctor for FeatureType
      * @param[in] Specific feature from a list of FeatureTypes
      * @param[in] Weight of feature in device reputation computation
-     * @param[in] Initial threshold for feedback
-     * @param[in] Initial threshold for latency
      * @return none
     */
-    AtlasDeviceFeature(AtlasDeviceFeatureType featureType, double featureWeight, double reputationThreshold) : featureType_(featureType), weight_(featureWeight),
-                                        feedbackThreshold_(reputationThreshold), currentReputation_(0), cptValue_(0), successTrans_(0) {}
+    AtlasDeviceFeature(AtlasDeviceFeatureType featureType, double featureWeight) : featureType_(featureType), weight_(featureWeight),currentReputation_(0), successTrans_(0) {}
 
     /**
      * @brief Get feature type
@@ -55,19 +51,6 @@ public:
     void updateWeight(double newVal) { weight_ = newVal; }
 
     /**
-     * @brief Get Feedback threshold value
-     * @return Current Feedback threshold value
-    */
-    double getFeedbackThreshold() { return feedbackThreshold_; }
-    
-    /**
-     * @brief Set Feedback threshold value
-     * @param[in] New Feedback threshold value
-     * @return none
-    */
-    void updateFeedbackThreshold(double feedbackThreshold) { feedbackThreshold_ = feedbackThreshold; }
-
-    /**
      * @brief Updates the current reputation value and adds the old value in the reputation history
      * @param[in] New value for reputation
      * @return none
@@ -81,18 +64,6 @@ public:
     double getReputation() { return currentReputation_; }
 
     /**
-     * @brief Updates the Conditional Probability variable
-     * @return none
-    */
-    void updateCPT(double newVal) { cptValue_ = newVal; }
-
-    /**
-     * @brief Returns the CPT value
-     * @return CPT value 
-    */
-    double getCPT() { return cptValue_; }
-
-    /**
      * @brief Updates number of successful transactions (required by Naive Bayes component)
      * @return none
     */
@@ -104,18 +75,16 @@ public:
     */
     int getSuccessfulTransactions() { return successTrans_; }
 
-    AtlasDeviceFeature(const AtlasDeviceFeature &src) { featureType_ = src.featureType_; feedbackThreshold_ = src.feedbackThreshold_; currentReputation_ = src.currentReputation_; 
-                                                        successTrans_ = src.successTrans_; cptValue_ = src.cptValue_; weight_ = src.weight_; }
+    AtlasDeviceFeature(const AtlasDeviceFeature &src) { featureType_ = src.featureType_; currentReputation_ = src.currentReputation_; 
+                                                        successTrans_ = src.successTrans_; weight_ = src.weight_; }
                                     
-    AtlasDeviceFeature& operator = (const AtlasDeviceFeature& src) { featureType_ = src.featureType_; feedbackThreshold_ = src.feedbackThreshold_; currentReputation_ = src.currentReputation_; 
-                                                                    successTrans_ = src.successTrans_; cptValue_ = src.cptValue_; weight_ = src.weight_; return *this; }
+    AtlasDeviceFeature& operator = (const AtlasDeviceFeature& src) { featureType_ = src.featureType_; currentReputation_ = src.currentReputation_; 
+                                                                        successTrans_ = src.successTrans_; weight_ = src.weight_; return *this; }
 
 private:
     AtlasDeviceFeatureType featureType_;
     double weight_;
-    double feedbackThreshold_;
     double currentReputation_;
-    double cptValue_;
     int successTrans_;
 
     //FIXME

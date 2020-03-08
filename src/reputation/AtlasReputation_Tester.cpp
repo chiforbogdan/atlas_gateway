@@ -20,7 +20,8 @@ double AtlasReputationTester::generateFeedback(double targetVal, double errorVal
 void AtlasReputationTester::simulateScenario_1(double targetVal, double errorVal, double thresholdVal, int noOfIterations)
 {
     AtlasDeviceFeatureManager manager;
-    manager.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC, 1, thresholdVal);
+    manager.updateFeedbackThreshold(thresholdVal);
+    manager.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC, 1);
     
     FILE* fileOut = fopen("scenario_1.dat", "w");
     if (fileOut != nullptr)
@@ -51,8 +52,9 @@ void AtlasReputationTester::simulateScenario_1(double targetVal, double errorVal
 void AtlasReputationTester::simulateScenario_2(double targetVal, double errorVal, double thresholdVal, int noOfIterations)
 {
     AtlasDeviceFeatureManager manager;
-    manager.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC, 0.8, thresholdVal);
-    manager.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_TEMPERATURE, 0.2, thresholdVal);
+    manager.updateFeedbackThreshold(thresholdVal);
+    manager.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC, 0.8);
+    manager.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_TEMPERATURE, 0.2);
     
     FILE* fileOut = fopen("scenario_2.dat", "w");
     if (fileOut != nullptr)
@@ -83,7 +85,8 @@ void AtlasReputationTester::simulateScenario_2(double targetVal, double errorVal
 void AtlasReputationTester::simulateScenario_3(double targetVal, double errorVal, double thresholdVal, int noOfIterations)
 {
     AtlasDeviceFeatureManager manager;
-    manager.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC, 1, thresholdVal);
+    manager.updateFeedbackThreshold(thresholdVal);
+    manager.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC, 1);
     
     FILE* fileOut = fopen("scenario_3_1.dat", "w");
     if (fileOut != nullptr)
@@ -140,7 +143,8 @@ void AtlasReputationTester::simulateScenario_3(double targetVal, double errorVal
 void AtlasReputationTester::simulateScenario_4(double targetVal, double errorVal, double thresholdVal, int noOfIterations)
 {
     AtlasDeviceFeatureManager manager;
-    manager.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC, 1, thresholdVal);
+    manager.updateFeedbackThreshold(thresholdVal);
+    manager.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC, 1);
     
     //1st Naive Bayes network
     FILE* fileOut = fopen("scenario_4_1.dat", "w");

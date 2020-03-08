@@ -11,51 +11,51 @@ double AtlasReputationNaiveBayes::computeReputationForFeature(AtlasDeviceFeature
         manager[type].updateReputation(0);
         ATLAS_LOGGER_INFO("AtlasReputationNaiveBayes_computeForFeature: Reputation could not be calculated!");
         return 0;
-    }
-
-    double trustProb = (double)manager.getTotalSuccessfulTransactions() / (double)manager.getTotalTransactions();
+    }    
     
     double featureProb = (double)manager[type].getSuccessfulTransactions() / (double)manager.getTotalSuccessfulTransactions();
-    manager[type].updateCPT(featureProb);
-
-    double reputationVal = 0;
-    if ((featureProb != 0) && (trustProb != 0)) {
-        reputationVal = featureProb * trustProb;
-        manager[type].updateReputation(reputationVal);
-    } else {
-        manager[type].updateReputation(manager[type].getReputation() * ATLAS_REPUTATION_NAIVE_BAYES_DECREASE_FACTOR);
-    }
+    manager[type].updateReputation(featureProb);
     
     ATLAS_LOGGER_INFO("AtlasReputationNaiveBayes_computeForFeature: Reputation calculated successfully!");
-    return reputationVal;
+    return featureProb;
 }
 
 double AtlasReputationNaiveBayes::computeReputation(AtlasDeviceFeatureManager& manager, std::vector<std::pair<AtlasDeviceFeatureType, double>>& feedbackMatrix)
 {
-    bool computeSuccess = true;
-
     manager.updateTotalTransactions();
+    double satisfactionScore = 0;
 
+    //compute feedback per device 
     for (auto it = feedbackMatrix.begin(); it != feedbackMatrix.end(); it++)
     {
-        if ((*it).second >= manager[(*it).first].getFeedbackThreshold()) {
-            manager[(*it).first].updateSuccessfulTransactions();
-        } else {
-            computeSuccess = false;
-        }
+        satisfactionScore += (*it).second * manager[(*it).first].getWeight();
     }
 
-    if (computeSuccess) {
+    //check if feedback per device is >= feedback threshold
+    if (satisfactionScore >= manager.getFeedbackThreshold())
+    {
         manager.updateTotalSuccessfulTransactions();
     }
 
-    double featureRepVal = 0;
+    //update success transactions for each feature, if the weighted feedback for each one is >= weighted threshold
+    double weightedFeatureFeadback = 0, weightedFeatureFeedbackThreshold = 0;
     for (auto it = feedbackMatrix.begin(); it != feedbackMatrix.end(); it++)
     {
-        featureRepVal += computeReputationForFeature(manager, (*it).first) * manager[(*it).first].getWeight();      
+        weightedFeatureFeadback = (*it).second * manager[(*it).first].getWeight();
+        weightedFeatureFeedbackThreshold = manager.getFeedbackThreshold() * manager[(*it).first].getWeight();
+        if (weightedFeatureFeadback >= weightedFeatureFeedbackThreshold) {
+            manager[(*it).first].updateSuccessfulTransactions();
+        }
     }
 
-    return featureRepVal;
+    //compute reputation for device
+    double repVal = (double)manager.getTotalSuccessfulTransactions() / (double)manager.getTotalTransactions(); 
+    for (auto it = feedbackMatrix.begin(); it != feedbackMatrix.end(); it++)
+    {
+        repVal *= computeReputationForFeature(manager, (*it).first);      
+    }
+
+    return repVal;
 }
 
 } //namespace atlas

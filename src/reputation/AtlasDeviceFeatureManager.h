@@ -15,10 +15,10 @@ public:
     /**
      * @brief Add a new feature to a device or update the value of an existing feature
      * @param[in] Feature type
-     * @param[in] Feature value
+     * @param[in] Feature weight value
      * @return nonne
     */
-    void addFeature(AtlasDeviceFeatureType type, double featureWeight, double feedbackThreshold);
+    void addFeature(AtlasDeviceFeatureType type, double featureWeight);
 
     /**
      * @brief Remove a feature from a device
@@ -71,6 +71,19 @@ public:
     */
     double getDeviceReputation() { return deviceReputation_; }
 
+    /**
+     * @brief Updates the device reputation value
+     * @param[in] New device reputation value
+     * @return none
+    */
+    void updateFeedbackThreshold(double newVal) { feedbackThreshold_ = newVal; }
+
+    /**
+     * @brief Returns the reputation value of current device
+     * @return Reputation value
+    */
+    double getFeedbackThreshold() { return feedbackThreshold_; }
+
     std::vector<AtlasDeviceFeature> getDeviceFeatures() { return features_; }
 
     AtlasDeviceFeatureManager() : totalSuccessTrans_(0), totalTrans_(0) {};
@@ -82,6 +95,7 @@ private:
     int totalSuccessTrans_;
     int totalTrans_;
     double deviceReputation_;
+    double feedbackThreshold_;
 };
 } //namespace atlas
 
