@@ -118,8 +118,8 @@ AtlasCoapResponse AtlasFeatureReputation::receiveFeedbackCallback(const std::str
     std::vector<AtlasCommand> cmd;
     std::pair<const uint8_t*, size_t> cmdBuf;
     std::string identity;
-    uint16_t feedback;
-   
+    boost::optional<uint16_t> feedback;
+    uint16_t tmp; 
     
     ATLAS_LOGGER_DEBUG("Feedback callback executed...");
 
@@ -152,17 +152,15 @@ AtlasCoapResponse AtlasFeatureReputation::receiveFeedbackCallback(const std::str
                 ATLAS_LOGGER_ERROR("Feedback end-point called with SPOOFED identity");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
-        } 
-        else if(cmdEntry.getType() == ATLAS_CMD_FEEDBACK){
-            if (!cmdEntry.getLen()) {
-                ATLAS_LOGGER_ERROR("Feedback end-point called with empty FEEDBACK command");
+        } else if(cmdEntry.getType() == ATLAS_CMD_FEEDBACK){
+            if (cmdEntry.getLen() != sizeof(uint16_t)) {
+                ATLAS_LOGGER_ERROR("Feedback end-point called with invalid FEEDBACK command");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
 
-            memcpy(&feedback, cmdEntry.getVal(), cmdEntry.getLen());
-            feedback = ntohs(feedback);
-
-            /* FIXME get the clientID with the best reputation and save feedback */
+            memcpy(&tmp, cmdEntry.getVal(), cmdEntry.getLen());
+            tmp = ntohs(tmp);
+            feedback = tmp;
         }
     }
 
@@ -177,6 +175,8 @@ AtlasCoapResponse AtlasFeatureReputation::receiveFeedbackCallback(const std::str
     }
 
     ATLAS_LOGGER_INFO("Device with identity " + identity + " send a feedback value.");
+
+    /* TODO inject the feedback value into the naive bayes */
  
     return ATLAS_COAP_RESP_OK;
 }
@@ -188,7 +188,6 @@ void AtlasFeatureReputation::start()
     /* Add CoAP resource for reputation feature */
     AtlasCoapServer::getInstance().addResource(featureReputationResource_);
     AtlasCoapServer::getInstance().addResource(receiveFeedbackResource_);
-    
 }
 
 void AtlasFeatureReputation::stop()
