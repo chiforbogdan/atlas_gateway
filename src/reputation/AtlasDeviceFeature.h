@@ -5,8 +5,6 @@
 #include <vector>
 #include "AtlasDeviceFeatureType.h"
 
-#define ATLAS_DEVICE_FEATURE_DEFAULT_FEEDBACK_THRESHOLD 0.75
-
 namespace atlas
 {
 class AtlasDeviceFeature {
@@ -86,11 +84,7 @@ private:
     double weight_;
     double currentReputation_;
     int successTrans_;
-
-    //FIXME
-    // Add history for reputation values and received feedback, if necessary
 };
-
 } //namespace atlas
 
 #endif /*__ATLAS_DEVICE_FEATURE_H__*/

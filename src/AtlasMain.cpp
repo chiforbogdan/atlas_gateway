@@ -14,7 +14,6 @@
 #include "mqtt_client/AtlasMqttClient.h"
 #include "identity/AtlasIdentity.h"
 #include "cloud/AtlasRegisterCloud.h"
-#include "reputation/AtlasReputation_Tester.h"
 
 namespace {
 
@@ -97,11 +96,6 @@ int main(int argc, char **argv)
     //atlas::AtlasCoapServer::getInstance().start(coapPort, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 
 
     ATLAS_LOGGER_DEBUG("Starting Atlas gateway...");
-
-    atlas::AtlasReputationTester::simulateScenario_1(10, 3, 8, 10000);
-    atlas::AtlasReputationTester::simulateScenario_2(10, 3, 8, 10000);
-    atlas::AtlasReputationTester::simulateScenario_3(10, 3, 8, 10000);
-    atlas::AtlasReputationTester::simulateScenario_4(10, 3, 8, 10000);
 
     /* Start policy module */
     //policy.start();

@@ -33,21 +33,28 @@ file(GLOB ATLAS_GATEWAY_SOURCES "src/*.cpp" "src/sql/AtlasSQLite.cpp" "src/sched
 # Atlas_gateway_cli files
 file(GLOB ATLAS_GATEWAY_CLI_SOURCES "src/sql/*.cpp" "src/logger/*.cpp")
 
+# Atlas_gateway_reputation_test files
+file(GLOB ATLAS_GATEWAY_REPUTATION_TEST_SOURCES "src/reputation/*.cpp" "src/reputation/tester/*.cpp" "src/logger/*.cpp")
+
 link_directories(${COAP_LIBRARY_DIRS})
 link_directories(${SQLITE_LIBRARY_DIRS})
 
 add_executable(${PROJECT_NAME} ${ATLAS_GATEWAY_SOURCES})
 add_executable(atlas_gateway_cli ${ATLAS_GATEWAY_CLI_SOURCES})
+add_executable(atlas_gateway_reputation_test ${ATLAS_GATEWAY_REPUTATION_TEST_SOURCES})
 
 target_link_libraries(${PROJECT_NAME} paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto -lstdc++fs)
 target_link_libraries(atlas_gateway_cli paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto -lstdc++fs)
+target_link_libraries(atlas_gateway_reputation_test paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto -lstdc++fs)
 
 #Add CoAP and Boost library
 target_link_libraries(${PROJECT_NAME} ${SQLITE_LIBRARIES} ${COAP_LIBRARIES} ${Boost_LIBRARIES} ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(atlas_gateway_cli ${SQLITE_LIBRARIES} ${COAP_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(atlas_gateway_reputation_test ${SQLITE_LIBRARIES} ${COAP_LIBRARIES} ${Boost_LIBRARIES})
 
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
 target_compile_options(atlas_gateway_cli PRIVATE -Wall)
+target_compile_options(atlas_gateway_reputation_test PRIVATE -Wall)
 
 # Mosquitto dependency
 pkg_check_modules(MOSQUITTO libmosquitto REQUIRED)

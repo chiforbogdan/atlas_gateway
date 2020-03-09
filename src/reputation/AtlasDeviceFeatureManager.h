@@ -1,6 +1,7 @@
 #ifndef __ATLAS_DEVICE_FEATURE_MANAGERR_H__
 #define __ATLAS_DEVICE_FEATURE_MANAGERR_H__
 
+#define ATLAS_DEVICE_FEATURE_MANAGER_DEFAULT_THRESHOLD 0.8
 #define ATLAS_DEVICE_FEATURE_MANAGER_DATAPLANE_WEIGHT 0.6
 #define ATLAS_DEVICE_FEATURE_MANAGER_CONTROLPLANE_WEIGHT 0.4
 
@@ -84,10 +85,13 @@ public:
     */
     double getFeedbackThreshold() { return feedbackThreshold_; }
 
+    /**
+     * @brief Returns all features that the current device has
+     * @return Vector with all device features
+    */
     std::vector<AtlasDeviceFeature> getDeviceFeatures() { return features_; }
 
-    AtlasDeviceFeatureManager() : totalSuccessTrans_(0), totalTrans_(0) {};
-    ~AtlasDeviceFeatureManager() { features_.clear(); totalSuccessTrans_ = 0; totalTrans_ = 0; }
+    AtlasDeviceFeatureManager() : totalSuccessTrans_(0), totalTrans_(0), deviceReputation_(0), feedbackThreshold_(ATLAS_DEVICE_FEATURE_MANAGER_DEFAULT_THRESHOLD) {};
 
     AtlasDeviceFeature& operator [] (AtlasDeviceFeatureType type);
 private:
