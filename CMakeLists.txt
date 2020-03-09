@@ -28,13 +28,13 @@ include_directories(${COAP_INCLUDE_DIRS})
 include_directories(${SQLITE_INCLUDE_DIRS})
 
 # Atlas gateway files
-file(GLOB ATLAS_GATEWAY_SOURCES "src/*.cpp" "src/sql/AtlasSQLite.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp" "src/pubsub_agent/*.cpp" "src/device/*.cpp" "src/telemetry/*.cpp" "src/policy/*.cpp" "src/mqtt_client/*.cpp" "src/identity/*.cpp" "src/cloud/*.cpp" "src/reputation/*cpp")
+file(GLOB ATLAS_GATEWAY_SOURCES "src/*.cpp" "src/sql/AtlasSQLite.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp" "src/pubsub_agent/*.cpp" "src/device/*.cpp" "src/telemetry/*.cpp" "src/policy/*.cpp" "src/mqtt_client/*.cpp" "src/identity/*.cpp" "src/cloud/*.cpp" "src/reputation_impl/*cpp")
 
 # Atlas_gateway_cli files
 file(GLOB ATLAS_GATEWAY_CLI_SOURCES "src/sql/*.cpp" "src/logger/*.cpp")
 
 # Atlas_gateway_reputation_test files
-file(GLOB ATLAS_GATEWAY_REPUTATION_TEST_SOURCES "src/reputation/*.cpp" "src/reputation/tester/*.cpp" "src/logger/*.cpp")
+file(GLOB ATLAS_GATEWAY_REPUTATION_TEST_SOURCES "src/reputation_impl/*.cpp" "src/reputation_impl/tester/*.cpp" "src/logger/*.cpp")
 
 link_directories(${COAP_LIBRARY_DIRS})
 link_directories(${SQLITE_LIBRARY_DIRS})
@@ -45,12 +45,11 @@ add_executable(atlas_gateway_reputation_test ${ATLAS_GATEWAY_REPUTATION_TEST_SOU
 
 target_link_libraries(${PROJECT_NAME} paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto -lstdc++fs)
 target_link_libraries(atlas_gateway_cli paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto -lstdc++fs)
-target_link_libraries(atlas_gateway_reputation_test paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto -lstdc++fs)
 
 #Add CoAP and Boost library
 target_link_libraries(${PROJECT_NAME} ${SQLITE_LIBRARIES} ${COAP_LIBRARIES} ${Boost_LIBRARIES} ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(atlas_gateway_cli ${SQLITE_LIBRARIES} ${COAP_LIBRARIES} ${Boost_LIBRARIES})
-target_link_libraries(atlas_gateway_reputation_test ${SQLITE_LIBRARIES} ${COAP_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(atlas_gateway_reputation_test ${Boost_LIBRARIES})
 
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
 target_compile_options(atlas_gateway_cli PRIVATE -Wall)

@@ -17,9 +17,9 @@ public:
      * @brief Add a new feature to a device or update the value of an existing feature
      * @param[in] Feature type
      * @param[in] Feature weight value
-     * @return nonne
+     * @return True is feature is new or False is feature existed (weight value will be updated)
     */
-    void addFeature(AtlasDeviceFeatureType type, double featureWeight);
+    bool addFeature(AtlasDeviceFeatureType type, double featureWeight);
 
     /**
      * @brief Remove a feature from a device

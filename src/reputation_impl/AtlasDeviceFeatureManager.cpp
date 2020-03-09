@@ -4,25 +4,19 @@
 namespace atlas
 {
 
-void AtlasDeviceFeatureManager::addFeature(AtlasDeviceFeatureType type, double featureWeight)
+bool AtlasDeviceFeatureManager::addFeature(AtlasDeviceFeatureType type, double featureWeight)
 {
-    bool found = false;
     for (auto it = features_.begin(); it != features_.end(); it++) {
         if ((*it).getFeatureType() == type) {
-            if ((*it).getWeight() == featureWeight) {
-                ATLAS_LOGGER_INFO("AtlasDeviceFeatureManager: Feature already added with same value");
-                found = true;
-            } else {
-                ATLAS_LOGGER_INFO("AtlasDeviceFeatureManager: Feature already added. Updating value");
-                (*it).updateWeight(featureWeight);
-                found = true;
-            }                        
+            ATLAS_LOGGER_INFO("AtlasDeviceFeatureManager: Feature already added. Updating value");
+            (*it).updateWeight(featureWeight);
+            return false;                       
         }        
     }
-    if (!found) {
-        features_.push_back(AtlasDeviceFeature(type, featureWeight));
-        ATLAS_LOGGER_INFO("AtlasDeviceFeatureManager: New feature added to device");
-    }
+
+    features_.push_back(AtlasDeviceFeature(type, featureWeight));
+    ATLAS_LOGGER_INFO("AtlasDeviceFeatureManager: New feature added to device");
+    return true;
 }
 
 bool AtlasDeviceFeatureManager::removeFeature(AtlasDeviceFeatureType type)
