@@ -33,16 +33,16 @@ double AtlasReputationNaiveBayes::computeReputation(AtlasDeviceFeatureManager& m
     //check if feedback per device is >= feedback threshold
     if (satisfactionScore >= manager.getFeedbackThreshold()) {
         manager.updateTotalSuccessfulTransactions();
-    }
 
-    //update success transactions for each feature, if the weighted feedback for each one is >= weighted threshold
-    double weightedFeatureFeadback = 0, weightedFeatureFeedbackThreshold = 0;
-    for (auto it = feedbackMatrix.begin(); it != feedbackMatrix.end(); it++) {
-        weightedFeatureFeadback = (*it).second * manager[(*it).first].getWeight();
-        weightedFeatureFeedbackThreshold = manager.getFeedbackThreshold() * manager[(*it).first].getWeight();
+        //update success transactions for each feature, if the weighted feedback for each one is >= weighted threshold
+        double weightedFeatureFeadback = 0, weightedFeatureFeedbackThreshold = 0;
+        for (auto it = feedbackMatrix.begin(); it != feedbackMatrix.end(); it++) {
+            weightedFeatureFeadback = (*it).second * manager[(*it).first].getWeight();
+            weightedFeatureFeedbackThreshold = manager.getFeedbackThreshold() * manager[(*it).first].getWeight();
 
-        if (weightedFeatureFeadback >= weightedFeatureFeedbackThreshold) {
-            manager[(*it).first].updateSuccessfulTransactions();
+            if (weightedFeatureFeadback >= weightedFeatureFeedbackThreshold) {
+                manager[(*it).first].updateSuccessfulTransactions();
+            }
         }
     }
 
