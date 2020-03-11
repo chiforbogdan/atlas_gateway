@@ -2,6 +2,7 @@
 #include "../logger/AtlasLogger.h"
 #include "AtlasMqttException.h"
 #include "../scheduler/AtlasScheduler.h"
+#include "../cloud/AtlasCloudCmdParser.h"
 
 #include <iostream>
 #include <thread>
@@ -31,8 +32,9 @@ void AtlasMqttClient_callback::connection_lost(const std::string& cause)
 
 void AtlasMqttClient_callback::message_arrived(mqtt::const_message_ptr msg)
 {
-    /* FIXME this callback is executed on another thread!!! In order to use this, post the message on the main thread */
     ATLAS_LOGGER_INFO("AtlasMqttClient_Callback (message_arrived): Message arrived on topic [" + msg->get_topic() + "] with payload: \"" + msg->to_string() + "\"");
+
+    AtlasScheduler::getInstance().getService().post(boost::bind(&AtlasCloudCmdParser::parseCmd, &AtlasCloudCmdParser::getInstance(), msg->to_string()));
 }
 
 void AtlasMqttClient_callback::alarmCallback()

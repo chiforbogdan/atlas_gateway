@@ -39,7 +39,7 @@ link_directories(${SQLITE_LIBRARY_DIRS})
 add_executable(${PROJECT_NAME} ${ATLAS_GATEWAY_SOURCES})
 add_executable(atlas_gateway_cli ${ATLAS_GATEWAY_CLI_SOURCES})
 
-target_link_libraries(${PROJECT_NAME} paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto -lstdc++fs)
+target_link_libraries(${PROJECT_NAME} paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto -lstdc++fs -ljsoncpp)
 target_link_libraries(atlas_gateway_cli paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto -lstdc++fs)
 
 #Add CoAP and Boost library
