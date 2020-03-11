@@ -2,13 +2,14 @@
 #define __ATLAS_CLOUD_CMD_PARSER_H__
 
 #include "../alarm/AtlasAlarm.h"
+#include "../mqtt_client/IAtlasMqttState.h"
 #include <boost/function.hpp>
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 #include <unordered_map>
 
 namespace atlas {
 
-class AtlasCloudCmdParser
+class AtlasCloudCmdParser: public IAtlasMqttState
 {
 public:
     /**
@@ -18,10 +19,28 @@ public:
     static AtlasCloudCmdParser& getInstance();
 
     /**
-    * @brief Start cloud control module
+    * @brief MQTT broker connect callback
+    * @return none
+    */
+    void onConnect() override;
+
+    /**
+    * @brief MQTT broker disconnect callback
+    * @return none
+    */
+    void onDisconnect() override;
+
+    /**
+    * @brief Start cloud command parser module
     * @return none
     */
     void start();
+
+    /**
+    * @brief Stop cloud command parser module
+    * @return none
+    */
+    void stop();
 
     /**
     * @brief Parse a received command
@@ -41,41 +60,13 @@ private:
     AtlasCloudCmdParser();
 
     /**
-    * @brief Register a callback for a command type
-    * @param[in] command type
-    * @param[in] callback function
-    * @return none
-    */
-    void addCmdTypeCallback(std::string const &cmdType, std::function<void()> callback);
-
-    /**
-    * @brief Erase a callback linked with a command type
-    * @param[in] command type
-    * @return none
-    */
-    void delCmdTypeCallback(std::string const &cmdType);
-
-    /**
     * @brief Callback for ATLAS_CMD_GET_ALL_DEVICES command
     * @return none
     */
     void CommandGetAllDevicesCallback();
 
-    /**
-    * @brief Callback for subscribe event
-    * @return none
-    */
-    void connectAlarmCb();
-
     /* Indicates if the cloud module is connected */
     bool connected_;
-
-    /* Alarm for subscribe event*/
-    AtlasAlarm cAlarm_;
-
-    /*Registered callbacks for commands type*/
-    /* <cmd_type, callback function>*/
-    std::unordered_map<std::string, std::function<void()>> callbacks_;
 };
 
 } // namespace atlas

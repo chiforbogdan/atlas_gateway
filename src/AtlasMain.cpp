@@ -118,6 +118,9 @@ int main(int argc, char **argv)
     /* Start scheduler */
     atlas::AtlasScheduler::getInstance().run();
 
+    /* Stop cloud command parser module*/
+    atlas::AtlasCloudCmdParser::getInstance().stop();
+
     /* Stop cloud register module */
     atlas::AtlasRegisterCloud::getInstance().stop();
 

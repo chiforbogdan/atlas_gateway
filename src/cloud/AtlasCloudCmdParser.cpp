@@ -9,14 +9,7 @@
 
 namespace atlas {
 
-namespace {
-
-const int ATLAS_CONNECTED_CLOUD_INTERVAL_MS = 2000;
-
-} // anonymous namespace
-
-AtlasCloudCmdParser::AtlasCloudCmdParser() : connected_(false),
-                                         cAlarm_(ATLAS_CONNECTED_CLOUD_INTERVAL_MS, false, boost::bind(&AtlasCloudCmdParser::connectAlarmCb, this)){}
+AtlasCloudCmdParser::AtlasCloudCmdParser() : connected_(false){}
 
 AtlasCloudCmdParser& AtlasCloudCmdParser::getInstance()
 {
@@ -24,42 +17,17 @@ AtlasCloudCmdParser& AtlasCloudCmdParser::getInstance()
     return instance;
 }
 
-void AtlasCloudCmdParser::connectAlarmCb()
-{
-    ATLAS_LOGGER_INFO("Cloud connect-subscribing alarm triggered");
-
-    if (!connected_)
-        connected_ = AtlasMqttClient::getInstance().subscribeTopic(AtlasIdentity::getInstance().getPsk()+"-control", 1);
-    else
-        cAlarm_.cancel();
-}
-
 void AtlasCloudCmdParser::CommandGetAllDevicesCallback()
 {
-    std::string cmd = "{\n";
-    
-    ATLAS_LOGGER_INFO("Send GET_ALL_DEVICES command to cloud back-end");
-
-    /* Add header */
-    cmd += "\"" + ATLAS_CMD_TYPE_JSON_KEY + "\": \"" + ATLAS_CMD_GET_ALL_DEVICES + "\"";
-    cmd += "\n}";
-
-    bool delivered = AtlasMqttClient::getInstance().tryPublishMessage(AtlasIdentity::getInstance().getPsk(), cmd);
-    if (delivered) {
-        ATLAS_LOGGER_INFO("GET_ALL_DEVICES command was sent to cloud back-end. Sync all devices...");
-        AtlasDeviceManager::getInstance().getDeviceCloud()->allDevicesUpdate();
-    }
+    ATLAS_LOGGER_INFO("GET_ALL_DEVICES command was sent to cloud back-end. Sync all devices...");
+    AtlasDeviceManager::getInstance().getDeviceCloud()->allDevicesUpdate();
 }
 
 void AtlasCloudCmdParser::start()
 {
     ATLAS_LOGGER_DEBUG("Start cloud command parser");
 
-    /*commands registeration */
-    addCmdTypeCallback(ATLAS_CMD_GET_ALL_DEVICES, boost::bind(&AtlasCloudCmdParser::CommandGetAllDevicesCallback, this));
-
-    /*start alarm for async subscription*/
-    cAlarm_.start();
+    AtlasMqttClient::getInstance().addConnectionCb(this);
 }
 
 void AtlasCloudCmdParser::parseCmd(std::string const &cmd)
@@ -68,17 +36,32 @@ void AtlasCloudCmdParser::parseCmd(std::string const &cmd)
     Json::Value obj;
 
     reader.parse(cmd, obj);
-    callbacks_[obj["cmd"].asString()]();
+    if(obj["cmdType"].asString() == ATLAS_CMD_GET_ALL_DEVICES)
+    {
+        boost::bind(&AtlasCloudCmdParser::CommandGetAllDevicesCallback, this)();
+    }
 }
 
-void AtlasCloudCmdParser::addCmdTypeCallback(std::string const &cmdType, std::function<void()> callback)
+void AtlasCloudCmdParser::onConnect()
 {
-    callbacks_[cmdType] = callback;
+    ATLAS_LOGGER_INFO("Connect event to cloud MQTT broker");
+
+    if (!connected_)
+        connected_ = AtlasMqttClient::getInstance().subscribeTopic(AtlasIdentity::getInstance().getPsk() + "-control", 1);
 }
 
-void AtlasCloudCmdParser::delCmdTypeCallback(std::string const &cmdType)
+void AtlasCloudCmdParser::onDisconnect()
 {
-    callbacks_.erase(cmdType);
+    ATLAS_LOGGER_INFO("Disconnect event from cloud MQTT broker");
+
+    connected_ = false;
+}
+
+void AtlasCloudCmdParser::stop()
+{
+    ATLAS_LOGGER_DEBUG("Stop cloud command parser");
+
+    AtlasMqttClient::getInstance().removeConnectionCb(this);
 }
 
 } // namespace atlas

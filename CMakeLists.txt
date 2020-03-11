@@ -15,6 +15,9 @@ pkg_check_modules(UUID uuid REQUIRED)
 # OpenSSL dependency
 find_package(OpenSSL REQUIRED)
 
+# JSONCPP dependency
+pkg_check_modules(JSONCPP jsoncpp REQUIRED)
+
 # Link with dynamic version of Boost (for logging)
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 
@@ -26,6 +29,9 @@ include_directories(${COAP_INCLUDE_DIRS})
 
 # Add SQLite3 headers
 include_directories(${SQLITE_INCLUDE_DIRS})
+
+# Add JSONCPP headers
+include_directories(${JSONCPP_INCLUDE_DIRS})
 
 # Atlas gateway files
 file(GLOB ATLAS_GATEWAY_SOURCES "src/*.cpp" "src/sql/AtlasSQLite.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp" "src/pubsub_agent/*.cpp" "src/device/*.cpp" "src/telemetry/*.cpp" "src/policy/*.cpp" "src/mqtt_client/*.cpp" "src/identity/*.cpp" "src/cloud/*.cpp" "src/statistics/*.cpp" "src/reputation/*.cpp" )
@@ -39,7 +45,7 @@ link_directories(${SQLITE_LIBRARY_DIRS})
 add_executable(${PROJECT_NAME} ${ATLAS_GATEWAY_SOURCES})
 add_executable(atlas_gateway_cli ${ATLAS_GATEWAY_CLI_SOURCES})
 
-target_link_libraries(${PROJECT_NAME} paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto -lstdc++fs -ljsoncpp)
+target_link_libraries(${PROJECT_NAME} paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto -lstdc++fs ${JSONCPP_LIBRARIES})
 target_link_libraries(atlas_gateway_cli paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto -lstdc++fs)
 
 #Add CoAP and Boost library
