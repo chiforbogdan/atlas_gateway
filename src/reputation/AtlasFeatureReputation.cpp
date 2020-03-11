@@ -1,4 +1,5 @@
 #include <string>
+#include <iostream>
 #include <boost/bind.hpp>
 #include <boost/optional.hpp>
 #include "AtlasFeatureReputation.h"
@@ -33,7 +34,7 @@ AtlasCoapResponse AtlasFeatureReputation::featureReputationCallback(const std::s
     std::string identity;
     std::string feature;
     uint8_t *buf = nullptr;
-    uint16_t featureReputation = 20;
+    const char *clientRepId = "client30";
     
     ATLAS_LOGGER_DEBUG("Feature callback executed...");
 
@@ -93,7 +94,7 @@ AtlasCoapResponse AtlasFeatureReputation::featureReputationCallback(const std::s
     /* FIXME get response from reputation module (naive bayes) */
 
     /* Add feature command */
-    AtlasCommand cmdPush(ATLAS_CMD_FEATURE_REQUEST, sizeof(uint16_t), (uint8_t *) &featureReputation);
+    AtlasCommand cmdPush(ATLAS_CMD_FEATURE_REQUEST, strlen(clientRepId), (uint8_t *) clientRepId);
     cmdBatch.addCommand(cmdPush);
 
     /* Serialize response */
@@ -119,7 +120,6 @@ AtlasCoapResponse AtlasFeatureReputation::receiveFeedbackCallback(const std::str
     std::pair<const uint8_t*, size_t> cmdBuf;
     std::string identity;
     boost::optional<uint16_t> feedback;
-    uint16_t tmp; 
     
     ATLAS_LOGGER_DEBUG("Feedback callback executed...");
 
@@ -153,24 +153,12 @@ AtlasCoapResponse AtlasFeatureReputation::receiveFeedbackCallback(const std::str
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
         } else if(cmdEntry.getType() == ATLAS_CMD_FEEDBACK){
-            if (cmdEntry.getLen() != sizeof(uint16_t)) {
-                ATLAS_LOGGER_ERROR("Feedback end-point called with invalid FEEDBACK command");
-                return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
-            }
-
-            memcpy(&tmp, cmdEntry.getVal(), cmdEntry.getLen());
-            tmp = ntohs(tmp);
-            feedback = tmp;
+            std::cout << "AM PRIMIT FEEDBACK" << std::endl;
         }
     }
 
     if (identity == "") {
         ATLAS_LOGGER_ERROR("Receive feedback failed because of invalid identity");
-        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
-    }
-
-    if (!feedback) {
-        ATLAS_LOGGER_ERROR("Receive feedback failed because of invalid feedback");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
 
