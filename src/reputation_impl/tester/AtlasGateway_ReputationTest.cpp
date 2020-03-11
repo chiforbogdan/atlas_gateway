@@ -17,10 +17,7 @@ int noOfClients;
 int noOfFeatures;
 
 /* Reference value for generating data */
-double referenceValue;
-
-/* Error range of values for generated data */
-double errorRange;
+double badFeedbackProbab;
 
 /* Threshold value for feedback */
 double thresholdValue;
@@ -40,8 +37,7 @@ void parse_options(int argc, char **argv)
     ("scenario_number,s", boost::program_options::value<int>(&scenarioNo), "Scenario number: \n\t - 1 ('c' clients with 'f' feature); \n\t - 2 ('c' clients with 'f' features each: normal vs bad feedback); \n\t - 3 ('c' clients with 'f' features each: switching feedback score at half of simulation); \n\t - 4 ('c' clients with 'f' features and 4 control plane features and normal feedback)")
     ("no_of_clients,c", boost::program_options::value<int>(&noOfClients), "Number of clients that will be simulated (between 1 and 10)")
     ("no_of_features,f", boost::program_options::value<int>(&noOfFeatures), "Number of dataplane features simulated for each client (between 1 and 5)")
-    ("ref_data_value,r", boost::program_options::value<double>(&referenceValue), "Refence value taken into account for generating random values for dataplane (between 1 and 20)")
-    ("error_value,e", boost::program_options::value<double>(&errorRange), "Error used when generating random values for dataplane (needs to be lower than the 'reference_data_value')")
+    ("bad_fb_probability,p", boost::program_options::value<double>(&badFeedbackProbab), "Bad feedback probability when generating random feedback values for dataplane (between 1 and 99)")
     ("threshold_value,t", boost::program_options::value<double>(&thresholdValue), "Feedback threshold value (between 0.1 and 0.95)")
     ("no_of_iterations,i", boost::program_options::value<int>(&noOfIterations), "Number of iterations the simulation should be run (between 1 and 50000)");
 
@@ -58,7 +54,7 @@ void parse_options(int argc, char **argv)
         boost::program_options::notify(vm);
     
         /* Scenario number validation */
-        if (scenarioNo < 1 || scenarioNo > 4) {
+        if (scenarioNo < 1 || scenarioNo > 5) {
             std::cout << "ERROR: Invalid scenario number" << std::endl;
             std::cout << desc << std::endl;
             exit(1);
@@ -79,15 +75,8 @@ void parse_options(int argc, char **argv)
         } 
 
         /* Data refence value validation */
-        if (referenceValue < 1 || referenceValue > 20) {
+        if (badFeedbackProbab < 1 || badFeedbackProbab > 99) {
             std::cout << "ERROR: Invalid value for data reference" << std::endl;
-            std::cout << desc << std::endl;
-            exit(1);
-        } 
-
-        /* Error range validation */
-        if (errorRange < 1 || errorRange > 5) {
-            std::cout << "ERROR: Invalid value for data error" << std::endl;
             std::cout << desc << std::endl;
             exit(1);
         } 
@@ -121,20 +110,24 @@ int main(int argc, char **argv)
     switch (scenarioNo)
     {
         case 1:
-            std::cout << "Scenario 1 with " << noOfClients << " clients, each with " << noOfFeatures << " features. Ref_val = " << referenceValue << ". Error = " << errorRange << ". Threshold = " << thresholdValue << ". Iterations = " << noOfIterations << std::endl;
-            atlas::AtlasReputationTester::simulateScenario_1(noOfClients, noOfFeatures, referenceValue, errorRange, thresholdValue, noOfIterations);
+            std::cout << "Scenario 1 with " << noOfClients << " clients, each with " << noOfFeatures << " features. Bad_feedback_prob = " << badFeedbackProbab << ". Threshold = " << thresholdValue << ". Iterations = " << noOfIterations << std::endl;
+            atlas::AtlasReputationTester::simulateScenario_1(noOfClients, noOfFeatures, badFeedbackProbab, thresholdValue, noOfIterations);
             break;
         case 2:
-            std::cout << "Scenario 2 with " << noOfClients << " clients, each with " << noOfFeatures << " features. Ref_val = " << referenceValue << ". Error = " << errorRange << ". Threshold = " << thresholdValue << ". Iterations = " << noOfIterations << std::endl;
-            atlas::AtlasReputationTester::simulateScenario_2(noOfClients, noOfFeatures, referenceValue, errorRange, thresholdValue, noOfIterations);
+            std::cout << "Scenario 2 with " << noOfClients << " clients, each with " << noOfFeatures << " features. Bad_feedback_prob = " << badFeedbackProbab << ". Threshold = " << thresholdValue << ". Iterations = " << noOfIterations << std::endl;
+            atlas::AtlasReputationTester::simulateScenario_2(noOfClients, noOfFeatures, badFeedbackProbab, thresholdValue, noOfIterations);
             break;
         case 3:
-            std::cout << "Scenario 3 with " << noOfClients << " clients, each with " << noOfFeatures << " features. Ref_val = " << referenceValue << ". Error = " << errorRange << ". Threshold = " << thresholdValue << ". Iterations = " << noOfIterations << std::endl;
-            atlas::AtlasReputationTester::simulateScenario_3(noOfClients, noOfFeatures, referenceValue, errorRange, thresholdValue, noOfIterations);
+            std::cout << "Scenario 3 with " << noOfClients << " clients, each with " << noOfFeatures << " features. Bad_feedback_prob = " << badFeedbackProbab << ". Threshold = " << thresholdValue << ". Iterations = " << noOfIterations << std::endl;
+            atlas::AtlasReputationTester::simulateScenario_3(noOfClients, noOfFeatures, badFeedbackProbab, thresholdValue, noOfIterations);
             break;
         case 4:
-            std::cout << "Scenario 4 with " << noOfClients << " clients, each with " << noOfFeatures << " features. Ref_val = " << referenceValue << ". Error = " << errorRange << ". Threshold = " << thresholdValue << ". Iterations = " << noOfIterations << std::endl;
-            atlas::AtlasReputationTester::simulateScenario_4(noOfClients, noOfFeatures, referenceValue, errorRange, thresholdValue, noOfIterations);
+            std::cout << "Scenario 4 with " << noOfClients << " clients, each with " << noOfFeatures << " features. Bad_feedback_prob = " << badFeedbackProbab << ". Threshold = " << thresholdValue << ". Iterations = " << noOfIterations << std::endl;
+            atlas::AtlasReputationTester::simulateScenario_4(noOfClients, noOfFeatures, badFeedbackProbab, thresholdValue, noOfIterations);
+            break;
+        case 5:
+            std::cout << "Scenario 5 with " << noOfClients << " clients, each with " << noOfFeatures << " features. Bad_feedback_prob = " << badFeedbackProbab << ". Threshold = " << thresholdValue << ". Iterations = " << noOfIterations << std::endl;
+            atlas::AtlasReputationTester::simulateScenario_5(noOfClients, noOfFeatures, badFeedbackProbab, thresholdValue, noOfIterations);
             break;
     }
 

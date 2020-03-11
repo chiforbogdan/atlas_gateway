@@ -3,7 +3,7 @@ ATLAS IoT Reputation tester
 
 Usage: 
 ```sh
-./atlas_gateway_reputation_test -s 3 -c 2 -f 2 -r 12 -e 3 -t 0.85 -i 10000
+./atlas_gateway_reputation_test -s 3 -c 2 -f 2 -p 60 -e 3 -t 0.85 -i 10000
 ```
 
 Atlas gateway - reputation tester:
@@ -16,8 +16,7 @@ Atlas gateway - reputation tester:
                                  - 4 ('c' clients with 'f' features for data plane and 4 control plane features and normal feedback)
 - -c [ --no_of_clients ] --> Number of clients that will be simulated (between 1 and 10)
 - -f [ --no_of_features ] --> Number of dataplane features simulated for each client (between 1 and 5)
-- -r [ --ref_data_value ] --> Refence value taken into account for generating random values for dataplane (between 1 and 20)
-- -e [ --error_value ] --> Error used when generating random values for dataplane (needs to be lower than the 'reference_data_value')
+- -p [ --ref_data_value ] --> Bad feedback probability when generating random feedback values for dataplane (between 1 and 99)
 - -t [ --threshold_value ] --> Feedback threshold value (between 0.1 and 0.95)
 - -i [ --no_of_iterations ] --> Number of iterations the simulation should be run (between 1 and 50000)
 
