@@ -82,6 +82,8 @@ int main(int argc, char **argv)
 
     atlas::initLog();
     
+    ATLAS_LOGGER_DEBUG("Starting Atlas gateway...");
+    
     if(!atlas::AtlasIdentity::getInstance().initIdentity()) {
         ATLAS_LOGGER_ERROR("Error in generating gateway identity!");
         return 1;
@@ -97,11 +99,9 @@ int main(int argc, char **argv)
     /* Start internal CoAP server */
     atlas::AtlasCoapServer::getInstance().start(coapPort, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 
 
-    ATLAS_LOGGER_DEBUG("Starting Atlas gateway...");
-
     /* Start policy module */
     policy.start();
-    
+
     /* Start registration module */
     reg.start();
 
@@ -119,7 +119,6 @@ int main(int argc, char **argv)
 
     /* Stop feature reputation module */
     reputation.stop();
-
 
     /* Stop policy module */
     policy.stop();
