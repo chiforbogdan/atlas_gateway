@@ -219,24 +219,24 @@ std::string AtlasDevice::toJSON()
     std::string jsonDevice;
 
     /* Add registration state */
-    jsonDevice += registerEventToJSON() + ",";
+    jsonDevice += registerEventToJSON();
     
     /* Add keep-alive state */
-    jsonDevice += "\n" + keepaliveEventToJSON() + ",";
+    jsonDevice += ",\n" + keepaliveEventToJSON();
     
     /* Add IP and port */
-    jsonDevice += "\n" + ipPortToJSON()+ ",";
+    jsonDevice += ",\n" + ipPortToJSON();
 
     /* Add telemetry info */
-    jsonDevice += "\n" + telemetryInfo_.toJSON() + ",";
+    jsonDevice += ",\n" + telemetryInfo_.toJSON();
 
     /* Add firewall policy info */
     if (policy_)
-        jsonDevice += "\n" + policy_->toJSON() + ",";
+        jsonDevice += ",\n" + policy_->toJSON();
 
     /* Add firewall statistics info */
     if (stats_)
-        jsonDevice += "\n" + stats_->toJSON();
+        jsonDevice += ",\n" + stats_->toJSON();
 
     return jsonDevice;
 }

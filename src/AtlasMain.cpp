@@ -15,6 +15,7 @@
 #include "identity/AtlasIdentity.h"
 #include "cloud/AtlasRegisterCloud.h"
 #include "reputation/AtlasFeatureReputation.h"
+#include "cloud/AtlasCloudCmdParser.h"
 
 namespace {
 
@@ -96,6 +97,9 @@ int main(int argc, char **argv)
     /* Start cloud register module */
     atlas::AtlasRegisterCloud::getInstance().start();
 
+    /* Start cloud command parser module*/
+    atlas::AtlasCloudCmdParser::getInstance().start();
+
     /* Start internal CoAP server */
     atlas::AtlasCoapServer::getInstance().start(coapPort, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 
 
@@ -113,6 +117,9 @@ int main(int argc, char **argv)
 
     /* Start scheduler */
     atlas::AtlasScheduler::getInstance().run();
+
+    /* Stop cloud command parser module*/
+    atlas::AtlasCloudCmdParser::getInstance().stop();
 
     /* Stop cloud register module */
     atlas::AtlasRegisterCloud::getInstance().stop();

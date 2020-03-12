@@ -36,7 +36,7 @@ void AtlasRegisterCloud::sendRegisterCmd()
     cmd += "\n}";
 
     /* Send to REGISTER command */
-    bool delivered = AtlasMqttClient::getInstance().tryPublishMessage(AtlasIdentity::getInstance().getPsk(), cmd);
+    bool delivered = AtlasMqttClient::getInstance().tryPublishMessage(AtlasIdentity::getInstance().getPsk() + ATLAS_TO_CLOUD_TOPIC, cmd);
     if (delivered) {
         ATLAS_LOGGER_INFO("REGISTER command was sent to cloud back-end. Sync all devices...");
         registered_ = true;
@@ -55,7 +55,7 @@ void AtlasRegisterCloud::sendKeepaliveCmd()
     cmd += "\n}";
 
     /* Send to KEEPALIVE command */
-    bool delivered = AtlasMqttClient::getInstance().tryPublishMessage(AtlasIdentity::getInstance().getPsk(), cmd);
+    bool delivered = AtlasMqttClient::getInstance().tryPublishMessage(AtlasIdentity::getInstance().getPsk() + ATLAS_TO_CLOUD_TOPIC, cmd);
     if (!delivered)
         ATLAS_LOGGER_ERROR("KEEPALIVE command was not sent to cloud back-end");
 }

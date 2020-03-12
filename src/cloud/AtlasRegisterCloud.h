@@ -45,6 +45,12 @@ public:
     */
     bool isRegistered() const { return registered_; }
 
+    /**
+    * @brief Send register command to cloud back-end
+    * @return none
+    */
+    void sendRegisterCmd();
+
     AtlasRegisterCloud(const AtlasRegisterCloud &) = delete;
     AtlasRegisterCloud& operator=(const AtlasRegisterCloud &) = delete;
 
@@ -60,12 +66,6 @@ private:
     * @return none
     */
     void keepaliveAlarmCb();
-
-    /**
-    * @brief Send register command to cloud back-end
-    * @return none
-    */
-    void sendRegisterCmd();
     
     /**
     * @brief Send register command to cloud back-end
