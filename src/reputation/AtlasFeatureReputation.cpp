@@ -124,6 +124,7 @@ AtlasCoapResponse AtlasFeatureReputation::receiveFeedbackCallback(const std::str
     std::string clientID;
     std::string feature;
     uint16_t feedback;
+    uint16_t responseTime;
     
     
     ATLAS_LOGGER_DEBUG("Feedback callback executed...");
@@ -169,13 +170,16 @@ AtlasCoapResponse AtlasFeatureReputation::receiveFeedbackCallback(const std::str
             for (AtlasCommand &cmdInnerEntry : cmdInner) {
                 if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_CLIENTID) {
                     clientID.assign((char *)cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
-                    std::cout << clientID << std::endl;
+                    std::cout << "clinetID: " << clientID << std::endl;
                 } else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_FEATURE) {
                     feature.assign((char *)cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
-                    std::cout << feature << std::endl;
+                    std::cout << "feature: " << feature << std::endl;
                 } else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_VALUE) {
                     memcpy(&feedback, cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
-                    std::cout << feedback << std::endl;
+                    std::cout << "feedback: " << feedback << std::endl;
+                } else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_RESPONSE_TIME) {
+                    memcpy(&responseTime, cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
+                    std::cout << "response time: " << responseTime << std::endl;
                 }
             }
         }
