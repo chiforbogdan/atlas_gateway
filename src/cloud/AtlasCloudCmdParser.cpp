@@ -9,6 +9,12 @@
 
 namespace atlas {
 
+namespace {
+
+const std::string ATLAS_SUFFIX_SUBSCRIBE_TOPIC = "-to-cloud";
+
+} // anonymous namespace
+
 AtlasCloudCmdParser::AtlasCloudCmdParser() : connected_(false){}
 
 AtlasCloudCmdParser& AtlasCloudCmdParser::getInstance()
@@ -36,9 +42,8 @@ void AtlasCloudCmdParser::parseCmd(std::string const &cmd)
     Json::Value obj;
 
     reader.parse(cmd, obj);
-    if(obj["cmdType"].asString() == ATLAS_CMD_GET_ALL_DEVICES)
-    {
-        boost::bind(&AtlasCloudCmdParser::CommandGetAllDevicesCallback, this)();
+    if(obj["cmdType"].asString() == ATLAS_CMD_GET_ALL_DEVICES) {
+        CommandGetAllDevicesCallback();
     }
 }
 
@@ -47,7 +52,7 @@ void AtlasCloudCmdParser::onConnect()
     ATLAS_LOGGER_INFO("Connect event to cloud MQTT broker");
 
     if (!connected_)
-        connected_ = AtlasMqttClient::getInstance().subscribeTopic(AtlasIdentity::getInstance().getPsk() + "-control", 1);
+        connected_ = AtlasMqttClient::getInstance().subscribeTopic(AtlasIdentity::getInstance().getPsk() + ATLAS_SUFFIX_SUBSCRIBE_TOPIC, 1);
 }
 
 void AtlasCloudCmdParser::onDisconnect()
