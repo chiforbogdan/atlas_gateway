@@ -154,7 +154,7 @@ enum AtlasCommandType {
     /* Value command: payload is the feedback value */
     ATLAS_CMD_FEEDBACK_VALUE,
 
-    /* Value command: payload is the response time in millis */
+    /* Response time command: payload is the response time in millis */
     ATLAS_CMD_FEEDBACK_RESPONSE_TIME,
 };
 
