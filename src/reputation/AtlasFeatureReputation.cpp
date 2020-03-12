@@ -115,11 +115,16 @@ AtlasCoapResponse AtlasFeatureReputation::receiveFeedbackCallback(const std::str
                                                                 uint8_t **respPayload, size_t *respPayloadLen)
 {
     AtlasCommandBatch cmdBatch;
-    AtlasCommandBatch cmdRespBatch;
+    AtlasCommandBatch cmdInnerBatch;
     std::vector<AtlasCommand> cmd;
+    std::vector<AtlasCommand> cmdInner;
+
     std::pair<const uint8_t*, size_t> cmdBuf;
     std::string identity;
-    boost::optional<uint16_t> feedback;
+    std::string clientID;
+    std::string feature;
+    uint16_t feedback;
+    
     
     ATLAS_LOGGER_DEBUG("Feedback callback executed...");
 
@@ -153,7 +158,26 @@ AtlasCoapResponse AtlasFeatureReputation::receiveFeedbackCallback(const std::str
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
         } else if(cmdEntry.getType() == ATLAS_CMD_FEEDBACK){
-            std::cout << "AM PRIMIT FEEDBACK" << std::endl;
+            /* Parse feedback command */
+            if (!cmdEntry.getLen()) {
+                ATLAS_LOGGER_ERROR("Empty FEEDBACK command");
+                return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+            }
+            cmdInnerBatch.setRawCommands(cmdEntry.getVal(), cmdEntry.getLen());
+            cmdInner = cmdInnerBatch.getParsedCommands();
+
+            for (AtlasCommand &cmdInnerEntry : cmdInner) {
+                if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_CLIENTID) {
+                    clientID.assign((char *)cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
+                    std::cout << clientID << std::endl;
+                } else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_FEATURE) {
+                    feature.assign((char *)cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
+                    std::cout << feature << std::endl;
+                } else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_VALUE) {
+                    memcpy(&feedback, cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
+                    std::cout << feedback << std::endl;
+                }
+            }
         }
     }
 

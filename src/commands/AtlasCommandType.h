@@ -141,8 +141,18 @@ enum AtlasCommandType {
     /* Reputation feature request */    
     ATLAS_CMD_FEATURE_REQUEST = 1500,
 
-    /* Reputation feedback command */
+    /* Feedback command: payload is ATLAS_CMD_FEEDBACK_CLIENTID,
+     * ATLAS_CMD_FEEDBACK_FEATURE, ATLAS_CMD_FEEDBACK_VALUE */
     ATLAS_CMD_FEEDBACK,
+
+    /* ClientID command: payload is the client id */
+    ATLAS_CMD_FEEDBACK_CLIENTID,
+    
+    /* Feature command: payload is the feature type */
+    ATLAS_CMD_FEEDBACK_FEATURE,
+
+    /* Value command: payload is the feedback value */
+    ATLAS_CMD_FEEDBACK_VALUE,
 };
 
 } // namespace atlas
