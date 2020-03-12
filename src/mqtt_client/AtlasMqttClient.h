@@ -33,7 +33,7 @@ public:
      * @param[in] Desired QoS
      * @return True on success, False otherwise
     */
-    bool subscribeTopic(const std::string &topic, const int QoS);
+    bool subscribeTopic(const std::string &topic, int QoS = 2);
 
     /**
      * @brief Disconnect from a Atlas Cloud module

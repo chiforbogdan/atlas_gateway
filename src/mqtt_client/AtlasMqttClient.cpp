@@ -93,7 +93,7 @@ bool AtlasMqttClient::tryPublishMessage(const std::string &topic, const std::str
 }
 
 
-bool AtlasMqttClient::subscribeTopic(const std::string &topic, const int QoS)
+bool AtlasMqttClient::subscribeTopic(const std::string &topic, int QoS)
 {
     try {
         if (client_->is_connected()) {     

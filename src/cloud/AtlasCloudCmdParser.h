@@ -63,7 +63,13 @@ private:
     * @brief Callback for ATLAS_CMD_GET_ALL_DEVICES command
     * @return none
     */
-    void CommandGetAllDevicesCallback();
+    void getAllDevicesCmd();
+
+    /**
+    * @brief Callback for ATLAS_CMD_GATEWAY_REGISTER_REQUEST command
+    * @return none
+    */
+    void reqRegisterCmd();
 
     /* Indicates if the cloud module is connected */
     bool connected_;

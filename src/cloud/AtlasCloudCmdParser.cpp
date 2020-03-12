@@ -1,19 +1,13 @@
 #include <boost/bind.hpp>
 #include "AtlasCloudCmdParser.h"
 #include "AtlasCommandsCloud.h"
+#include "AtlasRegisterCloud.h"
 #include "../logger/AtlasLogger.h"
 #include "../mqtt_client/AtlasMqttClient.h"
 #include "../device/AtlasDeviceManager.h"
 #include "../identity/AtlasIdentity.h"
 
-
 namespace atlas {
-
-namespace {
-
-const std::string ATLAS_SUFFIX_SUBSCRIBE_TOPIC = "-to-cloud";
-
-} // anonymous namespace
 
 AtlasCloudCmdParser::AtlasCloudCmdParser() : connected_(false){}
 
@@ -23,11 +17,18 @@ AtlasCloudCmdParser& AtlasCloudCmdParser::getInstance()
     return instance;
 }
 
-void AtlasCloudCmdParser::CommandGetAllDevicesCallback()
+void AtlasCloudCmdParser::getAllDevicesCmd()
 {
-    ATLAS_LOGGER_INFO("GET_ALL_DEVICES command was sent to cloud back-end. Sync all devices...");
+    ATLAS_LOGGER_INFO("ATLAS_CMD_GATEWAY_GET_ALL_DEVICES command was sent by cloud back-end. Sync all devices...");
     AtlasDeviceManager::getInstance().getDeviceCloud()->allDevicesUpdate();
 }
+
+void AtlasCloudCmdParser::reqRegisterCmd()
+{
+    ATLAS_LOGGER_INFO("ATLAS_CMD_GATEWAY_REGISTER_REQUEST command was sent by cloud back-end");
+    AtlasRegisterCloud::getInstance().sendRegisterCmd();
+}
+
 
 void AtlasCloudCmdParser::start()
 {
@@ -42,9 +43,10 @@ void AtlasCloudCmdParser::parseCmd(std::string const &cmd)
     Json::Value obj;
 
     reader.parse(cmd, obj);
-    if(obj["cmdType"].asString() == ATLAS_CMD_GET_ALL_DEVICES) {
-        CommandGetAllDevicesCallback();
-    }
+    if(obj[ATLAS_CMD_TYPE_JSON_KEY].asString() == ATLAS_CMD_GATEWAY_GET_ALL_DEVICES)
+        getAllDevicesCmd();
+    else if (obj[ATLAS_CMD_TYPE_JSON_KEY].asString() == ATLAS_CMD_GATEWAY_REGISTER_REQUEST)
+        reqRegisterCmd();
 }
 
 void AtlasCloudCmdParser::onConnect()
@@ -52,7 +54,7 @@ void AtlasCloudCmdParser::onConnect()
     ATLAS_LOGGER_INFO("Connect event to cloud MQTT broker");
 
     if (!connected_)
-        connected_ = AtlasMqttClient::getInstance().subscribeTopic(AtlasIdentity::getInstance().getPsk() + ATLAS_SUFFIX_SUBSCRIBE_TOPIC, 1);
+        connected_ = AtlasMqttClient::getInstance().subscribeTopic(AtlasIdentity::getInstance().getPsk() + ATLAS_TO_GATEWAY_TOPIC);
 }
 
 void AtlasCloudCmdParser::onDisconnect()

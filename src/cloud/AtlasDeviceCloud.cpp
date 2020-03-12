@@ -32,7 +32,7 @@ void AtlasDeviceCloud::updateDevice(const std::string &identity, const std::stri
     std::string cmd = "{\n";
 
     /* Add header */
-    cmd += "\"" + ATLAS_CMD_TYPE_JSON_KEY + "\": \"" + ATLAS_CMD_CLIENT_INFO_UPDATE + "\",";
+    cmd += "\"" + ATLAS_CMD_TYPE_JSON_KEY + "\": \"" + ATLAS_CMD_GATEWAY_CLIENT_INFO_UPDATE + "\",";
     cmd += "\n\"" + ATLAS_CMD_PAYLOAD_JSON_KEY + "\": \n";
     cmd += "{\n";
 
@@ -45,7 +45,7 @@ void AtlasDeviceCloud::updateDevice(const std::string &identity, const std::stri
     cmd += "\n}\n}";
     
     /* Send to cloud last update info of a registered node*/
-    bool delivered = AtlasMqttClient::getInstance().tryPublishMessage(AtlasIdentity::getInstance().getPsk(), cmd);
+    bool delivered = AtlasMqttClient::getInstance().tryPublishMessage(AtlasIdentity::getInstance().getPsk() + ATLAS_TO_CLOUD_TOPIC, cmd);
     
     /* If message is not delivered, then schedule a full cloud sync */
     if (!delivered) {
