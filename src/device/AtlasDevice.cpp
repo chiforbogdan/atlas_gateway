@@ -162,9 +162,8 @@ void AtlasDevice::setFirewallStats(std::unique_ptr<AtlasFirewallStats> stats)
 
 int AtlasDevice::getRegInterval()
 {
-    /* If device is registered, the compute the registration time until now */
+    /* If device is registered, then compute the registration time until now */
     if (registered_) {
-        std::cout << "Reg\n";
         /* Get the registration time interval */
         boost::posix_time::time_duration diff = boost::posix_time::second_clock::local_time() - startRegTime_;
         return regIntervalSec_ +  diff.total_seconds();
