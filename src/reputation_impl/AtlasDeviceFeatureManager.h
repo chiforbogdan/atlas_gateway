@@ -29,13 +29,6 @@ public:
     bool removeFeature(AtlasDeviceFeatureType type);
 
     /**
-     * @brief Get reputation score for a specific device feature
-     * @param[in] Targeted feature
-     * @return Reputation score of the feature
-    */
-    double getDeviceFeatureReputation(AtlasDeviceFeatureType type);
-
-    /**
      * @brief Updates number of successful transactions (required by Naive Bayes component)
      * @return none
     */

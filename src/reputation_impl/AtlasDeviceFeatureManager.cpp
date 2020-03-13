@@ -36,15 +36,6 @@ bool AtlasDeviceFeatureManager::removeFeature(AtlasDeviceFeatureType type)
     return true;
 }
 
-double AtlasDeviceFeatureManager::getDeviceFeatureReputation(AtlasDeviceFeatureType type)
-{
-    for (auto tmp : features_) {
-        if (tmp.getFeatureType() == type)
-            return tmp.getReputation();
-    }
-    return 0;
-}
-
 AtlasDeviceFeature& AtlasDeviceFeatureManager::operator [] (AtlasDeviceFeatureType type) 
 { 
     int poz = 0;

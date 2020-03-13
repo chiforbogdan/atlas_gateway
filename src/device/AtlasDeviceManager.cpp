@@ -20,7 +20,8 @@ AtlasDeviceManager& AtlasDeviceManager::getInstance()
 }
 
 AtlasDeviceManager::AtlasDeviceManager(): deviceCloud_(new AtlasDeviceCloud()),
-                                          fsAlarm_(ATLAS_FIREWALL_STATISTICS_INTERVAL_MS, false, boost::bind(&AtlasDeviceManager::firewallStatisticsAlarmCallback, this)) 
+                                          fsAlarm_(ATLAS_FIREWALL_STATISTICS_INTERVAL_MS, false,
+                                                   boost::bind(&AtlasDeviceManager::firewallStatisticsAlarmCallback, this)) 
 {
     /* Start firewall statistics alarm */
     fsAlarm_.start();
@@ -30,17 +31,18 @@ void AtlasDeviceManager::firewallStatisticsAlarmCallback()
 {
     ATLAS_LOGGER_INFO("Firewall-statistics alarm callback");
 
-    forEachDevice([] (AtlasDevice& device) { 
+    forEachDevice([] (AtlasDevice& device) 
+                {     
                     if(device.getPolicy())
                         AtlasPubSubAgent::getInstance().getFirewallRuleStats((device.getPolicy()->getClientId()));
                 });
-} 
+}
 
 AtlasDevice& AtlasDeviceManager::getDevice(const std::string& identity)
 {
     if (devices_.find(identity) == devices_.end()) {
         ATLAS_LOGGER_INFO1("New client device created with identity ", identity);
-        devices_[identity] = AtlasDevice(identity, deviceCloud_); 
+        devices_[identity] = AtlasDevice(identity, deviceCloud_);
     }
 
     return devices_[identity];
@@ -54,7 +56,8 @@ void AtlasDeviceManager::forEachDevice(std::function<void(AtlasDevice&)> cb)
 
 void AtlasDeviceManager::installAllPolicies()
 {
-    forEachDevice([] (AtlasDevice& device) { 
+    forEachDevice([] (AtlasDevice& device)
+                    { 
                         if(device.getPolicy())
                             AtlasPubSubAgent::getInstance().installFirewallRule(device.getIdentity(), device.getPolicy());
                     });

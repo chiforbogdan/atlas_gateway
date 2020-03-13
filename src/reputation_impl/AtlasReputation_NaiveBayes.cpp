@@ -7,14 +7,12 @@ namespace atlas
 {
 double AtlasReputationNaiveBayes::computeReputationForFeature(AtlasDeviceFeatureManager& manager, AtlasDeviceFeatureType type)
 {       
-    if ((manager.getTotalTransactions() == 0) || (manager.getTotalSuccessfulTransactions() == 0) || (manager[type].getSuccessfulTransactions() == 0)) {
-        manager[type].updateReputation(0);
+    if (manager.getTotalTransactions() == 0 || manager.getTotalSuccessfulTransactions() == 0 || manager[type].getSuccessfulTransactions() == 0) {
         ATLAS_LOGGER_INFO("AtlasReputationNaiveBayes_computeForFeature: Reputation could not be calculated!");
         return 0;
     }    
     
     double featureProb = (double)manager[type].getSuccessfulTransactions() / (double)manager.getTotalSuccessfulTransactions();
-    manager[type].updateReputation(featureProb);
     
     ATLAS_LOGGER_INFO("AtlasReputationNaiveBayes_computeForFeature: Reputation calculated successfully!");
     return featureProb;

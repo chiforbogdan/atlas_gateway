@@ -6,6 +6,7 @@
 #include "../telemetry/AtlasTelemetryInfo.h"
 #include "../telemetry/AtlasAlertFactory.h"
 #include "../pubsub_agent/AtlasPubSubAgent.h"
+#include "../reputation_impl/AtlasDeviceFeatureType.h"
 
 namespace atlas {
 
@@ -13,45 +14,62 @@ namespace {
 
 /* Keep-alive counter initial value */
 const int ATLAS_KEEP_ALIVE_COUNTER = 6;
-
 /* JSON register event key */
 const std::string ATLAS_REGISTER_JSON_KEY = "registered";
-
 /* JSON last register time key */
 const std::string ATLAS_LAST_REGISTER_TIME_JSON_KEY = "lastRegisterTime";
-
 /* JSON last keep-alive time key */
 const std::string ATLAS_LAST_KEEPALIVE_TIME_JSON_KEY = "lastKeepAliveTime";
-
 /* JSON IP and port key */
 const std::string ATLAS_IP_PORT_JSON_KEY = "ipPort";
-
 /* JSON firewall stat key */
 const std::string ATLAS_FIREWALLSTAT_JSON_KEY = "firewallStatistic";
-
 /* JSON firewall stat-droppedPkts key */
 const std::string ATLAS_FIREWALLSTAT_DROPPEDPKTS_JSON_KEY = "droppedPkts";
-
 /* JSON firewall stat-passedPkts key */
 const std::string ATLAS_FIREWALLSTAT_PASSEDPKTS_JSON_KEY = "passedPkts";
 
+/* Reputation feature weights (importance) */
+const int ATLAS_REPUTATION_PACKETS_ACCEPTANCY_WEIGHT = 0.4;
+const int ATLAS_REPUTAION_REGISTERING_RATE_WEIGHT = 0.3;
+const int ATLAS_REPUTAION_MISSED_KEEP_ALIVE_WEIGHT = 0.3;
+
 } // anonymous namespace
 
-AtlasDevice::AtlasDevice(const std::string &identity, std::shared_ptr<AtlasDeviceCloud> deviceCloud) : identity_(identity), deviceCloud_(deviceCloud),
-                                                                                                       registered_(false)
+AtlasDevice::AtlasDevice(const std::string &identity,
+                         std::shared_ptr<AtlasDeviceCloud> deviceCloud) : identity_(identity),
+                                                                          deviceCloud_(deviceCloud),
+                                                                          registered_(false),
+                                                                          regIntervalSec_(0),
+                                                                          keepAlivePkts_(0)
 {
+    /* Install default alerts */
     installDefaultAlerts();
+    /* Init system reputation with default features */
+    initSystemReputation();
 }
 
-AtlasDevice::AtlasDevice() : identity_(""), registered_(false) {}
+AtlasDevice::AtlasDevice() : identity_(""), registered_(false), regIntervalSec_(0), keepAlivePkts_(0) {}
+
+void AtlasDevice::initSystemReputation()
+{
+    /* Add default features for the system reputation */
+    systemReputation_.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_PACKETS_ACCEPTANCY_RATE,
+                                 ATLAS_REPUTATION_PACKETS_ACCEPTANCY_WEIGHT);
+    systemReputation_.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_REGISTERING_RATE,
+                                 ATLAS_REPUTAION_REGISTERING_RATE_WEIGHT);
+    systemReputation_.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_MISSED_KEEP_ALIVE_PACKETS,
+                                 ATLAS_REPUTAION_MISSED_KEEP_ALIVE_WEIGHT);
+}
 
 void AtlasDevice::uninstallPolicy()
 {
-    /* Remove firewall rule from publish-subscribe broker */
-    AtlasPubSubAgent::getInstance().removeFirewallRule(policy_->getClientId());
-    
-    /* Explicit delete policy */
-    policy_.reset();
+    if (policy_) {
+        /* Remove firewall rule from publish-subscribe broker */
+        AtlasPubSubAgent::getInstance().removeFirewallRule(policy_->getClientId());
+        /* Explicit delete policy */
+        policy_.reset();
+    }
 
     /* Explicit delete firewall statistics */
     stats_.reset();
@@ -92,7 +110,7 @@ void AtlasDevice::pushAlerts()
 {
     ATLAS_LOGGER_INFO1("Push all telemetry alerts to client with identity ", identity_);
 
-    std::unordered_map<std::string, std::unique_ptr<AtlasAlert>>::iterator it = pushAlerts_.begin();
+    auto it = pushAlerts_.begin();
     while (it != pushAlerts_.end()) {
         ATLAS_LOGGER_INFO1("Push to client device telemetry push alert of type ", (*it).first);
         (*it).second->push();
@@ -111,7 +129,6 @@ void AtlasDevice::setIpPort(const std::string &ipPort)
 {
     if (ipPort_ != ipPort) {
         ipPort_ = ipPort;
-
         /* Update the client IP and port to cloud */
         deviceCloud_->updateDevice(identity_, ipPortToJSON());
     }
@@ -142,10 +159,25 @@ void AtlasDevice::setFirewallStats(std::unique_ptr<AtlasFirewallStats> stats)
         deviceCloud_->updateDevice(identity_, stats_->toJSON());
     }    
 }
+
+int AtlasDevice::getRegInterval()
+{
+    /* If device is registered, the compute the registration time until now */
+    if (registered_) {
+        std::cout << "Reg\n";
+        /* Get the registration time interval */
+        boost::posix_time::time_duration diff = boost::posix_time::second_clock::local_time() - startRegTime_;
+        return regIntervalSec_ +  diff.total_seconds();
+    }
+
+    std::cout << "Not reg\n";
+    return regIntervalSec_;
+}
+
 void AtlasDevice::registerNow()
 {
-    boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
-    regTime_ = boost::posix_time::to_simple_string(timeLocal);
+    startRegTime_ = boost::posix_time::second_clock::local_time();
+    regTime_ = boost::posix_time::to_simple_string(startRegTime_);
 
     registered_ = true;
     kaCtr_ = ATLAS_KEEP_ALIVE_COUNTER;
@@ -165,8 +197,9 @@ void AtlasDevice::keepAliveNow()
     keepAliveTime_ = boost::posix_time::to_simple_string(timeLocal);
 
     kaCtr_ = ATLAS_KEEP_ALIVE_COUNTER;
-
     ATLAS_LOGGER_INFO1("Client device sent a keep-alive at ", keepAliveTime_);
+
+    keepAlivePkts_++;
 
     /* Update keep-alive event to cloud */
     deviceCloud_->updateDevice(identity_, keepaliveEventToJSON());
@@ -178,13 +211,15 @@ void AtlasDevice::keepAliveExpired()
         return;
 
     kaCtr_--;
-
-    if (!kaCtr_) {
+    if (!kaCtr_ && registered_) {
         ATLAS_LOGGER_INFO1("Keep-alive counter expired for client with identity ", identity_);
+        /* Get the registration time interval */
+        boost::posix_time::time_duration diff = boost::posix_time::second_clock::local_time() - startRegTime_;
+        regIntervalSec_ += diff.total_seconds();
+
         registered_ = false;
         
         uninstallPolicy();
-
         /* Update un-registration event to cloud */
         deviceCloud_->updateDevice(identity_, registerEventToJSON());
     }
@@ -220,20 +255,15 @@ std::string AtlasDevice::toJSON()
 
     /* Add registration state */
     jsonDevice += registerEventToJSON();
-    
     /* Add keep-alive state */
     jsonDevice += ",\n" + keepaliveEventToJSON();
-    
     /* Add IP and port */
     jsonDevice += ",\n" + ipPortToJSON();
-
     /* Add telemetry info */
     jsonDevice += ",\n" + telemetryInfo_.toJSON();
-
     /* Add firewall policy info */
     if (policy_)
         jsonDevice += ",\n" + policy_->toJSON();
-
     /* Add firewall statistics info */
     if (stats_)
         jsonDevice += ",\n" + stats_->toJSON();
