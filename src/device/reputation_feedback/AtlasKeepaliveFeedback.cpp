@@ -13,8 +13,8 @@ double AtlasKeepaliveFeedback::getFeedback()
 
     prevKeepalivePkts_ = keepalivePkts;
 
-    ATLAS_LOGGER_INFO("Feedback was computed for keep-alive packets (system reputation)");
-
+    ATLAS_LOGGER_INFO("Keep-alive feedback was computed for device with identity " + device_.getIdentity() + " to value " + std::to_string(feedback));
+    
     return feedback;
 }
 

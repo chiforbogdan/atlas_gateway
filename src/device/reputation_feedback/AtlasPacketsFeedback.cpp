@@ -40,7 +40,7 @@ double AtlasPacketsFeedback::getFeedback()
 
     prevStats_ = *stats;
  
-    ATLAS_LOGGER_INFO("Feedback was computed for valid TX packets (system reputation)");
+    ATLAS_LOGGER_INFO("Valid packets feedback was computed for device with identity " + device_.getIdentity() + " to value " + std::to_string(feedback));
 
     return feedback;
 }

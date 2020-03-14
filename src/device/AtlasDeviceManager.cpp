@@ -17,9 +17,9 @@ const int ATLAS_FIREWALL_STATISTICS_INTERVAL_MS = 60000;
 const int ATLAS_SYSTEM_REPUTATION_INTERVAL_MS = 60000;
 
 /* Reputation feature weights (importance) */
-const double ATLAS_VALID_PACKETS_WEIGHT = 0.4;
+const double ATLAS_VALID_PACKETS_WEIGHT = 0.3;
 const double ATLAS_REGISTER_TIME_WEIGHT = 0.4;
-const double ATLAS_KEEPALIVE_PACKETS_WEIGHT = 0.2;
+const double ATLAS_KEEPALIVE_PACKETS_WEIGHT = 0.3;
 
 /* System reputation threshold value */
 const double ATLAS_SYSTEM_REPUTATION_THRESHOLD = 0.8;
@@ -68,8 +68,11 @@ void AtlasDeviceManager::sysRepAlarmCallback()
                                  feedbackMatrix.push_back(std::pair<AtlasDeviceFeatureType, double>(feedbackElem->getType(),
                                                                                                     feedbackElem->getFeedback()));
 
-                             // TODO save reputation
-                             AtlasReputationNaiveBayes::computeReputation(device.getSystemReputation(), feedbackMatrix);
+                             /* Compute system reputation using naive-bayes */
+                             double repVal = AtlasReputationNaiveBayes::computeReputation(device.getSystemReputation(), feedbackMatrix);
+                             ATLAS_LOGGER_INFO("System reputation for device with identity " + device.getIdentity() + 
+                                               " is " + std::to_string(repVal));
+                             device.syncSystemReputation();
                          });
 }
 

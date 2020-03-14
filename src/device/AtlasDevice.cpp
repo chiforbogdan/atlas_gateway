@@ -28,6 +28,8 @@ const std::string ATLAS_FIREWALLSTAT_JSON_KEY = "firewallStatistic";
 const std::string ATLAS_FIREWALLSTAT_DROPPEDPKTS_JSON_KEY = "droppedPkts";
 /* JSON firewall stat-passedPkts key */
 const std::string ATLAS_FIREWALLSTAT_PASSEDPKTS_JSON_KEY = "passedPkts";
+/* JSON system reputation key */
+const std::string ATLAS_SYSTEM_REPUTATION_JSON_KEY = "systemReputation";
 
 } // anonymous namespace
 
@@ -205,6 +207,18 @@ void AtlasDevice::keepAliveExpired()
     }
 }
 
+void AtlasDevice::syncSystemReputation()
+{
+    /* Update the system reputation value to cloud */
+    deviceCloud_->updateDevice(identity_, systemReputationToJSON());
+}
+
+std::string AtlasDevice::systemReputationToJSON()
+{
+    return "\"" + ATLAS_SYSTEM_REPUTATION_JSON_KEY + "\": \"" +
+           std::to_string(systemReputation_.getReputation()) + "\""; 
+}
+
 std::string AtlasDevice::registerEventToJSON()
 {
     std::string regEvent;
@@ -241,6 +255,8 @@ std::string AtlasDevice::toJSON()
     jsonDevice += ",\n" + ipPortToJSON();
     /* Add telemetry info */
     jsonDevice += ",\n" + telemetryInfo_.toJSON();
+    /* Add system reputation */
+    jsonDevice += ",\n" + systemReputationToJSON();
     /* Add firewall policy info */
     if (policy_)
         jsonDevice += ",\n" + policy_->toJSON();

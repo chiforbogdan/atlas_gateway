@@ -57,13 +57,13 @@ public:
      * @param[in] New device reputation value
      * @return none
     */
-    void updateDeviceReputation(double newVal) { deviceReputation_ = newVal; }
+    void updateReputation(double newVal) { deviceReputation_ = newVal; }
 
     /**
      * @brief Returns the reputation value of current device
      * @return Reputation value
     */
-    double getDeviceReputation() { return deviceReputation_; }
+    double getReputation() { return deviceReputation_; }
 
     /**
      * @brief Updates the device reputation value
@@ -84,7 +84,9 @@ public:
     */
     std::vector<AtlasDeviceFeature> getDeviceFeatures() { return features_; }
 
-    AtlasDeviceFeatureManager() : totalSuccessTrans_(0), totalTrans_(0), deviceReputation_(0), feedbackThreshold_(ATLAS_DEVICE_FEATURE_MANAGER_DEFAULT_THRESHOLD) {};
+    AtlasDeviceFeatureManager() : totalSuccessTrans_(0), totalTrans_(0),
+                                  deviceReputation_(0),
+                                  feedbackThreshold_(ATLAS_DEVICE_FEATURE_MANAGER_DEFAULT_THRESHOLD) {};
 
     AtlasDeviceFeature& operator [] (AtlasDeviceFeatureType type);
 private:

@@ -48,6 +48,8 @@ double AtlasReputationNaiveBayes::computeReputation(AtlasDeviceFeatureManager& m
     for (auto it = feedbackMatrix.begin(); it != feedbackMatrix.end(); it++)
         repVal *= computeReputationForFeature(manager, (*it).first);      
 
+    manager.updateReputation(repVal);
+
     return repVal;
 }
 

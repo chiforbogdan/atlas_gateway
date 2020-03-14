@@ -13,7 +13,7 @@ double AtlasRegistrationFeedback::getFeedback()
 
     prevRegIntervalSec_ = regIntervalSec;
 
-    ATLAS_LOGGER_INFO("Feedback was computed for registration time (system reputation)");
+    ATLAS_LOGGER_INFO("Registration time feedback was computed for device with identity " + device_.getIdentity() + " to value " + std::to_string(feedback));
 
     return feedback;
 }

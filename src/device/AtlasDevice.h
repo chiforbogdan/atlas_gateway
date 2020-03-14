@@ -144,9 +144,15 @@ public:
 
     /**
     * @brief Put all device info in json format
-    * @return string
+    * @return JSON serialized device info
     */
     std::string toJSON();
+
+    /**
+    * @brief Serialize system reputation info to JSON
+    * @return JSON serialized system reputation info
+    */
+    std::string systemReputationToJSON();
 
     /**
     * @brief Serialize telemetry info to JSON
@@ -190,6 +196,11 @@ public:
     */
     AtlasDeviceFeatureManager& getSystemReputation() { return systemReputation_; }
 
+    /**
+    * @brief Sync system reputation with the cloud back-end
+    * @return none
+    */
+    void syncSystemReputation();
 private:
     /**
     * @brief Install default telemetry alerts
