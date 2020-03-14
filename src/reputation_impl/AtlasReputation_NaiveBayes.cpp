@@ -24,9 +24,8 @@ double AtlasReputationNaiveBayes::computeReputation(AtlasDeviceFeatureManager& m
     double satisfactionScore = 0;
 
     //compute feedback per device 
-    for (auto it = feedbackMatrix.begin(); it != feedbackMatrix.end(); it++) {
+    for (auto it = feedbackMatrix.begin(); it != feedbackMatrix.end(); it++)
         satisfactionScore += (*it).second * manager[(*it).first].getWeight();
-    }
 
     //check if feedback per device is >= feedback threshold
     if (satisfactionScore >= manager.getFeedbackThreshold()) {
@@ -46,9 +45,8 @@ double AtlasReputationNaiveBayes::computeReputation(AtlasDeviceFeatureManager& m
 
     //compute reputation for device
     double repVal = (double)manager.getTotalSuccessfulTransactions() / (double)manager.getTotalTransactions(); 
-    for (auto it = feedbackMatrix.begin(); it != feedbackMatrix.end(); it++) {
+    for (auto it = feedbackMatrix.begin(); it != feedbackMatrix.end(); it++)
         repVal *= computeReputationForFeature(manager, (*it).first);      
-    }
 
     return repVal;
 }

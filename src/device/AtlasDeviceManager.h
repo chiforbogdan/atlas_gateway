@@ -6,6 +6,7 @@
 #include <functional>
 #include <boost/asio.hpp>
 #include "AtlasDevice.h"
+#include "reputation_feedback/IAtlasFeedback.h"
 #include "../cloud/AtlasDeviceCloud.h"
 #include "../telemetry/AtlasTelemetry.h"
 
@@ -70,8 +71,24 @@ private:
     */
     void firewallStatisticsAlarmCallback();
 
+    /**
+    * @brief System reputation alarm callback
+    * @return none
+    */
+    void sysRepAlarmCallback();
+
+   /**
+   * @brief Init system reputation
+   * @param[in] device Client device
+   * @return none
+   */
+    void initSystemReputation(AtlasDevice &device);
+
     /* Client devices */
     std::unordered_map<std::string, AtlasDevice> devices_;
+
+    /* Stateful reputation feedback for system behaviour */
+    std::unordered_map<std::string, std::vector<std::unique_ptr<IAtlasFeedback>>> feedback_;
 
     /* Telemetry manager which handles the telemetry CoAP resources and pushes the data into the devices */
     AtlasTelemetry telemetry_;
@@ -81,6 +98,9 @@ private:
 
     /* Firewall-statistics alarm */
     AtlasAlarm fsAlarm_;
+
+    /* System reputation alarm */
+    AtlasAlarm sysRepAlarm_;
 };
 
 } // namespace atlas

@@ -173,28 +173,16 @@ public:
     inline void clearSyncRequired() { syncRequired_ = false; }
 
     /**
-    * @brief Clear registration time interval
-    * @return none
-    */
-    inline void clearRegInterval() { regIntervalSec_ = 0; }
-
-    /**
     * @brief Get registration time interval
     * @return Registration time interval (seconds)
     */
     int getRegInterval();
 
     /**
-    * @brief Clear the number of received keep-alive packets
-    * @return none
-    */
-    inline void clearKeepalivePackets() { keepAlivePkts_ = 0; }
-
-    /**
     * @brief Get the number of received keep-alive packets
     * @return Number of keep-alive packets
     */
-    inline int getKeepalivePackets() const { return keepAlivePkts_; }
+    inline int getKeepalivePkts() const { return keepAlivePkts_; }
 
     /**
     * @brief Get the system reputation
@@ -214,12 +202,6 @@ private:
     * @return none
     */
     void installDefaultAlerts();
-
-    /**
-    * @brief Init system reputation
-    * @return none
-    */
-    void initSystemReputation();
 
     /**
     * @brief Serialize register event to JSON

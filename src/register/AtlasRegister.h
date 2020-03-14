@@ -10,6 +10,9 @@
 
 namespace atlas {
 
+/* Client device keep-alive register interval */
+const int ATLAS_KEEP_ALIVE_INTERVAL_MS = 20000;
+
 class AtlasRegister
 {
 

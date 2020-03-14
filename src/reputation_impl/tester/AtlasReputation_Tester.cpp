@@ -160,10 +160,10 @@ void AtlasReputationTester::simulateScenario_4(int noOfClients, int noOfFeatures
         /***** Manager for Control Plane features *****/
         AtlasDeviceFeatureManager managerCtrl;
         managerCtrl.updateFeedbackThreshold(thresholdVal);
-        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_UPTIME, 0.3);
-        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_MISSED_KEEP_ALIVE_PACKETS, 0.15);
-        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_PACKETS_ACCEPTANCY_RATE, 0.35);
-        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_REGISTERING_RATE, 0.2);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC, 0.3);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS, 0.15);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_VALID_PACKETS, 0.35);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME, 0.2);
 
         FILE* fileOut = fopen(fileName.c_str(), "w");
         if (fileOut != nullptr) {
@@ -209,10 +209,10 @@ void AtlasReputationTester::simulateScenario_5(int noOfClients, int noOfFeatures
         /***** Manager for Control Plane features *****/
         AtlasDeviceFeatureManager managerCtrl;
         managerCtrl.updateFeedbackThreshold(thresholdVal);
-        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_UPTIME, 0.3);
-        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_MISSED_KEEP_ALIVE_PACKETS, 0.15);
-        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_PACKETS_ACCEPTANCY_RATE, 0.35);
-        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_REGISTERING_RATE, 0.2);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC, 0.3);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS, 0.15);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_VALID_PACKETS, 0.35);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME, 0.2);
 
         FILE* fileOut = fopen(fileName.c_str(), "w");
         if (fileOut != nullptr) {

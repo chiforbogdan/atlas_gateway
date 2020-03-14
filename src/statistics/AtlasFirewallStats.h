@@ -14,7 +14,8 @@ public:
     * @brief Default ctor for firewall statistics
     * @return none
     */
-    AtlasFirewallStats() : clientId_(""){}
+    AtlasFirewallStats() : clientId_(""), ruleDroppedPkts_(0), rulePassedPkts_(0),
+                           txDroppedPkts_(0), txPassedPkts_(0) {}
 
     /**
     * @brief Overwrite = operator

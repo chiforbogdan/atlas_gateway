@@ -12,7 +12,6 @@ namespace atlas {
 
 namespace {
 
-const int ATLAS_KEEP_ALIVE_INTERVAL_MS = 20000;
 const std::string ATLAS_REGISTER_URI = "gateway/register";
 const std::string ATLAS_KEEPALIVE_URI = "gateway/keepalive";
 

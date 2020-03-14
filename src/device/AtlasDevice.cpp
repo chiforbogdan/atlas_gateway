@@ -13,7 +13,7 @@ namespace atlas {
 namespace {
 
 /* Keep-alive counter initial value */
-const int ATLAS_KEEP_ALIVE_COUNTER = 6;
+const int ATLAS_KEEP_ALIVE_COUNTER = 4;
 /* JSON register event key */
 const std::string ATLAS_REGISTER_JSON_KEY = "registered";
 /* JSON last register time key */
@@ -29,11 +29,6 @@ const std::string ATLAS_FIREWALLSTAT_DROPPEDPKTS_JSON_KEY = "droppedPkts";
 /* JSON firewall stat-passedPkts key */
 const std::string ATLAS_FIREWALLSTAT_PASSEDPKTS_JSON_KEY = "passedPkts";
 
-/* Reputation feature weights (importance) */
-const int ATLAS_REPUTATION_PACKETS_ACCEPTANCY_WEIGHT = 0.4;
-const int ATLAS_REPUTAION_REGISTERING_RATE_WEIGHT = 0.3;
-const int ATLAS_REPUTAION_MISSED_KEEP_ALIVE_WEIGHT = 0.3;
-
 } // anonymous namespace
 
 AtlasDevice::AtlasDevice(const std::string &identity,
@@ -45,22 +40,9 @@ AtlasDevice::AtlasDevice(const std::string &identity,
 {
     /* Install default alerts */
     installDefaultAlerts();
-    /* Init system reputation with default features */
-    initSystemReputation();
 }
 
 AtlasDevice::AtlasDevice() : identity_(""), registered_(false), regIntervalSec_(0), keepAlivePkts_(0) {}
-
-void AtlasDevice::initSystemReputation()
-{
-    /* Add default features for the system reputation */
-    systemReputation_.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_PACKETS_ACCEPTANCY_RATE,
-                                 ATLAS_REPUTATION_PACKETS_ACCEPTANCY_WEIGHT);
-    systemReputation_.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_REGISTERING_RATE,
-                                 ATLAS_REPUTAION_REGISTERING_RATE_WEIGHT);
-    systemReputation_.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_MISSED_KEEP_ALIVE_PACKETS,
-                                 ATLAS_REPUTAION_MISSED_KEEP_ALIVE_WEIGHT);
-}
 
 void AtlasDevice::uninstallPolicy()
 {
@@ -169,7 +151,6 @@ int AtlasDevice::getRegInterval()
         return regIntervalSec_ +  diff.total_seconds();
     }
 
-    std::cout << "Not reg\n";
     return regIntervalSec_;
 }
 

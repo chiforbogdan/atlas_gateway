@@ -12,11 +12,10 @@ enum class AtlasDeviceFeatureType {
     ATLAS_DEVICE_FEATURE_HUMIDITY,
     ATLAS_DEVICE_FEATURE_AIR_PRESSURE,
 
-    //Some demo features for ControlPlane
-    ATLAS_DEVICE_FEATURE_UPTIME = 1000,
-    ATLAS_DEVICE_FEATURE_PACKETS_ACCEPTANCY_RATE,
-    ATLAS_DEVICE_FEATURE_REGISTERING_RATE,
-    ATLAS_DEVICE_FEATURE_MISSED_KEEP_ALIVE_PACKETS
+    //Some demo features for system
+    ATLAS_FEATURE_VALID_PACKETS = 1000,
+    ATLAS_FEATURE_REGISTER_TIME,
+    ATLAS_FEATURE_KEEPALIVE_PACKETS
 
     /*Extended with various feature of connected sensors.
     This can be upgraded to be manipulated by the administrator or through the Cloud component.*/
