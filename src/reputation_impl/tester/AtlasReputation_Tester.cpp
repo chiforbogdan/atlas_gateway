@@ -160,10 +160,9 @@ void AtlasReputationTester::simulateScenario_4(int noOfClients, int noOfFeatures
         /***** Manager for Control Plane features *****/
         AtlasDeviceFeatureManager managerCtrl;
         managerCtrl.updateFeedbackThreshold(thresholdVal);
-        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC, 0.3);
-        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS, 0.15);
-        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_VALID_PACKETS, 0.35);
-        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME, 0.2);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME, 0.3);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS, 0.3);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_VALID_PACKETS, 0.4);
 
         FILE* fileOut = fopen(fileName.c_str(), "w");
         if (fileOut != nullptr) {
@@ -201,7 +200,7 @@ void AtlasReputationTester::simulateScenario_4(int noOfClients, int noOfFeatures
     }
 }
 
-void AtlasReputationTester::simulateScenario_5(int noOfClients, int noOfFeatures, double badFeedbackProb, double thresholdVal, int noOfIterations)
+void AtlasReputationTester::simulateScenario_5(int noOfClients, double badFeedbackProb, double thresholdVal, int noOfIterations)
 {
     for (int i=1; i <= noOfClients; i++) {
         std::string fileName = "scenario_5_client_" + std::to_string(i) + ".dat";
@@ -209,10 +208,9 @@ void AtlasReputationTester::simulateScenario_5(int noOfClients, int noOfFeatures
         /***** Manager for Control Plane features *****/
         AtlasDeviceFeatureManager managerCtrl;
         managerCtrl.updateFeedbackThreshold(thresholdVal);
-        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_GENERIC, 0.3);
-        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS, 0.15);
-        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_VALID_PACKETS, 0.35);
-        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME, 0.2);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME, 0.3);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS, 0.3);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_VALID_PACKETS, 0.4);
 
         FILE* fileOut = fopen(fileName.c_str(), "w");
         if (fileOut != nullptr) {
@@ -229,6 +227,96 @@ void AtlasReputationTester::simulateScenario_5(int noOfClients, int noOfFeatures
                 }
                 rez = AtlasReputationNaiveBayes::computeReputation(managerCtrl, fbMatrix);
                 fbMatrix.clear();
+                fprintf(fileOut, "%f\n", rez);
+            }
+            fclose(fileOut);
+        }
+    }
+}
+
+void AtlasReputationTester::simulateScenario_6(int noOfClients, double regTime, double kaPkts, double validPkts, double badFeedbackProb, double thresholdVal, int noOfIterations)
+{
+    for (int i=1; i <= noOfClients; i++) {
+        std::string fileName = "scenario_6_client_" + std::to_string(i) + ".dat";
+        
+        /***** Manager for Control Plane features *****/
+        AtlasDeviceFeatureManager managerCtrl;
+        managerCtrl.updateFeedbackThreshold(thresholdVal);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME, regTime);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS, kaPkts);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_VALID_PACKETS, validPkts);
+
+        FILE* fileOut = fopen(fileName.c_str(), "w");
+        if (fileOut != nullptr) {
+            double rez = 0, genFB = 0;
+            std::vector<std::pair<AtlasDeviceFeatureType, double>> fbMatrix;
+            std::pair<AtlasDeviceFeatureType, double> tmpPair;
+            
+            for (int j = 0; j < noOfIterations; j++) {         
+                for (size_t k=0; k < managerCtrl.getDeviceFeatures().size(); k++) {
+                    genFB = generateFeedBack(badFeedbackProb, thresholdVal);
+                    tmpPair.first = managerCtrl.getDeviceFeatures()[k].getFeatureType();
+                    tmpPair.second = genFB;
+                    fbMatrix.push_back(tmpPair);
+                }
+                rez = AtlasReputationNaiveBayes::computeReputation(managerCtrl, fbMatrix);
+                fbMatrix.clear();
+                fprintf(fileOut, "%f\n", rez);
+            }
+            fclose(fileOut);
+        }
+    }
+}
+
+void AtlasReputationTester::simulateScenario_7(int noOfClients, int noOfFeatures, double ctrlPlaneWeight, double regTime, double kaPkts, double validPkts, double badFeedbackProb, double thresholdVal, int noOfIterations)
+{
+    double weightOfControlPlane = ctrlPlaneWeight;    
+    for (int i=1; i <= noOfClients; i++) {
+        std::string fileName = "scenario_7_client_" + std::to_string(i) + ".dat";
+        
+        /***** Manager for Data Plane features *****/
+        AtlasDeviceFeatureManager managerData;
+        managerData.updateFeedbackThreshold(thresholdVal);
+        for (int j=0; j < noOfFeatures; j++) {
+            managerData.addFeature((AtlasDeviceFeatureType)j, 1.0/(double)noOfFeatures);
+        }
+
+        /***** Manager for Control Plane features *****/
+        AtlasDeviceFeatureManager managerCtrl;
+        managerCtrl.updateFeedbackThreshold(thresholdVal);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME, regTime);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS, kaPkts);
+        managerCtrl.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_VALID_PACKETS, validPkts);
+
+        FILE* fileOut = fopen(fileName.c_str(), "w");
+        if (fileOut != nullptr) {
+            double rezData = 0, rezCtrl = 0, rez, genFB = 0;
+            std::vector<std::pair<AtlasDeviceFeatureType, double>> fbMatrix;
+            std::pair<AtlasDeviceFeatureType, double> tmpPair;
+            
+            for (int j = 0; j < noOfIterations; j++) {
+                /***** Generate feedback and compute reputation for Data Plane *****/            
+                for (size_t k=0; k < managerData.getDeviceFeatures().size(); k++) {
+                    genFB = generateFeedBack(badFeedbackProb, thresholdVal);
+                    tmpPair.first = managerData.getDeviceFeatures()[k].getFeatureType();
+                    tmpPair.second = genFB;
+                    fbMatrix.push_back(tmpPair);
+                }
+                rezData = AtlasReputationNaiveBayes::computeReputation(managerData, fbMatrix);
+                fbMatrix.clear();
+
+                /***** Generate feedback and compute reputation for Control Plane *****/            
+                for (size_t k=0; k < managerCtrl.getDeviceFeatures().size(); k++) {
+                    genFB = generateFeedBack(badFeedbackProb, thresholdVal);
+                    tmpPair.first = managerCtrl.getDeviceFeatures()[k].getFeatureType();
+                    tmpPair.second = genFB;
+                    fbMatrix.push_back(tmpPair);
+                }
+                rezCtrl = AtlasReputationNaiveBayes::computeReputation(managerCtrl, fbMatrix);
+                fbMatrix.clear();
+
+                /***** Generate feedback for device *****/
+                rez = (rezCtrl * weightOfControlPlane) + (rezData * (1 - weightOfControlPlane));
                 fprintf(fileOut, "%f\n", rez);
             }
             fclose(fileOut);
