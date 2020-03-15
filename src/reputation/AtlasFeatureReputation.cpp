@@ -176,9 +176,11 @@ AtlasCoapResponse AtlasFeatureReputation::receiveFeedbackCallback(const std::str
                     std::cout << "feature: " << feature << std::endl;
                 } else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_VALUE) {
                     memcpy(&feedback, cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
+                    feedback = ntohs(feedback);
                     std::cout << "feedback: " << feedback << std::endl;
                 } else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_RESPONSE_TIME) {
                     memcpy(&responseTime, cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
+                    responseTime = ntohs(responseTime);
                     std::cout << "response time: " << responseTime << std::endl;
                 }
             }
