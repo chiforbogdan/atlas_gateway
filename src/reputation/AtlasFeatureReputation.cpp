@@ -1,4 +1,5 @@
 #include <string>
+#include <iostream>
 #include <boost/bind.hpp>
 #include <boost/optional.hpp>
 #include "AtlasFeatureReputation.h"
@@ -33,7 +34,7 @@ AtlasCoapResponse AtlasFeatureReputation::featureReputationCallback(const std::s
     std::string identity;
     std::string feature;
     uint8_t *buf = nullptr;
-    uint16_t featureReputation = 20;
+    const char *clientRepId = "client30";
     
     ATLAS_LOGGER_DEBUG("Feature callback executed...");
 
@@ -93,7 +94,7 @@ AtlasCoapResponse AtlasFeatureReputation::featureReputationCallback(const std::s
     /* FIXME get response from reputation module (naive bayes) */
 
     /* Add feature command */
-    AtlasCommand cmdPush(ATLAS_CMD_FEATURE_REQUEST, sizeof(uint16_t), (uint8_t *) &featureReputation);
+    AtlasCommand cmdPush(ATLAS_CMD_FEATURE_REQUEST, strlen(clientRepId), (uint8_t *) clientRepId);
     cmdBatch.addCommand(cmdPush);
 
     /* Serialize response */
@@ -114,12 +115,17 @@ AtlasCoapResponse AtlasFeatureReputation::receiveFeedbackCallback(const std::str
                                                                 uint8_t **respPayload, size_t *respPayloadLen)
 {
     AtlasCommandBatch cmdBatch;
-    AtlasCommandBatch cmdRespBatch;
+    AtlasCommandBatch cmdInnerBatch;
     std::vector<AtlasCommand> cmd;
+    std::vector<AtlasCommand> cmdInner;
+
     std::pair<const uint8_t*, size_t> cmdBuf;
     std::string identity;
-    boost::optional<uint16_t> feedback;
-    uint16_t tmp; 
+    std::string clientID;
+    std::string feature;
+    uint16_t feedback;
+    uint16_t responseTime;
+    
     
     ATLAS_LOGGER_DEBUG("Feedback callback executed...");
 
@@ -153,24 +159,36 @@ AtlasCoapResponse AtlasFeatureReputation::receiveFeedbackCallback(const std::str
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
         } else if(cmdEntry.getType() == ATLAS_CMD_FEEDBACK){
-            if (cmdEntry.getLen() != sizeof(uint16_t)) {
-                ATLAS_LOGGER_ERROR("Feedback end-point called with invalid FEEDBACK command");
+            /* Parse feedback command */
+            if (!cmdEntry.getLen()) {
+                ATLAS_LOGGER_ERROR("Empty FEEDBACK command");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
+            cmdInnerBatch.setRawCommands(cmdEntry.getVal(), cmdEntry.getLen());
+            cmdInner = cmdInnerBatch.getParsedCommands();
 
-            memcpy(&tmp, cmdEntry.getVal(), cmdEntry.getLen());
-            tmp = ntohs(tmp);
-            feedback = tmp;
+            for (AtlasCommand &cmdInnerEntry : cmdInner) {
+                if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_CLIENTID) {
+                    clientID.assign((char *)cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
+                    std::cout << "clinetID: " << clientID << std::endl;
+                } else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_FEATURE) {
+                    feature.assign((char *)cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
+                    std::cout << "feature: " << feature << std::endl;
+                } else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_VALUE) {
+                    memcpy(&feedback, cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
+                    feedback = ntohs(feedback);
+                    std::cout << "feedback: " << feedback << std::endl;
+                } else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_RESPONSE_TIME) {
+                    memcpy(&responseTime, cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
+                    responseTime = ntohs(responseTime);
+                    std::cout << "response time: " << responseTime << std::endl;
+                }
+            }
         }
     }
 
     if (identity == "") {
         ATLAS_LOGGER_ERROR("Receive feedback failed because of invalid identity");
-        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
-    }
-
-    if (!feedback) {
-        ATLAS_LOGGER_ERROR("Receive feedback failed because of invalid feedback");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
 
