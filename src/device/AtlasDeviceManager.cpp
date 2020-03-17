@@ -8,6 +8,8 @@
 #include "reputation_feedback/AtlasRegistrationFeedback.h"
 #include "reputation_feedback/AtlasKeepaliveFeedback.h"
 #include "reputation_feedback/AtlasPacketsFeedback.h"
+#include "../sql/AtlasSQLite.h"
+#include "../reputation_impl/AtlasDeviceFeatureManager.h"
 
 namespace atlas {
 
@@ -73,6 +75,13 @@ void AtlasDeviceManager::sysRepAlarmCallback()
                              ATLAS_LOGGER_INFO("System reputation for device with identity " + device.getIdentity() + 
                                                " is " + std::to_string(repVal));
                              device.syncSystemReputation();
+
+                             /* Open db*/
+                            atlas::AtlasSQLite::getInstance().openConnection(ATLAS_DB_PATH);
+                            AtlasSQLite::getInstance().updateNetwork(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, device.getSystemReputation());
+                            AtlasSQLite::getInstance().updateFeatures(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, device.getSystemReputation());
+                            /* close db*/
+                            atlas::AtlasSQLite::getInstance().closeConnection();
                          });
 }
 
@@ -80,14 +89,50 @@ void AtlasDeviceManager::initSystemReputation(AtlasDevice &device)
 {
     /* Add default features for the system reputation */
     AtlasDeviceFeatureManager &systemReputation = device.getSystemReputation();
-    
-    systemReputation.updateFeedbackThreshold(ATLAS_SYSTEM_REPUTATION_THRESHOLD);
-    systemReputation.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME,
-                                ATLAS_REGISTER_TIME_WEIGHT);
-    systemReputation.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS,
-                                ATLAS_KEEPALIVE_PACKETS_WEIGHT);
-    systemReputation.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_VALID_PACKETS,
-                                ATLAS_VALID_PACKETS_WEIGHT);
+
+    /* Open db*/
+    atlas::AtlasSQLite::getInstance().openConnection(ATLAS_DB_PATH);
+
+    uint8_t stat = AtlasSQLite::getInstance().checkDeviceForFeatures(device.getIdentity());
+
+    if(stat == 1) {
+        /* Get from db*/
+        ATLAS_LOGGER_ERROR("get from local.db");
+
+        systemReputation.updateFeedbackThreshold(ATLAS_SYSTEM_REPUTATION_THRESHOLD);
+        AtlasSQLite::getInstance().selectNetwork(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, systemReputation);
+        AtlasSQLite::getInstance().selectFeatures(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, systemReputation);
+        
+    }
+    else if(!stat) {
+
+        ATLAS_LOGGER_ERROR("insert into local.db");
+        
+        systemReputation.updateFeedbackThreshold(ATLAS_SYSTEM_REPUTATION_THRESHOLD);
+        systemReputation.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME,
+                                    ATLAS_REGISTER_TIME_WEIGHT);
+        systemReputation.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS,
+                                    ATLAS_KEEPALIVE_PACKETS_WEIGHT);
+        systemReputation.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_VALID_PACKETS,
+                                    ATLAS_VALID_PACKETS_WEIGHT);
+
+        /* Insert into db*/
+        /* Insert network in db*/
+        AtlasSQLite::getInstance().insertNetwork(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, systemReputation.getTotalTransactions(), systemReputation.getTotalSuccessfulTransactions());
+        
+        /* Insert features in db*/
+        AtlasSQLite::getInstance().insertFeature(device.getIdentity(), int(AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL), int(AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME), systemReputation[AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME].getSuccessfulTransactions(), ATLAS_REGISTER_TIME_WEIGHT);
+        AtlasSQLite::getInstance().insertFeature(device.getIdentity(), int(AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL), int(AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS), systemReputation[AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS].getSuccessfulTransactions(), ATLAS_KEEPALIVE_PACKETS_WEIGHT);
+        AtlasSQLite::getInstance().insertFeature(device.getIdentity(), int(AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL), int(AtlasDeviceFeatureType::ATLAS_FEATURE_VALID_PACKETS), systemReputation[AtlasDeviceFeatureType::ATLAS_FEATURE_VALID_PACKETS].getSuccessfulTransactions(), ATLAS_VALID_PACKETS_WEIGHT);
+        
+    }
+    else {
+        /* Error*/
+        ATLAS_LOGGER_ERROR("Error when reading from local.db");
+    }
+
+    /* close db*/
+    atlas::AtlasSQLite::getInstance().closeConnection();
 
     /* Add feedack for system reputation */
     std::unique_ptr<IAtlasFeedback> regFeedback(new AtlasRegistrationFeedback(device,

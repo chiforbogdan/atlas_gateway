@@ -60,6 +60,13 @@ public:
     */
     int getSuccessfulTransactions() { return successTrans_; }
 
+    /**
+     * @brief Set number of successful transactions (required by Naive Bayes component)
+     * @param[in] Number of Successful Transactions
+     * @return none
+    */
+    void setSuccessfulTransactions(int successTrans) { successTrans_ = successTrans; }
+
     AtlasDeviceFeature(const AtlasDeviceFeature &src) { featureType_ = src.featureType_;
                                                         successTrans_ = src.successTrans_;
                                                         weight_ = src.weight_; }

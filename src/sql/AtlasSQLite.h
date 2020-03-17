@@ -5,6 +5,7 @@
 #include <sqlite3.h>
 #include <string>
 #include "../logger/AtlasLogger.h"
+#include "../reputation_impl/AtlasDeviceFeatureManager.h"
 
 namespace atlas {
 
@@ -15,10 +16,10 @@ class AtlasSQLite
 
 public:
     /**
-    * @brief Ctor
-    * @return none
+    * @brief Get SQLite instance
+    * @return SQLite instance
     */
-    AtlasSQLite();
+    static AtlasSQLite& getInstance();
 
     /**
     * @brief Open connection for an existing/new created database
@@ -40,27 +41,99 @@ public:
     bool isConnected();
 
     /**
-    * @brief Execute query on database: insert, update if identity already exists
-    * @param[in] identity - fist column
-    * @param[in] psk - second column
-    * @return none
+    * @brief Execute query on database: insert device
+    * @param[in] identity - device identity
+    * @param[in] psk - device psk
+    * @return 0 on success, -1 on error
     */
-    uint8_t insert(const std::string &identity, const std::string &psk);
+    uint8_t insertDevice(const std::string &identity, const std::string &psk);
 
     /**
-    * @brief Execute query on database: select, gets psk based on identity
-    * @param[in] identity - first column
+    * @brief Execute query on database: insert network
+    * @param[in] identity - device identity
+    * @param[in] networkTypeId - naive bayes network type (CONTROL-1, DATA-2)
+    * @param[in] totalTrans - total number of transactions
+    * @param[in] totalSuccessTrans - total number of successful transactions
+    * @return 0 on success, -1 on error
+    */
+    uint8_t insertNetwork(const std::string &identity, int networkTypeId, int totalTrans, int totalSuccessTrans);
+
+    /**
+    * @brief Execute query on database: insert feature
+    * @param[in] identity - device identity
+    * @param[in] networkTypeId - naive bayes network type
+    * @param[in] featureTypeId - feature type(features for control/dataPlane)
+    * @param[in] successTrans - number of successful transactions
+    * @return 0 on success, -1 on error
+    */
+    uint8_t insertFeature(const std::string &identity, int networkTypeId, int featureTypeId, int successTrans, double weight);
+
+    /**
+    * @brief Execute query on database: select, get psk based on device identity
+    * @param[in] identity Device identity
     * @return psk
     */
-    std::string selectPsk(const std::string &identity);
+    std::string selectDevicePsk(const std::string &identity);
+
+    /**
+    * @brief Execute query on database: select, get network params based on device identity
+    * @param[in] identity Device identity
+    * @param[in] networkTypeId Network type
+    * @param[in] manager AtlasDeviceFeatureManage
+    * @return 0 on success, -1 on error
+    */
+    uint8_t selectNetwork(const std::string &identity, int networkTypeId, AtlasDeviceFeatureManager &manager);
+
+    /**
+    * @brief Execute query on database: select, get features params based on device identity and network type
+    * @param[in] identity Device identity
+    * @param[in] networkTypeId Network type
+    * @param[in] manager AtlasDeviceFeatureManager
+    * @return 0 on success, -1 on error
+    */
+    uint8_t selectFeatures(const std::string &identity, int networkTypeId, AtlasDeviceFeatureManager &manager);
+
+        /**
+    * @brief Execute query on database: update network params based on device identity and network type
+    * @param[in] identity Device identity
+    * @param[in] networkTypeId Network type
+    * @param[in] manager AtlasDeviceFeatureManage
+    * @return 0 on success, -1 on error
+    */
+    uint8_t updateNetwork(const std::string &identity, int networkTypeId, AtlasDeviceFeatureManager &manager);
+
+    /**
+    * @brief Execute query on database: update features params based on device identity, network type and feature type
+    * @param[in] identity Device identity
+    * @param[in] networkTypeId Network type
+    * @param[in] manager AtlasDeviceFeatureManager
+    * @return 0 on success, -1 on error
+    */
+    uint8_t updateFeatures(const std::string &identity, int networkTypeId, AtlasDeviceFeatureManager &manager);
+
+    /**
+    * @brief Check if a device has related features in db
+    * @param[in] identity Device identityr
+    * @return 0 on success, -1 on error, 1 if exists related features
+    */
+    uint8_t checkDeviceForFeatures(const std::string &identity);
+
+    AtlasSQLite(const AtlasSQLite&) = delete;
+    AtlasSQLite& operator=(const AtlasSQLite&) = delete;
+
+private:
+
+    /**
+    * @brief Ctor
+    * @return none
+    */
+    AtlasSQLite();
 
     /**
     * @brief Dtor. It disconnect opened database
     * @return none
     */
     ~AtlasSQLite();
-
-private:
 
     /*status of the connection*/
     bool isConnected_;	 

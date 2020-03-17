@@ -41,6 +41,13 @@ public:
     int getTotalSuccessfulTransactions() { return totalSuccessTrans_; }
 
     /**
+     * @brief Set number of successful transactions (required by Naive Bayes component)
+     * @param[in] Number of successful transactions
+     * @return none
+    */
+    void setTotalSuccessfulTransactions(int totalSuccessTrans) { totalSuccessTrans_ = totalSuccessTrans; }
+
+    /**
      * @brief Update total number of interactions (required by Naive Bayes component)
      * @return none
     */
@@ -51,6 +58,13 @@ public:
      * @return Number of transactions
     */
     int getTotalTransactions() { return totalTrans_; }
+
+    /**
+     * @brief Set the total number of transactions (required by Naive Bayes component)
+     * @param[in] Total number of transactions
+     * @return none
+    */
+    void setTotalTransactions(int totalTrans) { totalTrans_ = totalTrans; }
 
     /**
      * @brief Updates the device reputation value

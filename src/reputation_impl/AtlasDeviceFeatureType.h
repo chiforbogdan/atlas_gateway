@@ -21,6 +21,11 @@ enum class AtlasDeviceFeatureType {
     This can be upgraded to be manipulated by the administrator or through the Cloud component.*/
 };
 
+enum class AtlasDeviceNetworkType {
+    ATLAS_NETWORK_CONTROL = 0,
+    ATLAS_NETWORK_DATA
+};
+
 } //namespace atlas
 
 #endif /*__ATLAS_DEVICE_FEATURE_TYPE_H__*/
