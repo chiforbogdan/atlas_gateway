@@ -80,8 +80,10 @@ AtlasSQLite::~AtlasSQLite()
 
 void AtlasSQLite::closeConnection()
 {
-    if(pCon_)
-        sqlite3_close(pCon_);
+    if(!pCon_)
+        return;
+
+    sqlite3_close(pCon_);
 
     pCon_ = nullptr;
 
