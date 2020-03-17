@@ -5,7 +5,8 @@ namespace atlas {
 
 namespace {
 
-    const char *SQL_CREATE_TABLES = "CREATE TABLE IF NOT EXISTS Device("  \
+    const char *SQL_CREATE_TABLES = "BEGIN TRANSACTION;"\
+                                    "CREATE TABLE IF NOT EXISTS Device("  \
                                     "Id INTEGER PRIMARY KEY AUTOINCREMENT," \
                                     "Identity TEXT NOT NULL UNIQUE," \
                                     "PSK TEXT NOT NULL );" \
@@ -24,7 +25,8 @@ namespace {
                                     "SuccessTrans INTEGER DEFAULT 0," \
                                     "Weight REAL DEFAULT 0," \
                                     "NetworkId INTEGER NOT NULL," \
-                                    "FOREIGN KEY (NetworkId) REFERENCES NaiveBayesNetwork(Id));";
+                                    "FOREIGN KEY (NetworkId) REFERENCES NaiveBayesNetwork(Id));"\
+                                    "COMMIT;";
 
     const char *SQL_INSERT_DEVICE = "INSERT INTO Device(Identity,PSK) VALUES(?,?);";
     const char *SQL_UPDATE_DEVICE = "UPDATE Device SET PSK=? WHERE Identity=?;";
@@ -446,7 +448,7 @@ uint8_t AtlasSQLite::updateNetwork(const std::string &identity, int networkTypeI
 
     /*update network for given identity*/
     if(sqlite3_prepare_v2(pCon_, SQL_UPDATE_NETWORK,-1, &stmt, 0) != SQLITE_OK) {
-        ATLAS_LOGGER_ERROR("Could not prepare update statement");
+        ATLAS_LOGGER_ERROR("Could not prepare update network stmt");
         sqlite3_finalize(stmt);
 	    return -1;
     }
@@ -455,14 +457,14 @@ uint8_t AtlasSQLite::updateNetwork(const std::string &identity, int networkTypeI
         sqlite3_bind_int(stmt, 2, manager.getTotalSuccessfulTransactions()) != SQLITE_OK ||
         sqlite3_bind_text(stmt, 3, identity.c_str(), identity.length(),	SQLITE_STATIC) != SQLITE_OK ||
         sqlite3_bind_int(stmt, 4, networkTypeId) != SQLITE_OK) {
-        ATLAS_LOGGER_ERROR("Could not bind text param");
+        ATLAS_LOGGER_ERROR("Could not bind text param update network stmt");
         sqlite3_finalize(stmt);
         return -1;
     }
 
     int stat = sqlite3_step(stmt);
     if (stat != SQLITE_DONE && stat != SQLITE_ROW) {
-        ATLAS_LOGGER_ERROR("Could not step (execute) update stmt, " + std::string(sqlite3_errmsg(pCon_)));
+        ATLAS_LOGGER_ERROR("Could not step (execute) update network stmt, " + std::string(sqlite3_errmsg(pCon_)));
         sqlite3_finalize(stmt);
         return -1;
     }
@@ -482,7 +484,7 @@ uint8_t AtlasSQLite::updateFeatures(const std::string &identity, int networkType
 
     /*update features for given identity*/
     if(sqlite3_prepare_v2(pCon_, SQL_UPDATE_FEATURE,-1, &stmt, 0) != SQLITE_OK) {
-        ATLAS_LOGGER_ERROR("Could not prepare update statement");
+        ATLAS_LOGGER_ERROR("Could not prepare update feature stmt");
         sqlite3_finalize(stmt);
 	    return -1;
     }
@@ -492,7 +494,7 @@ uint8_t AtlasSQLite::updateFeatures(const std::string &identity, int networkType
             sqlite3_bind_text(stmt, 2, identity.c_str(), identity.length(),	SQLITE_STATIC) != SQLITE_OK ||
             sqlite3_bind_int(stmt, 3, networkTypeId) != SQLITE_OK ||
             sqlite3_bind_int(stmt, 4, int(manager.getDeviceFeatures()[i].getFeatureType())) != SQLITE_OK) {
-            ATLAS_LOGGER_ERROR("Could not bind text param");
+            ATLAS_LOGGER_ERROR("Could not bind text param update feature stmt");
             sqlite3_finalize(stmt);
             return -1;
         }
@@ -500,7 +502,7 @@ uint8_t AtlasSQLite::updateFeatures(const std::string &identity, int networkType
         if (stat == SQLITE_DONE)
             break;
         if (stat != SQLITE_ROW) {
-            ATLAS_LOGGER_ERROR("Could not step (execute) update stmt");
+            ATLAS_LOGGER_ERROR("Could not step (execute) update feature stmt");
             break;
         }
     }
