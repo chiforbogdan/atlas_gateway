@@ -12,7 +12,7 @@ namespace {
 
                                     "CREATE TABLE IF NOT EXISTS NaiveBayesNetwork("  \
                                     "Id INTEGER PRIMARY KEY AUTOINCREMENT," \
-                                    "NetworkTypeId TEXT NOT NULL," \
+                                    "NetworkTypeId INTEGER NOT NULL," \
                                     "TotalTrans INTEGER DEFAULT 0," \
                                     "TotalSuccessTrans INTEGER DEFAULT 0," \
                                     "DeviceId INTEGER NOT NULL," \
@@ -20,7 +20,7 @@ namespace {
 
                                     "CREATE TABLE IF NOT EXISTS NaiveBayesFeature("  \
                                     "Id INTEGER PRIMARY KEY AUTOINCREMENT," \
-                                    "FeatureTypeId TEXT NOT NULL," \
+                                    "FeatureTypeId INTEGER NOT NULL," \
                                     "SuccessTrans INTEGER DEFAULT 0," \
                                     "Weight REAL DEFAULT 0," \
                                     "NetworkId INTEGER NOT NULL," \
@@ -33,9 +33,10 @@ namespace {
 
     
     const char *SQL_INSERT_NETWORK = "INSERT INTO NaiveBayesNetwork(NetworkTypeId, TotalTrans, TotalSuccessTrans, DeviceId) VALUES(?,?,?,?);";
-    const char *SQL_UPDATE_NETWORK = "UPDATE NaiveBayesNetwork SET TotalTrans=?,TotalSuccessTrans=? "\
-                                     "INNER JOIN Device ON Device.Id == NaiveBayesNetwork.DeviceId "\
-                                     "WHERE Identity=? AND NetworkTypeId=?;";
+    const char *SQL_UPDATE_NETWORK = "UPDATE NaiveBayesNetwork "\
+                                     "SET TotalTrans=?, TotalSuccessTrans=? "\
+                                     "WHERE DeviceId IN (SELECT Id FROM Device WHERE Identity=?) AND NetworkTypeId=?;";
+
     const char *SQL_GET_ID_NETWORK = "SELECT NaiveBayesNetwork.Id FROM NaiveBayesNetwork "\
                                      "INNER JOIN Device ON Device.Id == NaiveBayesNetwork.DeviceId "\
                                      "WHERE Device.Identity=? AND NaiveBayesNetwork.NetworkTypeId=?;";
@@ -44,10 +45,11 @@ namespace {
                                   "WHERE Device.Identity=? AND NaiveBayesNetwork.NetworkTypeId=?;";
 
     const char *SQL_INSERT_FEATURE = "INSERT INTO NaiveBayesFeature(FeatureTypeId, SuccessTrans, Weight, NetworkId) VALUES(?,?,?,?);";
-    const char *SQL_UPDATE_FEATURE = "UPDATE NaiveBayesFeature SET SuccessTrans=? "\
-                                     "INNER JOIN NaiveBayesNetwork ON NaiveBayesNetwork.Id == NaiveBayesFeature.NetworkId "\
-                                     "INNER JOIN Device ON Device.Id == NaiveBayesNetwork.DeviceId "\
-                                     "WHERE Identity=? AND NetworkId=? AND FeatureTypeId=?;";
+    const char *SQL_UPDATE_FEATURE = "UPDATE NaiveBayesFeature "\
+                                     "SET SuccessTrans=? "\
+                                     "WHERE NetworkId IN (SELECT Id FROM NaiveBayesNetwork INNER JOIN Device ON Device.Id == NaiveBayesNetwork.DeviceId WHERE Device.Identity=? AND NaiveBayesNetwork.NetworkTypeId=?) AND FeatureTypeId=?;";
+
+
     const char *SQL_GET_FEATURE = "SELECT NaiveBayesFeature.FeatureTypeId, NaiveBayesFeature.Weight, NaiveBayesFeature.SuccessTrans FROM NaiveBayesFeature "\
                                   "INNER JOIN NaiveBayesNetwork ON NaiveBayesNetwork.Id == NaiveBayesFeature.NetworkId "\
                                   "INNER JOIN Device ON Device.Id == NaiveBayesNetwork.DeviceId "\
@@ -109,7 +111,7 @@ bool AtlasSQLite::openConnection(const std::string &databasePath)
         isConnected_ = false;
         return isConnected_;
     } 
-    	
+
     ATLAS_LOGGER_DEBUG("Connection opened for local.db");
 
     return isConnected_;
@@ -460,7 +462,7 @@ uint8_t AtlasSQLite::updateNetwork(const std::string &identity, int networkTypeI
 
     int stat = sqlite3_step(stmt);
     if (stat != SQLITE_DONE && stat != SQLITE_ROW) {
-        ATLAS_LOGGER_ERROR("Could not step (execute) update stmt");
+        ATLAS_LOGGER_ERROR("Could not step (execute) update stmt, " + std::string(sqlite3_errmsg(pCon_)));
         sqlite3_finalize(stmt);
         return -1;
     }

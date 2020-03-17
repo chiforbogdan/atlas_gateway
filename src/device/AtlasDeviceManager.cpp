@@ -89,7 +89,8 @@ void AtlasDeviceManager::initSystemReputation(AtlasDevice &device)
 {
     /* Add default features for the system reputation */
     AtlasDeviceFeatureManager &systemReputation = device.getSystemReputation();
-
+    
+    systemReputation.updateFeedbackThreshold(ATLAS_SYSTEM_REPUTATION_THRESHOLD);
     /* Open db*/
     atlas::AtlasSQLite::getInstance().openConnection(ATLAS_DB_PATH);
 
@@ -99,7 +100,6 @@ void AtlasDeviceManager::initSystemReputation(AtlasDevice &device)
         /* Get from db*/
         ATLAS_LOGGER_ERROR("get from local.db");
 
-        systemReputation.updateFeedbackThreshold(ATLAS_SYSTEM_REPUTATION_THRESHOLD);
         AtlasSQLite::getInstance().selectNetwork(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, systemReputation);
         AtlasSQLite::getInstance().selectFeatures(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, systemReputation);
         
@@ -108,7 +108,6 @@ void AtlasDeviceManager::initSystemReputation(AtlasDevice &device)
 
         ATLAS_LOGGER_ERROR("insert into local.db");
         
-        systemReputation.updateFeedbackThreshold(ATLAS_SYSTEM_REPUTATION_THRESHOLD);
         systemReputation.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME,
                                     ATLAS_REGISTER_TIME_WEIGHT);
         systemReputation.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS,
