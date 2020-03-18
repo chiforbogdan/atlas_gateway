@@ -16,6 +16,7 @@
 #include "cloud/AtlasRegisterCloud.h"
 #include "reputation/AtlasFeatureReputation.h"
 #include "cloud/AtlasCloudCmdParser.h"
+#include "sql/AtlasSQLite.h"
 
 namespace {
 
@@ -84,7 +85,7 @@ int main(int argc, char **argv)
     atlas::initLog();
     
     ATLAS_LOGGER_DEBUG("Starting Atlas gateway...");
-    
+
     if(!atlas::AtlasIdentity::getInstance().initIdentity()) {
         ATLAS_LOGGER_ERROR("Error in generating gateway identity!");
         return 1;
@@ -99,6 +100,9 @@ int main(int argc, char **argv)
 
     /* Start cloud command parser module*/
     atlas::AtlasCloudCmdParser::getInstance().start();
+
+    /*open local.db connection*/
+    atlas::AtlasSQLite::getInstance().openConnection(atlas::ATLAS_DB_PATH);
 
     /* Start internal CoAP server */
     atlas::AtlasCoapServer::getInstance().start(coapPort, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 
@@ -132,6 +136,9 @@ int main(int argc, char **argv)
 
     /* Stop registration module */
     reg.stop();
+
+    /*close local.db connection*/
+    atlas::AtlasSQLite::getInstance().closeConnection();
 
     ATLAS_LOGGER_DEBUG("Stopping Atlas gateway...");
 

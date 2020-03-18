@@ -77,6 +77,12 @@ private:
     */
     void sysRepAlarmCallback();
 
+    /**
+    * @brief Sub function for reputation alarm callback
+    * @return none
+    */
+    void subAlarmCallback(AtlasDevice& device);
+
    /**
    * @brief Init system reputation
    * @param[in] device Client device

@@ -41,22 +41,28 @@ public:
     bool isConnected();
 
     /**
+    * @brief Initialize data base
+    * @param[in] databasePath Database path
+    * @return true on success
+    */
+    bool initDB(const std::string &databasePath);
+
+    /**
     * @brief Execute query on database: insert device
     * @param[in] identity - device identity
     * @param[in] psk - device psk
-    * @return 0 on success, -1 on error
+    * @return true on success, false on error
     */
-    uint8_t insertDevice(const std::string &identity, const std::string &psk);
+    bool insertDevice(const std::string &identity, const std::string &psk);
 
     /**
     * @brief Execute query on database: insert network
     * @param[in] identity - device identity
-    * @param[in] networkTypeId - naive bayes network type (CONTROL-1, DATA-2)
-    * @param[in] totalTrans - total number of transactions
-    * @param[in] totalSuccessTrans - total number of successful transactions
-    * @return 0 on success, -1 on error
+    * @param[in] networkTypeId - naive bayes network type
+    * @param[in] manager AtlasDeviceFeatureManage
+    * @return true on success, false on error
     */
-    uint8_t insertNetwork(const std::string &identity, int networkTypeId, int totalTrans, int totalSuccessTrans);
+    bool insertNetwork(const std::string &identity, int networkTypeId, AtlasDeviceFeatureManager &manager);
 
     /**
     * @brief Execute query on database: insert feature
@@ -64,9 +70,9 @@ public:
     * @param[in] networkTypeId - naive bayes network type
     * @param[in] featureTypeId - feature type(features for control/dataPlane)
     * @param[in] successTrans - number of successful transactions
-    * @return 0 on success, -1 on error
+    * @return true on success, false on error
     */
-    uint8_t insertFeature(const std::string &identity, int networkTypeId, int featureTypeId, int successTrans, double weight);
+    bool insertFeature(const std::string &identity, int networkTypeId, int featureTypeId, int successTrans, double weight);
 
     /**
     * @brief Execute query on database: select, get psk based on device identity
@@ -80,43 +86,43 @@ public:
     * @param[in] identity Device identity
     * @param[in] networkTypeId Network type
     * @param[in] manager AtlasDeviceFeatureManage
-    * @return 0 on success, -1 on error
+    * @return true on success, false on error
     */
-    uint8_t selectNetwork(const std::string &identity, int networkTypeId, AtlasDeviceFeatureManager &manager);
+    bool selectNetwork(const std::string &identity, int networkTypeId, AtlasDeviceFeatureManager &manager);
 
     /**
     * @brief Execute query on database: select, get features params based on device identity and network type
     * @param[in] identity Device identity
     * @param[in] networkTypeId Network type
     * @param[in] manager AtlasDeviceFeatureManager
-    * @return 0 on success, -1 on error
+    * @return true on success, false on error
     */
-    uint8_t selectFeatures(const std::string &identity, int networkTypeId, AtlasDeviceFeatureManager &manager);
+    bool selectFeatures(const std::string &identity, int networkTypeId, AtlasDeviceFeatureManager &manager);
 
         /**
     * @brief Execute query on database: update network params based on device identity and network type
     * @param[in] identity Device identity
     * @param[in] networkTypeId Network type
     * @param[in] manager AtlasDeviceFeatureManage
-    * @return 0 on success, -1 on error
+    * @return true on success, false on error
     */
-    uint8_t updateNetwork(const std::string &identity, int networkTypeId, AtlasDeviceFeatureManager &manager);
+    bool updateNetwork(const std::string &identity, int networkTypeId, AtlasDeviceFeatureManager &manager);
 
     /**
     * @brief Execute query on database: update features params based on device identity, network type and feature type
     * @param[in] identity Device identity
     * @param[in] networkTypeId Network type
     * @param[in] manager AtlasDeviceFeatureManager
-    * @return 0 on success, -1 on error
+    * @return true on success, false on error
     */
-    uint8_t updateFeatures(const std::string &identity, int networkTypeId, AtlasDeviceFeatureManager &manager);
+    bool updateFeatures(const std::string &identity, int networkTypeId, AtlasDeviceFeatureManager &manager);
 
     /**
     * @brief Check if a device has related features in db
     * @param[in] identity Device identityr
     * @return 0 on success, -1 on error, 1 if exists related features
     */
-    uint8_t checkDeviceForFeatures(const std::string &identity);
+    int8_t checkDeviceForFeatures(const std::string &identity);
 
     AtlasSQLite(const AtlasSQLite&) = delete;
     AtlasSQLite& operator=(const AtlasSQLite&) = delete;
