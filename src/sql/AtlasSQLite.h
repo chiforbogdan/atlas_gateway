@@ -120,9 +120,9 @@ public:
     /**
     * @brief Check if a device has related features in db
     * @param[in] identity Device identityr
-    * @return 0 on success, -1 on error, 1 if exists related features
+    * @return true if features exist, false on error or not exist
     */
-    int8_t checkDeviceForFeatures(const std::string &identity);
+    bool checkDeviceForFeatures(const std::string &identity);
 
     AtlasSQLite(const AtlasSQLite&) = delete;
     AtlasSQLite& operator=(const AtlasSQLite&) = delete;
@@ -147,8 +147,12 @@ private:
     /*SQLite connection object*/
     sqlite3 *pCon_;		
 
-    /*Last Error String*/
-    char* lastError_;    	        
+    /*SQLite statement object*/
+    sqlite3_stmt *stmt_;    
+
+    /*Status variables used for exit scope*/
+    bool commit_;
+    int8_t index_;	        
 };
 } // namespace atlas
 
