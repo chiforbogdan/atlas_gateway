@@ -102,7 +102,10 @@ int main(int argc, char **argv)
     atlas::AtlasCloudCmdParser::getInstance().start();
 
     /*open local.db connection*/
-    atlas::AtlasSQLite::getInstance().openConnection(atlas::ATLAS_DB_PATH);
+    if(!atlas::AtlasSQLite::getInstance().openConnection(atlas::ATLAS_DB_PATH)){
+        ATLAS_LOGGER_ERROR("Error opening database!");
+        return 1;
+    }
 
     /* Start internal CoAP server */
     atlas::AtlasCoapServer::getInstance().start(coapPort, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 

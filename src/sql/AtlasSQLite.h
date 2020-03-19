@@ -146,13 +146,7 @@ private:
 
     /*SQLite connection object*/
     sqlite3 *pCon_;		
-
-    /*SQLite statement object*/
-    sqlite3_stmt *stmt_;    
-
-    /*Status variables used for exit scope*/
-    bool commit_;
-    int8_t index_;	        
+    
 };
 } // namespace atlas
 
