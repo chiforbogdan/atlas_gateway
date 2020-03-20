@@ -25,6 +25,8 @@ const double ATLAS_KEEPALIVE_PACKETS_WEIGHT = 0.3;
 
 /* System reputation threshold value */
 const double ATLAS_SYSTEM_REPUTATION_THRESHOLD = 0.8;
+/* Data reputation threshold value */
+const double ATLAS_DATA_REPUTATION_THRESHOLD = 0.8;
 
 } // anonymous namespace
 
@@ -63,21 +65,38 @@ void AtlasDeviceManager::subAlarmCallback(AtlasDevice& device)
     std::vector<std::pair<AtlasDeviceFeatureType, double>> feedbackMatrix;
     /* Parse each system reputation feedback element and get feedback for device */
     for (auto &feedbackElem : feedback_[device.getIdentity()])
-        feedbackMatrix.push_back(std::pair<AtlasDeviceFeatureType, double>(feedbackElem->getType(),
-                                                                        feedbackElem->getFeedback()));
+        feedbackMatrix.push_back(std::pair<AtlasDeviceFeatureType, double>(feedbackElem->getType(), feedbackElem->getFeedback()));
 
     /* Compute system reputation using naive-bayes */
-    double repVal = AtlasReputationNaiveBayes::computeReputation(device.getSystemReputation(), feedbackMatrix);
-    ATLAS_LOGGER_INFO("System reputation for device with identity " + device.getIdentity() + 
-                    " is " + std::to_string(repVal));
-    device.syncSystemReputation();
+    double repVal = AtlasReputationNaiveBayes::computeReputation(device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL), feedbackMatrix);
+    ATLAS_LOGGER_INFO("System reputation for device with identity " + device.getIdentity() + " is " + std::to_string(repVal));
+    device.syncReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL);
 
-    if(!AtlasSQLite::getInstance().updateNetwork(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, device.getSystemReputation())){
+    /* TO DO: This part of data reputation is for testing only. Eliminate after testing */
+    feedbackMatrix.clear();
+    double tmpFB = (double)rand() / RAND_MAX;
+    std::cout << "Generated feedback for TEMP = " << tmpFB << std::endl;
+    feedbackMatrix.push_back(std::pair<AtlasDeviceFeatureType, double>(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_TEMPERATURE, tmpFB));
+    repVal = AtlasReputationNaiveBayes::computeReputation(device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_DATA), feedbackMatrix);
+    ATLAS_LOGGER_INFO("Data reputation for device with identity " + device.getIdentity() + " is " + std::to_string(repVal));
+    device.syncReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_DATA);
+    /* ****************************** */
+
+    if(!AtlasSQLite::getInstance().updateNetwork(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL))){
          ATLAS_LOGGER_ERROR("Uncommited update on NaiveBayesNetwork table");
     }
-    if(!AtlasSQLite::getInstance().updateFeatures(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, device.getSystemReputation())){
+    if(!AtlasSQLite::getInstance().updateFeatures(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL))){
          ATLAS_LOGGER_ERROR("Uncommited update on NaiveBayesFeature table");
     }
+
+    /* TO DO: This part of data reputation is for testing only. Eliminate after testing */
+    if(!AtlasSQLite::getInstance().updateNetwork(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_DATA, device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_DATA))){
+         ATLAS_LOGGER_ERROR("Uncommited update on NaiveBayesNetwork table");
+    }
+    if(!AtlasSQLite::getInstance().updateFeatures(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_DATA, device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_DATA))){
+         ATLAS_LOGGER_ERROR("Uncommited update on NaiveBayesFeature table");
+    }
+    /* ****************************** */
 }
 
 void AtlasDeviceManager::sysRepAlarmCallback()
@@ -93,7 +112,7 @@ void AtlasDeviceManager::sysRepAlarmCallback()
 void AtlasDeviceManager::initSystemReputation(AtlasDevice &device)
 {
     /* Add default features for the system reputation */
-    AtlasDeviceFeatureManager &systemReputation = device.getSystemReputation();
+    AtlasDeviceFeatureManager &systemReputation = device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL);
     
     systemReputation.updateFeedbackThreshold(ATLAS_SYSTEM_REPUTATION_THRESHOLD);
 
@@ -150,12 +169,34 @@ void AtlasDeviceManager::initSystemReputation(AtlasDevice &device)
     feedback_[device.getIdentity()].push_back(std::move(pktFeedback));
 }
 
+void AtlasDeviceManager::initDataReputation(AtlasDevice &device)
+{
+    /* Add default features for the data reputation */
+    AtlasDeviceFeatureManager &dataReputation = device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_DATA);
+    
+    dataReputation.updateFeedbackThreshold(ATLAS_DATA_REPUTATION_THRESHOLD);
+     
+    dataReputation.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_TEMPERATURE, 1);
+    ATLAS_LOGGER_INFO("Insert data into local.db");
+
+    /* Insert into db*/
+    /* Insert network in db*/
+    if(!AtlasSQLite::getInstance().insertNetwork(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_DATA, dataReputation)){
+        ATLAS_LOGGER_ERROR("Uncommited insert into NaiveBayesNetwork table");
+    }        
+    /* Insert features in db*/
+    if(!AtlasSQLite::getInstance().insertFeature(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_DATA, (int)AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_TEMPERATURE, dataReputation[AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_TEMPERATURE].getSuccessfulTransactions(), 1)){
+        ATLAS_LOGGER_ERROR("Uncommited insert into NaiveBayesFeature table");
+    }
+}
+
 AtlasDevice& AtlasDeviceManager::getDevice(const std::string& identity)
 {
     if (devices_.find(identity) == devices_.end()){
         ATLAS_LOGGER_INFO1("New client device created with identity ", identity);
         devices_[identity] = AtlasDevice(identity, deviceCloud_);
         initSystemReputation(devices_[identity]);
+        initDataReputation(devices_[identity]);
     }
 
     return devices_[identity];
