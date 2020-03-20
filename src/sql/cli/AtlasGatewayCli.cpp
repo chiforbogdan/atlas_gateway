@@ -18,7 +18,10 @@ int main(int argc, char** argv)
       return -1;
    }
 
-   atlas::AtlasSQLite::getInstance().openConnection(ATLAS_DB_PATH);
+   if(!atlas::AtlasSQLite::getInstance().openConnection(ATLAS_DB_PATH)){
+      ATLAS_LOGGER_ERROR("Error opening database!");
+      return -1;
+   }
    atlas::AtlasSQLite::getInstance().insertDevice(argv[2],argv[4]);
    atlas::AtlasSQLite::getInstance().closeConnection();
 

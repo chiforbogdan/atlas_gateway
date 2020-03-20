@@ -75,26 +75,26 @@ void AtlasDeviceManager::subAlarmCallback(AtlasDevice& device)
     /* TO DO: This part of data reputation is for testing only. Eliminate after testing */
     feedbackMatrix.clear();
     double tmpFB = (double)rand() / RAND_MAX;
-    std::cout << "Generated feedback for TEMP = " << tmpFB << std::endl;
     feedbackMatrix.push_back(std::pair<AtlasDeviceFeatureType, double>(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_TEMPERATURE, tmpFB));
     repVal = AtlasReputationNaiveBayes::computeReputation(device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_DATA), feedbackMatrix);
     ATLAS_LOGGER_INFO("Data reputation for device with identity " + device.getIdentity() + " is " + std::to_string(repVal));
     device.syncReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_DATA);
     /* ****************************** */
 
-    if(!AtlasSQLite::getInstance().updateNetwork(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL))){
-         ATLAS_LOGGER_ERROR("Uncommited update on NaiveBayesNetwork table");
-    }
-    if(!AtlasSQLite::getInstance().updateFeatures(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL))){
-         ATLAS_LOGGER_ERROR("Uncommited update on NaiveBayesFeature table");
+    /* Update into db*/
+    bool result = AtlasSQLite::getInstance().updateBayesParams(device.getIdentity(), 
+                                                               (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, 
+                                                               device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL));
+    if(!result) {
+         ATLAS_LOGGER_ERROR("Uncommited update on naiveBayes params for System");
     }
 
     /* TO DO: This part of data reputation is for testing only. Eliminate after testing */
-    if(!AtlasSQLite::getInstance().updateNetwork(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_DATA, device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_DATA))){
-         ATLAS_LOGGER_ERROR("Uncommited update on NaiveBayesNetwork table");
-    }
-    if(!AtlasSQLite::getInstance().updateFeatures(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_DATA, device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_DATA))){
-         ATLAS_LOGGER_ERROR("Uncommited update on NaiveBayesFeature table");
+    result = AtlasSQLite::getInstance().updateBayesParams(device.getIdentity(), 
+                                                               (int)AtlasDeviceNetworkType::ATLAS_NETWORK_DATA, 
+                                                               device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_DATA));
+    if(!result) {
+         ATLAS_LOGGER_ERROR("Uncommited update on naiveBayes params for Data");
     }
     /* ****************************** */
 }
@@ -111,20 +111,22 @@ void AtlasDeviceManager::sysRepAlarmCallback()
 
 void AtlasDeviceManager::initSystemReputation(AtlasDevice &device)
 {
+    bool result = false;
+
     /* Add default features for the system reputation */
     AtlasDeviceFeatureManager &systemReputation = device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL);
     
     systemReputation.updateFeedbackThreshold(ATLAS_SYSTEM_REPUTATION_THRESHOLD);
 
-    if(AtlasSQLite::getInstance().checkDeviceForFeatures(device.getIdentity())){
+    if (AtlasSQLite::getInstance().checkDeviceForFeatures(device.getIdentity())) {
         /* Get from db*/
         ATLAS_LOGGER_INFO("Get data from local.db");
 
-        if(!AtlasSQLite::getInstance().selectNetwork(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, systemReputation)){
-            ATLAS_LOGGER_ERROR("Uncommited select on NaiveBayesNetwork table");
-        }
-        if(!AtlasSQLite::getInstance().selectFeatures(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, systemReputation)){
-            ATLAS_LOGGER_ERROR("Uncommited select on NaiveBayesFeature table");
+        result = AtlasSQLite::getInstance().selectBayesParams(device.getIdentity(), 
+                                                             (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL,
+                                                             systemReputation);
+        if (!result) {
+            ATLAS_LOGGER_ERROR("Uncommited select on naiveBayes params data");
         }
         
     } else {
@@ -139,21 +141,11 @@ void AtlasDeviceManager::initSystemReputation(AtlasDevice &device)
         ATLAS_LOGGER_INFO("Insert data into local.db");
 
         /* Insert into db*/
-        /* Insert network in db*/
-        if(!AtlasSQLite::getInstance().insertNetwork(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, systemReputation)){
-            ATLAS_LOGGER_ERROR("Uncommited insert into NaiveBayesNetwork table");
+        result = AtlasSQLite::getInstance().insertBayesParams(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, systemReputation);
+        if(!result) {
+            ATLAS_LOGGER_ERROR("Uncommited insert for naiveBayes params data");
         }
         
-        /* Insert features in db*/
-        if(!AtlasSQLite::getInstance().insertFeature(device.getIdentity(), int(AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL), int(AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME), systemReputation[AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME].getSuccessfulTransactions(), ATLAS_REGISTER_TIME_WEIGHT)){
-            ATLAS_LOGGER_ERROR("Uncommited insert into NaiveBayesFeature table");
-        }
-        if(!AtlasSQLite::getInstance().insertFeature(device.getIdentity(), int(AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL), int(AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS), systemReputation[AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS].getSuccessfulTransactions(), ATLAS_KEEPALIVE_PACKETS_WEIGHT)){
-            ATLAS_LOGGER_ERROR("Uncommited insert into NaiveBayesFeature table");
-        }
-        if(!AtlasSQLite::getInstance().insertFeature(device.getIdentity(), int(AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL), int(AtlasDeviceFeatureType::ATLAS_FEATURE_VALID_PACKETS), systemReputation[AtlasDeviceFeatureType::ATLAS_FEATURE_VALID_PACKETS].getSuccessfulTransactions(), ATLAS_VALID_PACKETS_WEIGHT)){
-            ATLAS_LOGGER_ERROR("Uncommited insert into NaiveBayesFeature table");
-        }
     }
 
     /* Add feedack for system reputation */
@@ -180,13 +172,9 @@ void AtlasDeviceManager::initDataReputation(AtlasDevice &device)
     ATLAS_LOGGER_INFO("Insert data into local.db");
 
     /* Insert into db*/
-    /* Insert network in db*/
-    if(!AtlasSQLite::getInstance().insertNetwork(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_DATA, dataReputation)){
-        ATLAS_LOGGER_ERROR("Uncommited insert into NaiveBayesNetwork table");
-    }        
-    /* Insert features in db*/
-    if(!AtlasSQLite::getInstance().insertFeature(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_DATA, (int)AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_TEMPERATURE, dataReputation[AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_TEMPERATURE].getSuccessfulTransactions(), 1)){
-        ATLAS_LOGGER_ERROR("Uncommited insert into NaiveBayesFeature table");
+    bool result = AtlasSQLite::getInstance().insertBayesParams(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_DATA, dataReputation);
+    if(!result) {
+        ATLAS_LOGGER_ERROR("Uncommited insert for naiveBayes params data");
     }
 }
 

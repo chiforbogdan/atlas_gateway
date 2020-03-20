@@ -122,9 +122,13 @@ void AtlasFilter::getFirewallRuleStats(const uint8_t *cmdBuf, uint16_t cmdLen)
     /* Get statistics for firewall rule */
     mutex_.lock();
     ruleDroppedPkts = rules_[clientId].getStatDroppedPkt();
+    rules_[clientId].setStatDroppedPkt(0);
     rulePassedPkts = rules_[clientId].getStatPassedPkt();
+    rules_[clientId].setStatPassedPkt(0);
     txDroppedPkts = txPktStats_[clientId].getDroppedPkts();
+    txPktStats_[clientId].setDroppedPkts(0);
     txPassedPkts = txPktStats_[clientId].getPassedPkts();
+    txPktStats_[clientId].setPassedPkts(0);
     mutex_.unlock();
         
     writeFirewallStats(clientId, ruleDroppedPkts, rulePassedPkts, txDroppedPkts, txPassedPkts);
