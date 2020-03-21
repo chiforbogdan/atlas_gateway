@@ -28,7 +28,6 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
 {
     AtlasCommandBatch cmdBatch;
     std::vector<AtlasCommand> cmd;
-    std::string clientId = "";
     uint16_t tmp;
     boost::optional<uint16_t> qos;
     boost::optional<uint16_t> ppm;
@@ -53,52 +52,28 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
 
-    for (AtlasCommand &cmdEntry : cmd) 
-    {
-        if (cmdEntry.getType() == ATLAS_CMD_DATA_PLANE_POLICY_CLIENTID) 
-        {
-            ATLAS_LOGGER_DEBUG("Policy end-point called and CLIENT ID command is found");
-           
-            if (!cmdEntry.getLen()) 
-            {
-                ATLAS_LOGGER_ERROR("Policy end-point called with empty CLIENT ID command");
-                return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
-            }
-
-            clientId.assign((char *)cmdEntry.getVal(), cmdEntry.getLen());
-        }
-        else if (cmdEntry.getType() == ATLAS_CMD_DATA_PLANE_POLICY_MAX_QOS) 
-        {
+    for (AtlasCommand &cmdEntry : cmd) {
+        if (cmdEntry.getType() == ATLAS_CMD_DATA_PLANE_POLICY_MAX_QOS) {
             ATLAS_LOGGER_DEBUG("Policy end-point called and QOS command is found");
-           
-            if (!cmdEntry.getLen()) 
-            {
+            if (cmdEntry.getLen() != sizeof(uint16_t)) {
                 ATLAS_LOGGER_ERROR("Policy end-point called with empty QOS command");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
 
             memcpy(&tmp, cmdEntry.getVal(), cmdEntry.getLen());
 	    qos = ntohs(tmp);
-        }
-        else if (cmdEntry.getType() == ATLAS_CMD_DATA_PLANE_POLICY_PACKETS_PER_MINUTE) 
-        {
+        } else if (cmdEntry.getType() == ATLAS_CMD_DATA_PLANE_POLICY_PACKETS_PER_MINUTE) {
             ATLAS_LOGGER_DEBUG("Policy end-point called and PPM command is found");
-           
-            if (!cmdEntry.getLen()) 
-            {
+            if (cmdEntry.getLen() != sizeof(uint16_t)) {
                 ATLAS_LOGGER_ERROR("Policy end-point called with empty PPM command");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
 
             memcpy(&tmp, cmdEntry.getVal(), cmdEntry.getLen());
 	    ppm = ntohs(tmp);
-        }
-        else if (cmdEntry.getType() == ATLAS_CMD_DATA_PLANE_POLICY_PACKETS_MAXLEN) 
-        {
+        } else if (cmdEntry.getType() == ATLAS_CMD_DATA_PLANE_POLICY_PACKETS_MAXLEN) {
             ATLAS_LOGGER_DEBUG("Policy end-point called and PAYLOAD_LEN command is found");
-           
-            if (!cmdEntry.getLen()) 
-            {
+            if (cmdEntry.getLen() != sizeof(uint16_t)) {
                 ATLAS_LOGGER_ERROR("Policy end-point called with empty PAYLOAD_LEN command");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
@@ -108,15 +83,14 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
         }
     }
 
-    if (clientId == "" || !qos || !ppm || !payloadLen) 
-    {
+    if (!qos || !ppm || !payloadLen) {
         ATLAS_LOGGER_ERROR("Policy failed because of invalid params");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
 
     std::unique_ptr<AtlasFirewallPolicy> policyAux = std::unique_ptr<AtlasFirewallPolicy>(new AtlasFirewallPolicy());
 
-    policyAux->setClientId(clientId);
+    policyAux->setClientId(pskIdentity);
     policyAux->setQOS(*qos);
     policyAux->setPPM(*ppm);
     policyAux->setPayloadLen(*payloadLen);
