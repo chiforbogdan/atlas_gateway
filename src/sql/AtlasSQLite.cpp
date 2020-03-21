@@ -1,3 +1,4 @@
+
 #include "AtlasSQLite.h"
 #include "../reputation_impl/AtlasDeviceFeatureType.h"
 #include <boost/scope_exit.hpp>
@@ -36,6 +37,9 @@ namespace {
                                     "SuccessTrans INTEGER DEFAULT 0," \
                                     "Weight REAL DEFAULT 0," \
                                     "FOREIGN KEY (NetworkId) REFERENCES NaiveBayesNetwork(Id));"\
+
+                                    "CREATE UNIQUE INDEX IF NOT EXISTS idxDeviceIdentity "\
+                                    "ON Device(Identity);"\
                                     "COMMIT;";
 
     const char *SQL_INSERT_STATS = "INSERT INTO FirewallStatistics(DeviceId, RuleDroppedPkts, RulePassedPkts, TxDroppedPkts, TxPassedPkts) VALUES(?,?,?,?,?);";
@@ -374,7 +378,7 @@ bool AtlasSQLite::insertFeatures(const std::string &identity, int networkTypeId,
     return true;
 }
 
- bool AtlasSQLite::insertStats(const std::string &identity, const AtlasFirewallStats *stats)
+ bool AtlasSQLite::insertStats(const std::string &identity, const AtlasFirewallStats &stats)
  {
      sqlite3_stmt *stmt = nullptr;
     int stat = -1, deviceId = -1;
@@ -412,10 +416,10 @@ bool AtlasSQLite::insertFeatures(const std::string &identity, int networkTypeId,
     }
 
     if (sqlite3_bind_int(stmt, 1, deviceId) != SQLITE_OK ||
-        sqlite3_bind_int(stmt, 2, stats->getRuleDroppedPkts()) != SQLITE_OK ||
-        sqlite3_bind_int(stmt, 3, stats->getRulePassedPkts()) != SQLITE_OK ||
-        sqlite3_bind_int(stmt, 4, stats->getTxDroppedPkts()) != SQLITE_OK ||
-        sqlite3_bind_int(stmt, 5, stats->getTxPassedPkts()) != SQLITE_OK){ 
+        sqlite3_bind_int(stmt, 2, stats.getRuleDroppedPkts()) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 3, stats.getRulePassedPkts()) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 4, stats.getTxDroppedPkts()) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 5, stats.getTxPassedPkts()) != SQLITE_OK){ 
         ATLAS_LOGGER_ERROR("Could not bind, fct:insertStats, stmt:SQL_INSERT_STATS, error:" + std::string(sqlite3_errmsg(pCon_)));
         return false;
     }
@@ -551,7 +555,7 @@ bool AtlasSQLite::selectFeatures(const std::string &identity, int networkTypeId,
     return true;
 }
 
-bool AtlasSQLite::selectStats(const std::string &identity, AtlasFirewallStats *stats)
+bool AtlasSQLite::selectStats(const std::string &identity, AtlasFirewallStats &stats)
 {
     sqlite3_stmt *stmt = nullptr;
 
@@ -580,10 +584,10 @@ bool AtlasSQLite::selectStats(const std::string &identity, AtlasFirewallStats *s
     }
 
     if (stat == SQLITE_ROW){
-        stats->addRuleDroppedPkts(sqlite3_column_int(stmt, 0));
-        stats->addRulePassedPkts(sqlite3_column_int(stmt, 1));
-        stats->addTxDroppedPkts(sqlite3_column_int(stmt, 2));
-        stats->addTxPassedPkts(sqlite3_column_int(stmt, 3));
+        stats.addRuleDroppedPkts(sqlite3_column_int(stmt, 0));
+        stats.addRulePassedPkts(sqlite3_column_int(stmt, 1));
+        stats.addTxDroppedPkts(sqlite3_column_int(stmt, 2));
+        stats.addTxPassedPkts(sqlite3_column_int(stmt, 3));
     }
 
     return true;
@@ -675,7 +679,7 @@ bool AtlasSQLite::updateFeatures(const std::string &identity, int networkTypeId,
     return true;
 }
 
-bool AtlasSQLite::updateStats(const std::string &identity, const AtlasFirewallStats *stats)
+bool AtlasSQLite::updateStats(const std::string &identity, const AtlasFirewallStats &stats)
 {
     sqlite3_stmt *stmt = nullptr;
     
@@ -692,10 +696,10 @@ bool AtlasSQLite::updateStats(const std::string &identity, const AtlasFirewallSt
 	    return false;
     }
 
-    if (sqlite3_bind_int(stmt, 1, stats->getRuleDroppedPkts()) != SQLITE_OK ||
-        sqlite3_bind_int(stmt, 2, stats->getRulePassedPkts()) != SQLITE_OK ||
-        sqlite3_bind_int(stmt, 3, stats->getTxDroppedPkts()) != SQLITE_OK ||
-        sqlite3_bind_int(stmt, 4, stats->getTxPassedPkts()) != SQLITE_OK ||
+    if (sqlite3_bind_int(stmt, 1, stats.getRuleDroppedPkts()) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 2, stats.getRulePassedPkts()) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 3, stats.getTxDroppedPkts()) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 4, stats.getTxPassedPkts()) != SQLITE_OK ||
         sqlite3_bind_text(stmt, 5, identity.c_str(), identity.length(), SQLITE_STATIC) != SQLITE_OK) {
         ATLAS_LOGGER_ERROR("Could not bind, fct:updateStats, stmt:SQL_UPDATE_STATS, error:" + std::string(sqlite3_errmsg(pCon_)));
         return false;

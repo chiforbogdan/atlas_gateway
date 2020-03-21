@@ -7,6 +7,7 @@
 #include "../telemetry/AtlasAlertFactory.h"
 #include "../pubsub_agent/AtlasPubSubAgent.h"
 #include "../reputation_impl/AtlasDeviceFeatureType.h"
+#include "../sql/AtlasSQLite.h"
 
 namespace atlas {
 
@@ -38,7 +39,8 @@ AtlasDevice::AtlasDevice(const std::string &identity,
                                                                           deviceCloud_(deviceCloud),
                                                                           registered_(false),
                                                                           regIntervalSec_(0),
-                                                                          keepAlivePkts_(0)
+                                                                          keepAlivePkts_(0),
+                                                                          stats_(new AtlasFirewallStats())
 {
     /* Install default alerts */
     installDefaultAlerts();

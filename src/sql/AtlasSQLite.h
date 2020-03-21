@@ -78,7 +78,7 @@ public:
     * @param[in] stats AtlasFirewallStats
     * @return true on success, false on error
     */
-    bool insertStats(const std::string &identity, const AtlasFirewallStats *stats);
+    bool insertStats(const std::string &identity, const AtlasFirewallStats &stats);
 
     /**
     * @brief Execute query on database: select, get network & features params based on device identity and network type
@@ -95,7 +95,7 @@ public:
     * @param[in] stats AtlasFirewallStats
     * @return true on success, false on error
     */
-    bool selectStats(const std::string &identity, AtlasFirewallStats *stats);
+    bool selectStats(const std::string &identity, AtlasFirewallStats &stats);
 
     /**
     * @brief Execute query on database: update network & features params based on device identity and network type
@@ -112,7 +112,7 @@ public:
     * @param[in] stats AtlasFirewallStats
     * @return true on success, false on error
     */
-    bool updateStats(const std::string &identity, const AtlasFirewallStats *stats);
+    bool updateStats(const std::string &identity, const AtlasFirewallStats &stats);
 
     /**
     * @brief Check if a device has related features in db

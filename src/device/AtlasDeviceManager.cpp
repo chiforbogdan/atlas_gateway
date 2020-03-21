@@ -53,8 +53,16 @@ void AtlasDeviceManager::firewallStatisticsAlarmCallback()
 
     forEachDevice([] (AtlasDevice& device) 
                      {     
-                         if(device.getPolicy())
-                             AtlasPubSubAgent::getInstance().getFirewallRuleStats((device.getPolicy()->getClientId()));
+                        if(device.getPolicy()) {
+                            AtlasPubSubAgent::getInstance().getFirewallRuleStats((device.getPolicy()->getClientId()));
+                            
+                            /* update in db previous stats sample */
+                            bool result = AtlasSQLite::getInstance().updateStats(device.getIdentity(),
+                                                                                 *(device.getFirewallStats()));
+                            if(!result) {
+                                ATLAS_LOGGER_ERROR("Uncommited update on statistics data");
+                            }
+                        }
                      });
 }
 
@@ -145,12 +153,33 @@ void AtlasDeviceManager::initSystemReputation(AtlasDevice &device)
     feedback_[device.getIdentity()].push_back(std::move(pktFeedback));
 }
 
+void AtlasDeviceManager::initSystemStatistics(AtlasDevice &device)
+{
+    /*Get stats from DB if exists*/
+    bool result = AtlasSQLite::getInstance().checkDeviceForStats(device.getIdentity());
+    if(result) {
+        /* select from db*/   
+        result = AtlasSQLite::getInstance().selectStats(device.getIdentity(), *(device.getFirewallStats()));
+        if(!result) {
+            ATLAS_LOGGER_ERROR("Uncommited select on statistics data");
+        }
+    }
+    else {
+        /* insert into db*/
+        result = AtlasSQLite::getInstance().insertStats(device.getIdentity(), *(device.getFirewallStats()));
+        if(!result) {
+            ATLAS_LOGGER_ERROR("Uncommited insert on statistics data");
+        }
+    }
+}
+
 AtlasDevice& AtlasDeviceManager::getDevice(const std::string& identity)
 {
     if (devices_.find(identity) == devices_.end()){
         ATLAS_LOGGER_INFO1("New client device created with identity ", identity);
         devices_[identity] = AtlasDevice(identity, deviceCloud_);
         initSystemReputation(devices_[identity]);
+        initSystemStatistics(devices_[identity]);
     }
 
     return devices_[identity];

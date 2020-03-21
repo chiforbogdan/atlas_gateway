@@ -96,7 +96,7 @@ public:
     * @brief Get client device firewall stats
     * @return Client device firewall stats
     */
-    inline const AtlasFirewallStats* getFirewallStats() const { return stats_.get(); }
+    inline AtlasFirewallStats* getFirewallStats() const { return stats_.get(); }
 
     /**
     * @brief Indicate that a client device just registered

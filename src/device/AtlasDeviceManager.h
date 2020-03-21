@@ -90,6 +90,13 @@ private:
    */
     void initSystemReputation(AtlasDevice &device);
 
+    /**
+   * @brief Init system statistics
+   * @param[in] device Client device
+   * @return none
+   */
+    void initSystemStatistics(AtlasDevice &device);
+
     /* Client devices */
     std::unordered_map<std::string, AtlasDevice> devices_;
 

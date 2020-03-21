@@ -184,8 +184,6 @@ void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t c
         return;
     } else {
         
-        bool result = false;
-
         std::unique_ptr<AtlasFirewallStats> statsAux(new AtlasFirewallStats());
         statsAux->setClientId(clientId);
         statsAux->addRuleDroppedPkts(*ruleDroppedPkts);
@@ -193,47 +191,9 @@ void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t c
         statsAux->addTxDroppedPkts(*txDroppedPkts);
         statsAux->addTxPassedPkts(*txPassedPkts);
 
-        /* check if statistics already exist into db*/
-        if(AtlasSQLite::getInstance().checkDeviceForStats(policyDevices_[clientId])) {
-
-            /* Select from db*/
-            ATLAS_LOGGER_INFO("Select data from local.db");
-            
-            result = AtlasSQLite::getInstance().selectStats(policyDevices_[clientId], statsAux.get());
-            if(!result) {
-                ATLAS_LOGGER_ERROR("Uncommited select on statistics data");
-            }
-
-            /* refresh into device curent statistics (db + firewall)*/
-            AtlasDeviceManager::getInstance()
-                                .getDevice(policyDevices_[clientId])
-                                .setFirewallStats(std::move(statsAux));
-
-            /* Update into db*/
-            ATLAS_LOGGER_INFO("Update data in local.db");
-
-            result = AtlasSQLite::getInstance().updateStats(policyDevices_[clientId],
-                                                            AtlasDeviceManager::getInstance().getDevice(policyDevices_[clientId]).getFirewallStats());
-            if(!result) {
-                ATLAS_LOGGER_ERROR("Uncommited update on statistics data");
-            }
-        
-        } else {
-            
-            ATLAS_LOGGER_INFO("Insert data into local.db");
-
-            AtlasDeviceManager::getInstance()
-                                .getDevice(policyDevices_[clientId])
-                                .setFirewallStats(std::move(statsAux));
-
-            /* Insert into db*/
-            result = AtlasSQLite::getInstance().insertStats(policyDevices_[clientId],
-                                                            AtlasDeviceManager::getInstance().getDevice(policyDevices_[clientId]).getFirewallStats());
-            if(!result) {
-                ATLAS_LOGGER_ERROR("Uncommited insert for naiveBayes params data");
-            }
-            
-        }
+        AtlasDeviceManager::getInstance()
+                            .getDevice(policyDevices_[clientId])
+                            .setFirewallStats(std::move(statsAux));
     }
 }
 
