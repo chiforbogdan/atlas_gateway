@@ -1,7 +1,6 @@
 #include <string>
 #include <iostream>
-#include <boost/bind.hpp>
-#include <boost/optional.hpp>
+#include <boost/optional/optional_io.hpp>
 #include "AtlasFeatureReputation.h"
 #include "../coap/AtlasCoapServer.h"
 #include "../logger/AtlasLogger.h"
@@ -17,12 +16,14 @@ const std::string ATLAS_FEEDBACK_RECEIVE_URI = "gateway/reputation/feedback";
 
 AtlasFeatureReputation::AtlasFeatureReputation() : featureReputationResource_(ATLAS_FEATURE_RECEIVE_URI,
                                                                               ATLAS_COAP_METHOD_PUT,
-                                                                              boost::bind(&AtlasFeatureReputation::featureReputationCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)),
+                                                                              boost::bind(&AtlasFeatureReputation::requestReputationCallback,
+                                                                                          this, _1, _2, _3, _4, _5, _6, _7, _8)),
                                                     receiveFeedbackResource_(ATLAS_FEEDBACK_RECEIVE_URI,
                                                                              ATLAS_COAP_METHOD_PUT,
-                                                                             boost::bind(&AtlasFeatureReputation::receiveFeedbackCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)){}
+                                                                             boost::bind(&AtlasFeatureReputation::feedbackReputationCallback,
+                                                                                         this, _1, _2, _3, _4, _5, _6, _7, _8)) {}
 
-AtlasCoapResponse AtlasFeatureReputation::featureReputationCallback(const std::string &path, const std::string &pskIdentity,
+AtlasCoapResponse AtlasFeatureReputation::requestReputationCallback(const std::string &path, const std::string &pskIdentity,
                                                                     const std::string &psk, AtlasCoapMethod method,
                                                                     const uint8_t* reqPayload, size_t reqPayloadLen,
                                                                     uint8_t **respPayload, size_t *respPayloadLen)
@@ -32,9 +33,10 @@ AtlasCoapResponse AtlasFeatureReputation::featureReputationCallback(const std::s
     std::vector<AtlasCommand> cmd;
     std::pair<const uint8_t*, size_t> cmdBuf;
     std::string identity;
-    std::string feature;
+    boost::optional<uint16_t> sensorType;
+    uint16_t tmp;
     uint8_t *buf = nullptr;
-    const char *clientRepId = "client30";
+    const char *clientRepId = "client3";
     
     ATLAS_LOGGER_DEBUG("Feature callback executed...");
 
@@ -67,14 +69,14 @@ AtlasCoapResponse AtlasFeatureReputation::featureReputationCallback(const std::s
                 ATLAS_LOGGER_ERROR("Feature end-point called with SPOOFED identity");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
-        } 
-        else if(cmdEntry.getType() == ATLAS_CMD_FEATURE_REQUEST){
-            if (!cmdEntry.getLen()) {
+        } else if(cmdEntry.getType() == ATLAS_CMD_FEATURE_REQUEST){
+            if (cmdEntry.getLen() != sizeof(tmp)) {
                 ATLAS_LOGGER_ERROR("Feature end-point called with empty FEATURE command");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
-
-            feature.assign((char *)cmdEntry.getVal(), cmdEntry.getLen());
+            memcpy(&tmp, cmdEntry.getVal(), sizeof(tmp));
+            tmp = ntohs(tmp);
+            sensorType = tmp;
         }
     }
 
@@ -83,13 +85,13 @@ AtlasCoapResponse AtlasFeatureReputation::featureReputationCallback(const std::s
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
 
-    if (feature == "") {
-        ATLAS_LOGGER_ERROR("Feature reputation failed because of invalid feature");
+    if (!sensorType) {
+        ATLAS_LOGGER_ERROR("Feature reputation failed because of invalid sensor type");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
 
 
-    ATLAS_LOGGER_INFO("Device with identity " + identity + " send a reputation request for feature " + feature);
+    ATLAS_LOGGER_INFO("Device with identity " + identity + " sent a reputation request for feature " + std::to_string(*sensorType));
     
     /* FIXME get response from reputation module (naive bayes) */
 
@@ -109,23 +111,22 @@ AtlasCoapResponse AtlasFeatureReputation::featureReputationCallback(const std::s
     return ATLAS_COAP_RESP_OK;
 }
 
-AtlasCoapResponse AtlasFeatureReputation::receiveFeedbackCallback(const std::string &path, const std::string &pskIdentity,
-                                                                const std::string &psk, AtlasCoapMethod method,
-                                                                const uint8_t* reqPayload, size_t reqPayloadLen,
-                                                                uint8_t **respPayload, size_t *respPayloadLen)
+AtlasCoapResponse AtlasFeatureReputation::feedbackReputationCallback(const std::string &path, const std::string &pskIdentity,
+                                                                     const std::string &psk, AtlasCoapMethod method,
+                                                                     const uint8_t* reqPayload, size_t reqPayloadLen,
+                                                                     uint8_t **respPayload, size_t *respPayloadLen)
 {
     AtlasCommandBatch cmdBatch;
     AtlasCommandBatch cmdInnerBatch;
     std::vector<AtlasCommand> cmd;
     std::vector<AtlasCommand> cmdInner;
-
     std::pair<const uint8_t*, size_t> cmdBuf;
     std::string identity;
-    std::string clientID;
-    std::string feature;
-    uint16_t feedback;
-    uint16_t responseTime;
-    
+    std::string feedbackIdentity;
+    boost::optional<uint16_t> sensorType;
+    boost::optional<uint16_t> sensorScore;
+    boost::optional<uint16_t> respTimeScore;
+    uint16_t tmp;
     
     ATLAS_LOGGER_DEBUG("Feedback callback executed...");
 
@@ -168,20 +169,20 @@ AtlasCoapResponse AtlasFeatureReputation::receiveFeedbackCallback(const std::str
             cmdInner = cmdInnerBatch.getParsedCommands();
 
             for (AtlasCommand &cmdInnerEntry : cmdInner) {
-                if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_CLIENTID) {
-                    clientID.assign((char *)cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
-                    std::cout << "clinetID: " << clientID << std::endl;
-                } else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_FEATURE) {
-                    feature.assign((char *)cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
-                    std::cout << "feature: " << feature << std::endl;
-                } else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_VALUE) {
-                    memcpy(&feedback, cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
-                    feedback = ntohs(feedback);
-                    std::cout << "feedback: " << feedback << std::endl;
+                if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_IDENTITY)
+                    feedbackIdentity.assign((char *)cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
+                else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_SENSOR_TYPE) {
+                    memcpy(&tmp, cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
+                    tmp = ntohs(tmp);
+                    sensorType = tmp;
+                } else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_SENSOR) {
+                    memcpy(&tmp, cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
+                    tmp = ntohs(tmp);
+                    sensorScore = tmp;
                 } else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_RESPONSE_TIME) {
-                    memcpy(&responseTime, cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
-                    responseTime = ntohs(responseTime);
-                    std::cout << "response time: " << responseTime << std::endl;
+                    memcpy(&tmp, cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
+                    tmp = ntohs(tmp);
+                    respTimeScore = tmp;
                 }
             }
         }
@@ -192,8 +193,32 @@ AtlasCoapResponse AtlasFeatureReputation::receiveFeedbackCallback(const std::str
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
 
-    ATLAS_LOGGER_INFO("Device with identity " + identity + " send a feedback value.");
+    if (feedbackIdentity == "") {
+        ATLAS_LOGGER_ERROR("Received feedback failed because of invalid feedback identity");
+        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    }
 
+    if (!sensorType) {
+        ATLAS_LOGGER_ERROR("Received feedback failed because of invalid feedback sensor type");
+        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    }
+
+    if (!sensorScore) {
+        ATLAS_LOGGER_ERROR("Received feedback failed because of invalid feedback sensor score");
+        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    }
+    
+    if (!respTimeScore) {
+        ATLAS_LOGGER_ERROR("Received feedback failed because of invalid feedback response time score");
+        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    }
+
+    ATLAS_LOGGER_INFO("Device with identity " + identity + " send a feedback value for device with identity " + feedbackIdentity);
+
+    std::cout << "feedbackIdentity: " << feedbackIdentity << std::endl;
+    std::cout << "Sensor type: " << sensorType << std::endl;
+    std::cout << "Sensor score: " << sensorScore << std::endl;
+    std::cout << "Response time score: " << respTimeScore << std::endl;
     /* TODO inject the feedback value into the naive bayes */
  
     return ATLAS_COAP_RESP_OK;

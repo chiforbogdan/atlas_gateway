@@ -88,19 +88,7 @@ enum AtlasCommandType {
 
     /* Install publish-subscribe firewall rule: payload is ATLAS_CMD_PUB_SUB_CLIENT_ID,
     ATLAS_CMD_PUB_SUB_MAX_QOS, ATLAS_CMD_PUB_SUB_PPM, ATLAS_CMD_PUB_SUB_MAX_PAYLOAD_LEN,*/
-    ATLAS_CMD_PUB_SUB_INSTALL_FIREWALL_RULE,
-
-    /* ClientID command: payload is the client id */
-    ATLAS_CMD_DATA_PLANE_POLICY_CLIENTID,
-    
-    /* Policy command: payload is the policy max_qos value */
-    ATLAS_CMD_DATA_PLANE_POLICY_MAX_QOS,
-
-    /* Policy command: payload is the policy packets_per_minute value */
-    ATLAS_CMD_DATA_PLANE_POLICY_PACKETS_PER_MINUTE,
-    
-    /* Policy command: payload is the policy packets_max_length value */
-    ATLAS_CMD_DATA_PLANE_POLICY_PACKETS_MAXLEN,
+    ATLAS_CMD_PUB_SUB_INSTALL_FIREWALL_RULE, 
 
     /* Remove publish-subscribe firewall rule: payload is ATLAS_CMD_PUB_SUB_CLIENT_ID */
     ATLAS_CMD_PUB_SUB_REMOVE_FIREWALL_RULE,
@@ -138,23 +126,34 @@ enum AtlasCommandType {
     /* Publish-subscribe number of TX passed packets: payload is 4 byte number of dropped packets*/
     ATLAS_CMD_PUB_SUB_TX_PKT_PASS,
 
+    /* COMMANDS SHARED WITH DATA PLANE AND CLIENT */
+
+    /* Policy command: payload is the policy max_qos value */
+    ATLAS_CMD_DATA_PLANE_POLICY_MAX_QOS = 1100,
+
+    /* Policy command: payload is the policy packets_per_minute value */
+    ATLAS_CMD_DATA_PLANE_POLICY_PACKETS_PER_MINUTE,
+
+    /* Policy command: payload is the policy packets_max_length value */
+    ATLAS_CMD_DATA_PLANE_POLICY_PACKETS_MAXLEN,
+
     /* Reputation feature request */    
     ATLAS_CMD_FEATURE_REQUEST = 1500,
 
-    /* Feedback command: payload is ATLAS_CMD_FEEDBACK_CLIENTID, ATLAS_CMD_FEEDBACK_FEATURE, 
-     * ATLAS_CMD_FEEDBACK_VALUE, ATLAS_CMD_FEEDBACK_RESPONSE_TIME*/
+    /* Feedback command: payload is ATLAS_CMD_FEEDBACK_IDENTITY, ATLAS_CMD_FEEDBACK_SENSOR_TYPE, 
+     * ATLAS_CMD_FEEDBACK_SENSOR, ATLAS_CMD_FEEDBACK_RESPONSE_TIME*/
     ATLAS_CMD_FEEDBACK,
 
-    /* ClientID command: payload is the client id */
-    ATLAS_CMD_FEEDBACK_CLIENTID,
+    /* Device identity command: payload is the device identity */
+    ATLAS_CMD_FEEDBACK_IDENTITY,
+
+    /* Sensor type command: payload is the sensor type */
+    ATLAS_CMD_FEEDBACK_SENSOR_TYPE,
     
-    /* Feature command: payload is the feature type */
-    ATLAS_CMD_FEEDBACK_FEATURE,
+    /* Feedback sensor: payload is the feedback score for sensor feature */
+    ATLAS_CMD_FEEDBACK_SENSOR,
 
-    /* Value command: payload is the feedback value */
-    ATLAS_CMD_FEEDBACK_VALUE,
-
-    /* Response time command: payload is the response time in millis */
+    /* Feedbck response time command: payload is the feedback score for response time */
     ATLAS_CMD_FEEDBACK_RESPONSE_TIME,
 };
 
