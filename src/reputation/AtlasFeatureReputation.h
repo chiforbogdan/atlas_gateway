@@ -43,7 +43,7 @@ private:
     * @param[out] respPayloadLen Response payload length
     * @return CoAP response status
     */
-    AtlasCoapResponse featureReputationCallback(const std::string &path, const std::string &identity, const std::string &psk,
+    AtlasCoapResponse requestReputationCallback(const std::string &path, const std::string &identity, const std::string &psk,
                                                 AtlasCoapMethod method, const uint8_t* reqPayload, size_t reqPayloadLen,
                                                 uint8_t **respPayload, size_t *respPayloadLen);
 
@@ -59,9 +59,9 @@ private:
     * @param[out] respPayloadLen Response payload length
     * @return CoAP response status
     */
-    AtlasCoapResponse receiveFeedbackCallback(const std::string &path, const std::string &identity, const std::string &psk,
-                                                AtlasCoapMethod method, const uint8_t* reqPayload, size_t reqPayloadLen,
-                                                uint8_t **respPayload, size_t *respPayloadLen);
+    AtlasCoapResponse feedbackReputationCallback(const std::string &path, const std::string &identity, const std::string &psk,
+                                                 AtlasCoapMethod method, const uint8_t* reqPayload, size_t reqPayloadLen,
+                                                 uint8_t **respPayload, size_t *respPayloadLen);
 
     /* FEATURE command CoAP resource*/
     AtlasCoapResource featureReputationResource_;

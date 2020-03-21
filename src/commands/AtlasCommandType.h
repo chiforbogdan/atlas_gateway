@@ -141,20 +141,20 @@ enum AtlasCommandType {
     /* Reputation feature request */    
     ATLAS_CMD_FEATURE_REQUEST = 1500,
 
-    /* Feedback command: payload is ATLAS_CMD_FEEDBACK_CLIENTID, ATLAS_CMD_FEEDBACK_FEATURE, 
-     * ATLAS_CMD_FEEDBACK_VALUE, ATLAS_CMD_FEEDBACK_RESPONSE_TIME*/
+    /* Feedback command: payload is ATLAS_CMD_FEEDBACK_IDENTITY, ATLAS_CMD_FEEDBACK_SENSOR_TYPE, 
+     * ATLAS_CMD_FEEDBACK_SENSOR, ATLAS_CMD_FEEDBACK_RESPONSE_TIME*/
     ATLAS_CMD_FEEDBACK,
 
-    /* ClientID command: payload is the client id */
-    ATLAS_CMD_FEEDBACK_CLIENTID,
+    /* Device identity command: payload is the device identity */
+    ATLAS_CMD_FEEDBACK_IDENTITY,
+
+    /* Sensor type command: payload is the sensor type */
+    ATLAS_CMD_FEEDBACK_SENSOR_TYPE,
     
-    /* Feature command: payload is the feature type */
-    ATLAS_CMD_FEEDBACK_FEATURE,
+    /* Feedback sensor: payload is the feedback score for sensor feature */
+    ATLAS_CMD_FEEDBACK_SENSOR,
 
-    /* Value command: payload is the feedback value */
-    ATLAS_CMD_FEEDBACK_VALUE,
-
-    /* Response time command: payload is the response time in millis */
+    /* Feedbck response time command: payload is the feedback score for response time */
     ATLAS_CMD_FEEDBACK_RESPONSE_TIME,
 };
 
