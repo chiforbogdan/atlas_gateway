@@ -132,9 +132,6 @@ private:
 
     /* Read data buffer */
     uint8_t data_[ATLAS_PUB_SUB_AGENT_BUF_LEN];
-
-    /* Cache for all devices that installed policies in firewall - <clientId-Identity> */
-    std::unordered_map<std::string, std::string> policyDevices_;
 };
 
 } // namespace atlas

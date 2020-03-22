@@ -97,8 +97,6 @@ void AtlasPubSubAgent::removeFirewallRule(const std::string &clientId)
 
     std::pair<const uint8_t*, size_t> outerCmd = cmdBatchOuter.getSerializedAddedCommands();
 
-    policyDevices_.erase(clientId);
-
     /* Write command to publish-subscribe agent */
     write(outerCmd.first, outerCmd.second);
 }
@@ -177,24 +175,18 @@ void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t c
         ATLAS_LOGGER_ERROR("Empty TX accepted packets found when processing firewall rule statistics command");
         return;
     }
-
-
-    if(policyDevices_.find(clientId) == policyDevices_.end()) {
-        ATLAS_LOGGER_ERROR("ClientId is not found in agent cache when processing firewall rule statistics command");
-        return;
-    } else {
         
-        std::unique_ptr<AtlasFirewallStats> statsAux(new AtlasFirewallStats());
-        statsAux->setClientId(clientId);
-        statsAux->addRuleDroppedPkts(*ruleDroppedPkts);
-        statsAux->addRulePassedPkts(*rulePassedPkts);
-        statsAux->addTxDroppedPkts(*txDroppedPkts);
-        statsAux->addTxPassedPkts(*txPassedPkts);
+    std::unique_ptr<AtlasFirewallStats> statsAux(new AtlasFirewallStats());
+    statsAux->setClientId(clientId);
+    statsAux->addRuleDroppedPkts(*ruleDroppedPkts);
+    statsAux->addRulePassedPkts(*rulePassedPkts);
+    statsAux->addTxDroppedPkts(*txDroppedPkts);
+    statsAux->addTxPassedPkts(*txPassedPkts);
 
-        AtlasDeviceManager::getInstance()
-                            .getDevice(policyDevices_[clientId])
-                            .setFirewallStats(std::move(statsAux));
-    }
+    AtlasDeviceManager::getInstance()
+                        .getDevice(clientId)
+                        .setFirewallStats(std::move(statsAux));
+    
 }
 
 void AtlasPubSubAgent::processCommand(size_t cmdLen)
@@ -313,8 +305,6 @@ void AtlasPubSubAgent::installFirewallRule(const std::string &identity, const At
     AtlasCommand cmd5(ATLAS_CMD_PUB_SUB_INSTALL_FIREWALL_RULE, inner.second, inner.first);
     cmdBatchOuter.addCommand(cmd5);
     std::pair<const uint8_t*, size_t> outer = cmdBatchOuter.getSerializedAddedCommands();
-
-    policyDevices_[clientId] = identity;
 
     write(outer.first, outer.second);
 }
