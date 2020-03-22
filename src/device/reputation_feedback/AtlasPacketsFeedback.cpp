@@ -22,7 +22,7 @@ double AtlasPacketsFeedback::getFeedback()
     /* If no statistics are available, then return the default feedback */ 
     if (!stats)
         return ATLAS_PACKETS_DEFAULT_FEEDBACK;
-
+    
     txDroppedPkts = stats->getTxDroppedPkts();
     txPassedPkts = stats->getTxPassedPkts();
 
@@ -33,8 +33,8 @@ double AtlasPacketsFeedback::getFeedback()
         txPassedPkts -= prevStats_.getTxPassedPkts();
     
     /* If no packets are transmitted, then return the default feedback */
-    if (!(txDroppedPkts + txPassedPkts))
-        return ATLAS_PACKETS_DEFAULT_FEEDBACK;
+    if (!(txDroppedPkts + txPassedPkts)) 
+            return ATLAS_PACKETS_DEFAULT_FEEDBACK;
 
     feedback = (double) txPassedPkts / (double) (txDroppedPkts + txPassedPkts);
 

@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <boost/optional.hpp>
+#include <unordered_map>
 #include "../telemetry/AtlasTelemetryInfo.h"
 #include "../telemetry/AtlasAlert.h"
 #include "../commands/AtlasCommandType.h"
@@ -96,7 +97,7 @@ public:
     * @brief Get client device firewall stats
     * @return Client device firewall stats
     */
-    inline const AtlasFirewallStats* getFirewallStats() const { return stats_.get(); }
+    inline AtlasFirewallStats* getFirewallStats() const { return stats_.get(); }
 
     /**
     * @brief Indicate that a client device just registered
@@ -149,10 +150,11 @@ public:
     std::string toJSON();
 
     /**
-    * @brief Serialize system reputation info to JSON
+    * @brief Serialize reputation info to JSON
+    * @param[in] netType Reputation network type
     * @return JSON serialized system reputation info
     */
-    std::string systemReputationToJSON();
+    std::string reputationToJSON(AtlasDeviceNetworkType netType);
 
     /**
     * @brief Serialize telemetry info to JSON
@@ -191,16 +193,18 @@ public:
     inline int getKeepalivePkts() const { return keepAlivePkts_; }
 
     /**
-    * @brief Get the system reputation
+    * @brief Get the reputation network
+    * @param[in] netType Reputation network type
     * @return A reference to the system reputation
     */
-    AtlasDeviceFeatureManager& getSystemReputation() { return systemReputation_; }
+    AtlasDeviceFeatureManager& getReputation(AtlasDeviceNetworkType netType) { return deviceReputation_[netType]; }
 
     /**
-    * @brief Sync system reputation with the cloud back-end
+    * @brief Sync reputation with the cloud back-end
+    * @param[in] netType Reputation network type
     * @return none
     */
-    void syncSystemReputation();
+    void syncReputation(AtlasDeviceNetworkType netType);
 private:
     /**
     * @brief Install default telemetry alerts
@@ -284,9 +288,7 @@ private:
     int keepAlivePkts_;
 
     /* System reputation */
-    AtlasDeviceFeatureManager systemReputation_;
-
-    /* TODO implement feature reputation */
+    std::unordered_map<AtlasDeviceNetworkType, AtlasDeviceFeatureManager> deviceReputation_;
 };
 
 } // namespace atlas
