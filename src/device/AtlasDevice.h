@@ -193,11 +193,18 @@ public:
     inline int getKeepalivePkts() const { return keepAlivePkts_; }
 
     /**
+    * @brief Verify if device has a given reputation network
+    * @param[in] netType Reputation network type
+    * @return True if device has the given reputation network, false otherwise
+    */
+    inline bool hasReputation(AtlasDeviceNetworkType netType) const {return deviceReputation_.find(netType) != deviceReputation_.end(); }
+
+    /**
     * @brief Get the reputation network
     * @param[in] netType Reputation network type
     * @return A reference to the system reputation
     */
-    AtlasDeviceFeatureManager& getReputation(AtlasDeviceNetworkType netType) { return deviceReputation_[netType]; }
+    inline AtlasDeviceFeatureManager& getReputation(AtlasDeviceNetworkType netType) { return deviceReputation_[netType]; }
 
     /**
     * @brief Sync reputation with the cloud back-end
@@ -205,6 +212,7 @@ public:
     * @return none
     */
     void syncReputation(AtlasDeviceNetworkType netType);
+
 private:
     /**
     * @brief Install default telemetry alerts

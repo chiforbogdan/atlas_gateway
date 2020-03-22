@@ -3,27 +3,35 @@
 
 namespace atlas
 {
+
 enum class AtlasDeviceFeatureType {
-    //Some demo features for DataPlane
-    ATLAS_DEVICE_FEATURE_GENERIC = 0,
+    /* Features for data reputation network */
+    ATLAS_DEVICE_FEATURE_SENSOR = 0,
+    ATLAS_DEVICE_FEATURE_RESP_TIME,
+
+    /* Features for system (control plane) reputation network */
+    ATLAS_FEATURE_VALID_PACKETS = 1000,
+    ATLAS_FEATURE_REGISTER_TIME,
+    ATLAS_FEATURE_KEEPALIVE_PACKETS,
+
+    /* Features for reputation network simulation */
+    ATLAS_DEVICE_FEATURE_GENERIC = 2000,
     ATLAS_DEVICE_FEATURE_CO2,
     ATLAS_DEVICE_FEATURE_TEMPERATURE,
     ATLAS_DEVICE_FEATURE_LIGHT,
     ATLAS_DEVICE_FEATURE_HUMIDITY,
     ATLAS_DEVICE_FEATURE_AIR_PRESSURE,
-
-    //Some demo features for system
-    ATLAS_FEATURE_VALID_PACKETS = 1000,
-    ATLAS_FEATURE_REGISTER_TIME,
-    ATLAS_FEATURE_KEEPALIVE_PACKETS
-
-    /*Extended with various feature of connected sensors.
-    This can be upgraded to be manipulated by the administrator or through the Cloud component.*/
+ 
 };
 
 enum class AtlasDeviceNetworkType {
-    ATLAS_NETWORK_CONTROL = 0,
-    ATLAS_NETWORK_DATA
+    /* Identifies the system reputation network */
+    ATLAS_NETWORK_SYSTEM = 0,
+
+    /* Identifies the data reputation network */
+    ATLAS_NETWORK_SENSOR_START = 100,
+    ATLAS_NETWORK_SENSOR_TEMPERATURE = 101,
+    ATLAS_NETWORK_SENSOR_MAX = 102,
 };
 
 } //namespace atlas

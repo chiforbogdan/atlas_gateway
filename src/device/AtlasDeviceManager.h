@@ -49,6 +49,17 @@ public:
     */
     void forEachDevice(std::function<void(AtlasDevice&)> cb);
 
+    /**
+    * @brief Update data network reputation
+    * @param[in] identity Device identity
+    * @param[in] networkType Reputation data network type
+    * @param[in] feedbackMatrix Feedback score matrix
+    * @return none
+    */
+    void updateDataReputation(const std::string &identity,
+                              AtlasDeviceNetworkType networkType,
+                              std::vector<std::pair<AtlasDeviceFeatureType, double>> &feedbackMatrix);
+
     AtlasDeviceManager(const AtlasDeviceManager&) = delete;
     AtlasDeviceManager& operator=(const AtlasDeviceManager&) = delete;
 

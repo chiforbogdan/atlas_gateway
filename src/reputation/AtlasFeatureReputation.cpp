@@ -84,7 +84,6 @@ AtlasCoapResponse AtlasFeatureReputation::requestReputationCallback(const std::s
         ATLAS_LOGGER_ERROR("Feature reputation failed because of invalid identity");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
-
     if (!sensorType) {
         ATLAS_LOGGER_ERROR("Feature reputation failed because of invalid sensor type");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
@@ -124,9 +123,11 @@ AtlasCoapResponse AtlasFeatureReputation::feedbackReputationCallback(const std::
     std::string identity;
     std::string feedbackIdentity;
     boost::optional<uint16_t> sensorType;
-    boost::optional<uint16_t> sensorScore;
-    boost::optional<uint16_t> respTimeScore;
+    bool sensorScore = false;
+    bool respTimeScore = false;
+    double value;
     uint16_t tmp;
+    std::vector<std::pair<AtlasDeviceFeatureType, double>> feedbackMatrix;
     
     ATLAS_LOGGER_DEBUG("Feedback callback executed...");
 
@@ -178,11 +179,15 @@ AtlasCoapResponse AtlasFeatureReputation::feedbackReputationCallback(const std::
                 } else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_SENSOR) {
                     memcpy(&tmp, cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
                     tmp = ntohs(tmp);
-                    sensorScore = tmp;
+                    value = (double) tmp / 100;
+                    feedbackMatrix.push_back(std::pair<AtlasDeviceFeatureType, double>(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_SENSOR, value));
+                    sensorScore = true;
                 } else if (cmdInnerEntry.getType() == ATLAS_CMD_FEEDBACK_RESPONSE_TIME) {
                     memcpy(&tmp, cmdInnerEntry.getVal(), cmdInnerEntry.getLen());
                     tmp = ntohs(tmp);
-                    respTimeScore = tmp;
+                    value = (double) tmp / 100;
+                    feedbackMatrix.push_back(std::pair<AtlasDeviceFeatureType, double>(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_RESP_TIME, value));
+                    respTimeScore = true;
                 }
             }
         }
@@ -192,22 +197,18 @@ AtlasCoapResponse AtlasFeatureReputation::feedbackReputationCallback(const std::
         ATLAS_LOGGER_ERROR("Receive feedback failed because of invalid identity");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
-
     if (feedbackIdentity == "") {
         ATLAS_LOGGER_ERROR("Received feedback failed because of invalid feedback identity");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
-
     if (!sensorType) {
         ATLAS_LOGGER_ERROR("Received feedback failed because of invalid feedback sensor type");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
-
     if (!sensorScore) {
         ATLAS_LOGGER_ERROR("Received feedback failed because of invalid feedback sensor score");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
-    
     if (!respTimeScore) {
         ATLAS_LOGGER_ERROR("Received feedback failed because of invalid feedback response time score");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
@@ -215,11 +216,9 @@ AtlasCoapResponse AtlasFeatureReputation::feedbackReputationCallback(const std::
 
     ATLAS_LOGGER_INFO("Device with identity " + identity + " send a feedback value for device with identity " + feedbackIdentity);
 
-    std::cout << "feedbackIdentity: " << feedbackIdentity << std::endl;
-    std::cout << "Sensor type: " << sensorType << std::endl;
-    std::cout << "Sensor score: " << sensorScore << std::endl;
-    std::cout << "Response time score: " << respTimeScore << std::endl;
-    /* TODO inject the feedback value into the naive bayes */
+    AtlasDeviceManager::getInstance().updateDataReputation(feedbackIdentity,
+                                                           (AtlasDeviceNetworkType) *sensorType,
+                                                           feedbackMatrix);
  
     return ATLAS_COAP_RESP_OK;
 }
