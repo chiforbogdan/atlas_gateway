@@ -73,28 +73,28 @@ public:
     * @param[in] droppedPkts
     * @return none
     */
-    inline void setRuleDroppedPkts(uint32_t ruleDroppedPkts) { ruleDroppedPkts_ = ruleDroppedPkts; }
+    inline void addRuleDroppedPkts(uint32_t ruleDroppedPkts) { ruleDroppedPkts_ += ruleDroppedPkts; }
 
     /**
     * @brief Set firewall stats passedPkts
     * @param[in] passedPkts
     * @return none
     */
-    inline void setRulePassedPkts(uint32_t rulePassedPkts) { rulePassedPkts_ = rulePassedPkts; }
+    inline void addRulePassedPkts(uint32_t rulePassedPkts) { rulePassedPkts_ += rulePassedPkts; }
 
     /**
     * @brief Set TX number of dropped packets
     * @param[in] txDroppedPackets TX number of dropped packets
     * @return none
     */
-    inline void setTxDroppedPkts(uint32_t txDroppedPkts) { txDroppedPkts_ = txDroppedPkts; }
+    inline void addTxDroppedPkts(uint32_t txDroppedPkts) { txDroppedPkts_ += txDroppedPkts; }
 
     /**
     * @brief Set TX number of passed packets
     * @param[in] txPassedPkts TX number of passed packets
     * @return none
     */
-    inline void setTxPassedPkts(uint32_t txPassedPkts) { txPassedPkts_ = txPassedPkts; }
+    inline void addTxPassedPkts(uint32_t txPassedPkts) { txPassedPkts_ += txPassedPkts; }
 
     /**
     * @brief Put all stats info in json format

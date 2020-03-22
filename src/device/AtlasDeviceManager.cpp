@@ -8,6 +8,8 @@
 #include "reputation_feedback/AtlasRegistrationFeedback.h"
 #include "reputation_feedback/AtlasKeepaliveFeedback.h"
 #include "reputation_feedback/AtlasPacketsFeedback.h"
+#include "../sql/AtlasSQLite.h"
+#include "../reputation_impl/AtlasDeviceFeatureManager.h"
 
 namespace atlas {
 
@@ -56,38 +58,79 @@ void AtlasDeviceManager::firewallStatisticsAlarmCallback()
                      });
 }
 
+void AtlasDeviceManager::subAlarmCallback(AtlasDevice& device)
+{
+    std::vector<std::pair<AtlasDeviceFeatureType, double>> feedbackMatrix;
+    /* Parse each system reputation feedback element and get feedback for device */
+    for (auto &feedbackElem : feedback_[device.getIdentity()])
+        feedbackMatrix.push_back(std::pair<AtlasDeviceFeatureType, double>(feedbackElem->getType(),
+                                                                        feedbackElem->getFeedback()));
+
+    /* Compute system reputation using naive-bayes */
+    double repVal = AtlasReputationNaiveBayes::computeReputation(device.getSystemReputation(), feedbackMatrix);
+    ATLAS_LOGGER_INFO("System reputation for device with identity " + device.getIdentity() + 
+                    " is " + std::to_string(repVal));
+    device.syncSystemReputation();
+
+    /* Update into db*/
+    bool result = AtlasSQLite::getInstance().updateBayesParams(device.getIdentity(), 
+                                                               (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, 
+                                                               device.getSystemReputation());
+    if(!result) {
+         ATLAS_LOGGER_ERROR("Uncommited update on naiveBayes params data");
+    }
+}
+
 void AtlasDeviceManager::sysRepAlarmCallback()
 {
     ATLAS_LOGGER_INFO("System reputation alarm callback");
 
     forEachDevice([this] (AtlasDevice& device) 
                          {     
-                             std::vector<std::pair<AtlasDeviceFeatureType, double>> feedbackMatrix;
-                             /* Parse each system reputation feedback element and get feedback for device */
-                             for (auto &feedbackElem : feedback_[device.getIdentity()])
-                                 feedbackMatrix.push_back(std::pair<AtlasDeviceFeatureType, double>(feedbackElem->getType(),
-                                                                                                    feedbackElem->getFeedback()));
-
-                             /* Compute system reputation using naive-bayes */
-                             double repVal = AtlasReputationNaiveBayes::computeReputation(device.getSystemReputation(), feedbackMatrix);
-                             ATLAS_LOGGER_INFO("System reputation for device with identity " + device.getIdentity() + 
-                                               " is " + std::to_string(repVal));
-                             device.syncSystemReputation();
+                            subAlarmCallback(device);
                          });
 }
 
 void AtlasDeviceManager::initSystemReputation(AtlasDevice &device)
 {
+    bool result = false;
+
     /* Add default features for the system reputation */
     AtlasDeviceFeatureManager &systemReputation = device.getSystemReputation();
     
     systemReputation.updateFeedbackThreshold(ATLAS_SYSTEM_REPUTATION_THRESHOLD);
-    systemReputation.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME,
-                                ATLAS_REGISTER_TIME_WEIGHT);
-    systemReputation.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS,
-                                ATLAS_KEEPALIVE_PACKETS_WEIGHT);
-    systemReputation.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_VALID_PACKETS,
-                                ATLAS_VALID_PACKETS_WEIGHT);
+
+    if(AtlasSQLite::getInstance().checkDeviceForFeatures(device.getIdentity())) {
+        /* Get from db*/
+        ATLAS_LOGGER_INFO("Get data from local.db");
+
+        result = AtlasSQLite::getInstance().selectBayesParams(device.getIdentity(), 
+                                                             (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL,
+                                                             systemReputation);
+        if(!result) {
+            ATLAS_LOGGER_ERROR("Uncommited select on naiveBayes params data");
+        }
+        
+    } else {
+      
+        systemReputation.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME,
+                                    ATLAS_REGISTER_TIME_WEIGHT);
+        systemReputation.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_KEEPALIVE_PACKETS,
+                                    ATLAS_KEEPALIVE_PACKETS_WEIGHT);
+        systemReputation.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_VALID_PACKETS,
+                                    ATLAS_VALID_PACKETS_WEIGHT);
+
+        ATLAS_LOGGER_INFO("Insert data into local.db");
+
+        /* Insert into db*/
+        result = AtlasSQLite::getInstance().insertBayesParams(device.getIdentity(), 
+                                                              (int)AtlasDeviceNetworkType::ATLAS_NETWORK_CONTROL, 
+                                                              systemReputation);
+        if(!result) {
+            ATLAS_LOGGER_ERROR("Uncommited insert for naiveBayes params data");
+        }
+        
+    }
 
     /* Add feedack for system reputation */
     std::unique_ptr<IAtlasFeedback> regFeedback(new AtlasRegistrationFeedback(device,
@@ -104,7 +147,7 @@ void AtlasDeviceManager::initSystemReputation(AtlasDevice &device)
 
 AtlasDevice& AtlasDeviceManager::getDevice(const std::string& identity)
 {
-    if (devices_.find(identity) == devices_.end()) {
+    if (devices_.find(identity) == devices_.end()){
         ATLAS_LOGGER_INFO1("New client device created with identity ", identity);
         devices_[identity] = AtlasDevice(identity, deviceCloud_);
         initSystemReputation(devices_[identity]);

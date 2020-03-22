@@ -47,6 +47,18 @@ public:
     uint32_t getStatPassedPkt() const { return statPktPass_; }
 
     /**
+    * @brief Set number of dropped packets
+    * @return none
+    */
+    inline void setStatDroppedPkt(uint32_t statPktDrop) { statPktDrop_ = statPktDrop; }
+
+    /**
+    * @brief Set number of passed packets
+    * @return none
+    */
+    inline void setStatPassedPkt(uint32_t statPktPass) { statPktPass_ = statPktPass; }
+
+    /**
     * @brief Start a new window for the rate limit (packets per minute)
     * @return none
     */

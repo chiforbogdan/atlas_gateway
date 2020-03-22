@@ -177,10 +177,7 @@ const coap_bin_const_t *AtlasCoapServer::getPskForIdentity(coap_bin_const_t *ide
 
     /* If client device does not have a PSK, fetch the PSK from the database */
     if (device.getPsk() == "") {
-        AtlasSQLite object;
-        object.openConnection(ATLAS_DB_PATH);
-        psk = object.selectPsk(identity);
-
+        psk = AtlasSQLite::getInstance().selectDevicePsk(identity);
         /* Save the client device psk */
         device.setPsk(psk);
     }
