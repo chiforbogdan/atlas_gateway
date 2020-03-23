@@ -175,18 +175,21 @@ void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t c
         ATLAS_LOGGER_ERROR("Empty TX accepted packets found when processing firewall rule statistics command");
         return;
     }
-        
-    std::unique_ptr<AtlasFirewallStats> statsAux(new AtlasFirewallStats());
-    statsAux->setClientId(clientId);
-    statsAux->addRuleDroppedPkts(*ruleDroppedPkts);
-    statsAux->addRulePassedPkts(*rulePassedPkts);
-    statsAux->addTxDroppedPkts(*txDroppedPkts);
-    statsAux->addTxPassedPkts(*txPassedPkts);
 
-    AtlasDeviceManager::getInstance()
-                        .getDevice(clientId)
-                        .setFirewallStats(std::move(statsAux));
-    
+    AtlasDevice &device = AtlasDeviceManager::getInstance().getDevice(clientId);
+
+    /* If at least one value is not zero, update the device firewall statistics
+    and sync the info with the cloud back-end */
+    if (*ruleDroppedPkts || *rulePassedPkts ||
+        *txDroppedPkts || *txPassedPkts) {    
+        device.getFirewallStats().addRuleDroppedPkts(*ruleDroppedPkts);
+        device.getFirewallStats().addRulePassedPkts(*rulePassedPkts);
+        device.getFirewallStats().addTxDroppedPkts(*txDroppedPkts);
+        device.getFirewallStats().addTxPassedPkts(*txPassedPkts);
+   
+        ATLAS_LOGGER_DEBUG("Sync firewall statistics with the cloud back-end"); 
+        device.syncFirewallStatistics();
+    }
 }
 
 void AtlasPubSubAgent::processCommand(size_t cmdLen)

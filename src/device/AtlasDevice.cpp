@@ -23,8 +23,6 @@ const std::string ATLAS_LAST_REGISTER_TIME_JSON_KEY = "lastRegisterTime";
 const std::string ATLAS_LAST_KEEPALIVE_TIME_JSON_KEY = "lastKeepAliveTime";
 /* JSON IP and port key */
 const std::string ATLAS_IP_PORT_JSON_KEY = "ipPort";
-/* JSON firewall stat key */
-const std::string ATLAS_FIREWALLSTAT_JSON_KEY = "firewallStatistic";
 /* JSON firewall stat-droppedPkts key */
 const std::string ATLAS_FIREWALLSTAT_DROPPEDPKTS_JSON_KEY = "droppedPkts";
 /* JSON firewall stat-passedPkts key */
@@ -40,12 +38,13 @@ AtlasDevice::AtlasDevice(const std::string &identity,
                          std::shared_ptr<AtlasDeviceCloud> deviceCloud) : identity_(identity),
                                                                           deviceCloud_(deviceCloud),
                                                                           registered_(false),
-                                                                          stats_(new AtlasFirewallStats()),
                                                                           regIntervalSec_(0),
                                                                           keepAlivePkts_(0)
 {
     /* Install default alerts */
     installDefaultAlerts();
+    /* Init publish-subscribe client id */
+    stats_.setClientId(identity);
 }
 
 AtlasDevice::AtlasDevice() : identity_(""), registered_(false), regIntervalSec_(0), keepAlivePkts_(0) {}
@@ -58,9 +57,6 @@ void AtlasDevice::uninstallPolicy()
         /* Explicit delete policy */
         policy_.reset();
     }
-
-    /* Explicit delete firewall statistics */
-    stats_.reset();
 }
 
 void AtlasDevice::installDefaultAlerts()
@@ -135,19 +131,6 @@ void AtlasDevice::setPolicyInfo(std::unique_ptr<AtlasFirewallPolicy> policy)
     }
 }
 
-void AtlasDevice::setFirewallStats(std::unique_ptr<AtlasFirewallStats> stats)
-{
-    if(!stats) {
-        ATLAS_LOGGER_ERROR("Received an empty firewall statistic!");
-        return;
-    }
-
-    if((!stats_) || (!(*stats_ == *stats))) {
-        stats_ = std::move(stats);
-        deviceCloud_->updateDevice(identity_, stats_->toJSON());
-    }    
-}
-
 int AtlasDevice::getRegInterval()
 {
     /* If device is registered, then compute the registration time until now */
@@ -214,29 +197,37 @@ void AtlasDevice::keepAliveExpired()
 void AtlasDevice::syncReputation(AtlasDeviceNetworkType netType)
 {
     /* Update the system reputation value to cloud */
-    switch (netType)
-    {
-    case AtlasDeviceNetworkType::ATLAS_NETWORK_SYSTEM:
-        deviceCloud_->updateDevice(identity_, reputationToJSON(netType));
-        break;
-    case AtlasDeviceNetworkType::ATLAS_NETWORK_SENSOR_TEMPERATURE:
-        deviceCloud_->updateDevice(identity_, reputationToJSON(netType));
-        break;
-    }    
+    switch (netType) {
+        case AtlasDeviceNetworkType::ATLAS_NETWORK_SYSTEM:
+            deviceCloud_->updateDevice(identity_, reputationToJSON(netType));
+            break;
+        case AtlasDeviceNetworkType::ATLAS_NETWORK_SENSOR_TEMPERATURE:
+            deviceCloud_->updateDevice(identity_, reputationToJSON(netType));
+            break;
+        default:
+            ATLAS_LOGGER_ERROR("Unknown reputation network type in reputation cloud sync");
+    }
+}
+
+void AtlasDevice::syncFirewallStatistics()
+{
+    deviceCloud_->updateDevice(identity_, stats_.toJSON());
 }
 
 std::string AtlasDevice::reputationToJSON(AtlasDeviceNetworkType netType)
 {   
     std::string tmpRet = "\"";
-    switch (netType)
-    {
-    case AtlasDeviceNetworkType::ATLAS_NETWORK_SYSTEM:
-        tmpRet = tmpRet + ATLAS_SYSTEM_REPUTATION_JSON_KEY + "\": \"" + std::to_string(deviceReputation_[netType].getReputation()) + "\"";
-        break;    
-    case AtlasDeviceNetworkType::ATLAS_NETWORK_SENSOR_TEMPERATURE:
-        tmpRet = tmpRet + ATLAS_DATA_REPUTATION_JSON_KEY + "\": \"" + std::to_string(deviceReputation_[netType].getReputation()) + "\"";
-        break;
+    switch (netType) {
+        case AtlasDeviceNetworkType::ATLAS_NETWORK_SYSTEM:
+            tmpRet = tmpRet + ATLAS_SYSTEM_REPUTATION_JSON_KEY + "\": \"" + std::to_string(deviceReputation_[netType].getReputation()) + "\"";
+            break;    
+        case AtlasDeviceNetworkType::ATLAS_NETWORK_SENSOR_TEMPERATURE:
+            tmpRet = tmpRet + ATLAS_DATA_REPUTATION_JSON_KEY + "\": \"" + std::to_string(deviceReputation_[netType].getReputation()) + "\"";
+            break;
+        default:
+            ATLAS_LOGGER_ERROR("Unknown reputation network type in JSON serialize");
     }
+    
     return tmpRet; 
 }
 
@@ -280,12 +271,11 @@ std::string AtlasDevice::toJSON()
     jsonDevice += ",\n" + reputationToJSON(AtlasDeviceNetworkType::ATLAS_NETWORK_SYSTEM);
     /* Add data reputation */
     jsonDevice += ",\n" + reputationToJSON(AtlasDeviceNetworkType::ATLAS_NETWORK_SENSOR_TEMPERATURE);
+    /* Add firewall statistics info */
+    jsonDevice += ",\n" + stats_.toJSON();
     /* Add firewall policy info */
     if (policy_)
         jsonDevice += ",\n" + policy_->toJSON();
-    /* Add firewall statistics info */
-    if (stats_)
-        jsonDevice += ",\n" + stats_->toJSON();
 
     return jsonDevice;
 }

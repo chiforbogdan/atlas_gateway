@@ -57,13 +57,6 @@ public:
     void setPolicyInfo(std::unique_ptr<AtlasFirewallPolicy> policy);
 
     /**
-    * @brief Set firewall statistic for client device
-    * @param[in] statistics pointer
-    * @return none
-    */
-    void setFirewallStats(std::unique_ptr<AtlasFirewallStats> stats);
-
-    /**
     * @brief Get client device identity
     * @return Client device identity
     */
@@ -97,7 +90,7 @@ public:
     * @brief Get client device firewall stats
     * @return Client device firewall stats
     */
-    inline AtlasFirewallStats* getFirewallStats() const { return stats_.get(); }
+    inline AtlasFirewallStats& getFirewallStats() { return stats_; }
 
     /**
     * @brief Indicate that a client device just registered
@@ -213,6 +206,12 @@ public:
     */
     void syncReputation(AtlasDeviceNetworkType netType);
 
+    /**
+    * @brief Sync firewall statistics with the cloud back-end
+    * @return none
+    */
+    void syncFirewallStatistics();
+
 private:
     /**
     * @brief Install default telemetry alerts
@@ -280,11 +279,11 @@ private:
     /* Telemetry threshold alerts */
     std::unordered_map<std::string, std::unique_ptr<AtlasAlert> > thresholdAlerts_;
 
-    /* Policy*/
+    /* Policy */
     std::unique_ptr<AtlasFirewallPolicy> policy_;
 
-    /* Firewall statistic*/
-    std::unique_ptr<AtlasFirewallStats> stats_;
+    /* Firewall statistics */
+    AtlasFirewallStats stats_;
 
     /* Holds the most recent registration timestamp */
     boost::posix_time::ptime startRegTime_;

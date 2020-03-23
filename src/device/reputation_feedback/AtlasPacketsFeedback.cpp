@@ -16,15 +16,11 @@ double AtlasPacketsFeedback::getFeedback()
 {
     uint32_t txDroppedPkts;
     uint32_t txPassedPkts;
-    const AtlasFirewallStats* stats = device_.getFirewallStats();
+    const AtlasFirewallStats& stats = device_.getFirewallStats();
     double feedback;
-
-    /* If no statistics are available, then return the default feedback */ 
-    if (!stats)
-        return ATLAS_PACKETS_DEFAULT_FEEDBACK;
     
-    txDroppedPkts = stats->getTxDroppedPkts();
-    txPassedPkts = stats->getTxPassedPkts();
+    txDroppedPkts = stats.getTxDroppedPkts();
+    txPassedPkts = stats.getTxPassedPkts();
 
     /* Compute the difference within the sample window */
     if (txDroppedPkts >= prevStats_.getTxDroppedPkts())
@@ -38,7 +34,7 @@ double AtlasPacketsFeedback::getFeedback()
 
     feedback = (double) txPassedPkts / (double) (txDroppedPkts + txPassedPkts);
 
-    prevStats_ = *stats;
+    prevStats_ = stats;
  
     ATLAS_LOGGER_INFO("Valid packets feedback was computed for device with identity " + device_.getIdentity() + " to value " + std::to_string(feedback));
 

@@ -64,7 +64,7 @@ void AtlasDeviceManager::firewallStatisticsAlarmCallback()
                             
                              /* update in db previous stats sample */
                              bool result = AtlasSQLite::getInstance().updateStats(device.getIdentity(),
-                                                                                  *(device.getFirewallStats()));
+                                                                                  device.getFirewallStats());
                              if(!result)
                                  ATLAS_LOGGER_ERROR("Uncommited update on statistics data");
                          }
@@ -204,12 +204,12 @@ void AtlasDeviceManager::initSystemStatistics(AtlasDevice &device)
     bool result = AtlasSQLite::getInstance().checkDeviceForStats(device.getIdentity());
     if(result) {
         /* select from db */   
-        result = AtlasSQLite::getInstance().selectStats(device.getIdentity(), *(device.getFirewallStats()));
+        result = AtlasSQLite::getInstance().selectStats(device.getIdentity(), device.getFirewallStats());
         if(!result)
             ATLAS_LOGGER_ERROR("Uncommited select on statistics data");
     } else {
         /* insert into db */
-        result = AtlasSQLite::getInstance().insertStats(device.getIdentity(), *(device.getFirewallStats()));
+        result = AtlasSQLite::getInstance().insertStats(device.getIdentity(), device.getFirewallStats());
         if(!result)
             ATLAS_LOGGER_ERROR("Uncommited insert on statistics data");
     }
