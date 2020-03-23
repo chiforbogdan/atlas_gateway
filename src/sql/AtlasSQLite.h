@@ -117,9 +117,10 @@ public:
     /**
     * @brief Check if a device has related features in db
     * @param[in] identity Device identity
+    * @param[in] networkTypeId Network type
     * @return true if features exist, false on error or not exist
     */
-    bool checkDeviceForFeatures(const std::string &identity);
+    bool checkDeviceForFeatures(const std::string &identity, int networkTypeId);
 
     /**
     * @brief Check if a device has related statistics in db

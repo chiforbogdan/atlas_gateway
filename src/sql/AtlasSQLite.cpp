@@ -96,7 +96,7 @@ namespace {
     const char *SQL_CHECK_FEATURE = "SELECT 1 FROM NaiveBayesFeature "\
                                     "INNER JOIN NaiveBayesNetwork ON NaiveBayesNetwork.Id == NaiveBayesFeature.NetworkId "\
                                     "INNER JOIN Device ON Device.Id == NaiveBayesNetwork.DeviceId "\
-                                    "WHERE Device.Identity=?;";
+                                    "WHERE Device.Identity=? AND NaiveBayesNetwork.NetworkTypeId=?;";
 } // anonymous namespace
 
 AtlasSQLite& AtlasSQLite::getInstance()
@@ -714,7 +714,7 @@ bool AtlasSQLite::updateStats(const std::string &identity, const AtlasFirewallSt
     return true;
 }
 
-bool AtlasSQLite::checkDeviceForFeatures(const std::string &identity)
+bool AtlasSQLite::checkDeviceForFeatures(const std::string &identity, int networkTypeId)
 {
     sqlite3_stmt *stmt = nullptr;
     
@@ -730,7 +730,8 @@ bool AtlasSQLite::checkDeviceForFeatures(const std::string &identity)
 	    return false;
     }
 
-    if (sqlite3_bind_text(stmt, 1, identity.c_str(), identity.length(),	SQLITE_STATIC) != SQLITE_OK) {
+    if (sqlite3_bind_text(stmt, 1, identity.c_str(), identity.length(),	SQLITE_STATIC) != SQLITE_OK ||
+        sqlite3_bind_int(stmt, 2, networkTypeId) != SQLITE_OK) {
         ATLAS_LOGGER_ERROR("Could not bind, fct:checkDeviceForFeatures, stmt:SQL_CHECK_FEATURE, error:" + std::string(sqlite3_errmsg(pCon_)));
         return false;
     }

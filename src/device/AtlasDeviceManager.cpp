@@ -160,7 +160,8 @@ void AtlasDeviceManager::initSystemReputation(AtlasDevice &device)
     
     systemReputation.updateFeedbackThreshold(ATLAS_SYSTEM_REPUTATION_THRESHOLD);
 
-    if (AtlasSQLite::getInstance().checkDeviceForFeatures(device.getIdentity())) {
+    result = AtlasSQLite::getInstance().checkDeviceForFeatures(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_SYSTEM);
+    if (result) {
         /* Get from db*/
         ATLAS_LOGGER_INFO("Get data from local.db");
         result = AtlasSQLite::getInstance().selectBayesParams(device.getIdentity(), 
@@ -222,16 +223,30 @@ void AtlasDeviceManager::initDataReputation(AtlasDevice &device)
     
     dataReputation.updateFeedbackThreshold(ATLAS_DATA_REPUTATION_THRESHOLD);
      
-    dataReputation.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_SENSOR, ATLAS_SENSOR_WEIGHT);
-    dataReputation.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_RESP_TIME, ATLAS_RESP_TIME_WEIGHT);
+    bool result = AtlasSQLite::getInstance().checkDeviceForFeatures(device.getIdentity(), (int)AtlasDeviceNetworkType::ATLAS_NETWORK_SENSOR_TEMPERATURE);
+    if (result) {
+        /* Get from db*/
+        ATLAS_LOGGER_INFO("Get data from local.db");
+        result = AtlasSQLite::getInstance().selectBayesParams(device.getIdentity(), 
+                                                             (int)AtlasDeviceNetworkType::ATLAS_NETWORK_SENSOR_TEMPERATURE,
+                                                             dataReputation);
+        if (!result)
+            ATLAS_LOGGER_ERROR("Uncommited select on naiveBayes params data");
 
-    /* Insert into db*/
-    ATLAS_LOGGER_INFO("Insert data into local.db");
-    bool result = AtlasSQLite::getInstance().insertBayesParams(device.getIdentity(),
-                                                               (int) AtlasDeviceNetworkType::ATLAS_NETWORK_SENSOR_TEMPERATURE,
-                                                               dataReputation);
-    if(!result)
-        ATLAS_LOGGER_ERROR("Uncommited insert for naiveBayes params data");
+    } else {
+
+        dataReputation.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_SENSOR, ATLAS_SENSOR_WEIGHT);
+        dataReputation.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_RESP_TIME, ATLAS_RESP_TIME_WEIGHT);
+
+        /* Insert into db*/
+        ATLAS_LOGGER_INFO("Insert data into local.db");
+        result = AtlasSQLite::getInstance().insertBayesParams(device.getIdentity(),
+                                                              (int) AtlasDeviceNetworkType::ATLAS_NETWORK_SENSOR_TEMPERATURE,
+                                                              dataReputation);
+        if(!result)
+            ATLAS_LOGGER_ERROR("Uncommited insert for naiveBayes params data");
+
+    }
 }
 
 AtlasDevice& AtlasDeviceManager::getDevice(const std::string& identity)
