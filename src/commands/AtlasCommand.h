@@ -5,6 +5,9 @@
 
 namespace atlas {
 
+/* Command header length (type + length) */
+const int ATLAS_CMD_HEADER_LEN = 4;
+
 class AtlasCommand
 {
 

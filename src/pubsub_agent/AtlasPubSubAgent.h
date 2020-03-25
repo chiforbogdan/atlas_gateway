@@ -5,9 +5,9 @@
 #include <unordered_map>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include "../utils/AtlasUtils.h"
 #include "../policy/AtlasFirewallPolicy.h"
-
-#define ATLAS_PUB_SUB_AGENT_BUF_LEN (2048)
+#include "../commands/AtlasCommandXfer.h"
 
 namespace atlas {
 
@@ -94,10 +94,11 @@ private:
 
     /**
     * @brief Process command received from publish-subsribe agent
+    * @param[in] cmdBUffer Command buffer
     * @param[in] cmdLen Command length
     * @return none
     */
-    void processCommand(size_t cmdLen);
+    void processCommand(const uint8_t *cmdBuffer, size_t cmdLen);
     
     /**
     * @brief Accept connections from publish-subscribe agent
@@ -130,8 +131,8 @@ private:
     /* Publish-subscribe agent connecting socket */
     boost::asio::local::stream_protocol::socket *connectedSocket_;
 
-    /* Read data buffer */
-    uint8_t data_[ATLAS_PUB_SUB_AGENT_BUF_LEN];
+    /* Command transfer over stream channel */
+    AtlasCommandXfer cmdXfer_;
 };
 
 } // namespace atlas

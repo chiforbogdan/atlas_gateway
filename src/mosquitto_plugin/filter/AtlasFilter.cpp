@@ -9,7 +9,6 @@
 #include "../logger/AtlasLogger.h"
 #include "../../commands/AtlasCommand.h"
 #include "../../commands/AtlasCommandBatch.h"
-#include "../../utils/AtlasUtils.h"
 
 namespace atlas {
 
@@ -230,7 +229,7 @@ void AtlasFilter::installFirewallRule(const uint8_t *cmdBuf, uint16_t cmdLen)
                       clientId.c_str(), maxQos, ppm, maxPayloadLen);
 }
 
-void AtlasFilter::processCommand(size_t cmdLen)
+void AtlasFilter::processCommand(const uint8_t *cmdBuffer, size_t cmdLen)
 {
     AtlasCommandBatch cmdBatch;
     std::vector<AtlasCommand> cmds;
@@ -238,7 +237,7 @@ void AtlasFilter::processCommand(size_t cmdLen)
     ATLAS_LOGGER_DEBUG("Process command from gateway");
     
     /* Parse commands */
-    cmdBatch.setRawCommands(data_, cmdLen);
+    cmdBatch.setRawCommands(cmdBuffer, cmdLen);
     cmds = cmdBatch.getParsedCommands();
 
     for (const AtlasCommand &cmd : cmds) {
@@ -255,10 +254,17 @@ void AtlasFilter::handleRead(const boost::system::error_code& error, size_t byte
 {
     if (!error) {
         ATLAS_LOGGER_DEBUG("Reading data from gateway");
+       
+        /* Handle arrived data */ 
+        cmdXfer_.handleArrivedData(bytesTransferred);
+        /* Process command if all the data is available */
+        if (cmdXfer_.isCmdAvailable()) {
+            processCommand(cmdXfer_.getDataBuffer(), cmdXfer_.getCmdLen());
+            cmdXfer_.init();
+        }
 
-        processCommand(bytesTransferred);
-
-        socket_->async_read_some(boost::asio::buffer(data_, sizeof(data_)),
+        socket_->async_read_some(boost::asio::buffer(cmdXfer_.getReadBuffer(),
+                                                     cmdXfer_.getRemainingLen()),
                                  boost::bind(&AtlasFilter::handleRead, this, _1, _2));
     } else {
         ATLAS_LOGGER_ERROR("Error when reading data from gateway. Trying to reconnect to the gateway...");
@@ -271,7 +277,6 @@ void AtlasFilter::handleWrite(const boost::system::error_code& error)
     if (error)
         ATLAS_LOGGER_DEBUG("Error when writing to gateway");
 }
-
 
 void AtlasFilter::gatewayConnect()
 {
@@ -287,9 +292,11 @@ void AtlasFilter::gatewayConnect()
             socket_ = new boost::asio::local::stream_protocol::socket(ioService_);
             /* Connect to gateway */
             socket_->connect(ep);
-        
-            socket_->async_read_some(boost::asio::buffer(data_, sizeof(data_)),
-                                              boost::bind(&AtlasFilter::handleRead, this, _1, _2));
+
+            cmdXfer_.init();
+            socket_->async_read_some(boost::asio::buffer(cmdXfer_.getReadBuffer(),
+                                                         cmdXfer_.getRemainingLen()),
+                                     boost::bind(&AtlasFilter::handleRead, this, _1, _2));
 
             /* Get all firewall rules */
             AtlasCommandBatch cmdBatch;

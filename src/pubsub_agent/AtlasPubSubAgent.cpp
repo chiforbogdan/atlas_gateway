@@ -6,7 +6,6 @@
 #include "../commands/AtlasCommandBatch.h"
 #include "../commands/AtlasCommandType.h"
 #include "../commands/AtlasCommand.h"
-#include "../utils/AtlasUtils.h"
 #include "../device/AtlasDeviceManager.h"
 #include "../policy/AtlasFirewallPolicy.h"
 #include "../sql/AtlasSQLite.h"
@@ -192,7 +191,7 @@ void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t c
     }
 }
 
-void AtlasPubSubAgent::processCommand(size_t cmdLen)
+void AtlasPubSubAgent::processCommand(const uint8_t *cmdBuffer, size_t cmdLen)
 {
     AtlasCommandBatch cmdBatch;
     std::vector<AtlasCommand> cmds;
@@ -200,7 +199,7 @@ void AtlasPubSubAgent::processCommand(size_t cmdLen)
     ATLAS_LOGGER_DEBUG("Process command from publish-subscribe agent");
 
     /* Parse commands */
-    cmdBatch.setRawCommands(data_, cmdLen);
+    cmdBatch.setRawCommands(cmdBuffer, cmdLen);
     cmds = cmdBatch.getParsedCommands();
 
     for (const AtlasCommand &cmd : cmds) {
@@ -215,10 +214,17 @@ void AtlasPubSubAgent::handleRead(const boost::system::error_code& error, size_t
 {
     if (!error) {
         ATLAS_LOGGER_DEBUG("Reading data from publish-subscribe agent");
-   
-        processCommand(bytesTransferred);
-
-        connectedSocket_->async_read_some(boost::asio::buffer(data_, sizeof(data_)),
+ 
+        /* Handle arrived data */ 
+        cmdXfer_.handleArrivedData(bytesTransferred);
+        /* Process command if all the data is available */
+        if (cmdXfer_.isCmdAvailable()) {
+            processCommand(cmdXfer_.getDataBuffer(), cmdXfer_.getCmdLen());
+            cmdXfer_.init();
+        }
+        
+        connectedSocket_->async_read_some(boost::asio::buffer(cmdXfer_.getReadBuffer(),
+                                                              cmdXfer_.getRemainingLen()),
                                           boost::bind(&AtlasPubSubAgent::handleRead, this, _1, _2));
     } else
         ATLAS_LOGGER_ERROR("Error when reading data from publish-subscribe agent. Closing socket...");
@@ -248,8 +254,10 @@ void AtlasPubSubAgent::handleAccept(const boost::system::error_code& error)
         /* Allow only one connection from agent, so close the existing one */
         delete connectedSocket_;
         connectedSocket_ = acceptingSocket_;
-        
-        connectedSocket_->async_read_some(boost::asio::buffer(data_, sizeof(data_)),
+       
+        cmdXfer_.init();
+        connectedSocket_->async_read_some(boost::asio::buffer(cmdXfer_.getReadBuffer(),
+                                                              cmdXfer_.getRemainingLen()),
                                           boost::bind(&AtlasPubSubAgent::handleRead, this, _1, _2));
 
     } else {

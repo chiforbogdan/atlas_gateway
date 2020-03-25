@@ -7,9 +7,9 @@
 #include "AtlasPacket.h"
 #include "AtlasPacketPolicer.h"
 #include "AtlasPacketStats.h"
+#include "../../utils/AtlasUtils.h"
 #include "../../commands/AtlasCommandType.h"
-
-#define ATLAS_PUB_SUB_AGENT_BUF_LEN (2048)
+#include "../../commands/AtlasCommandXfer.h"
 
 namespace atlas {
 
@@ -73,7 +73,8 @@ private:
     * @param[in] txDroppedPkts Number of dropped packets for the client id associated with the rule (egress)
     * @param[in] txPassedPkts Number of accepted packets for the client id associated with the rule (egress)
     */
-    void writeFirewallStats(const std::string &clientId,  uint32_t ruleDroppedPkts, uint32_t rulePassedPkts, uint32_t txDroppedPkts, uint32_t txPassedPkts);
+    void writeFirewallStats(const std::string &clientId,  uint32_t ruleDroppedPkts,
+                            uint32_t rulePassedPkts, uint32_t txDroppedPkts, uint32_t txPassedPkts);
 
     /**
     * @brief Get statistics for firewall rule
@@ -101,10 +102,11 @@ private:
 
     /**
     * @brief Process command from gateway
+    * @param[in] cmdBuffer Command buffer
     * @param[in] cmdLen Command length
     * @return none
     */ 
-    void processCommand(size_t cmdLen);
+    void processCommand(const uint8_t *cmdBuffer, size_t cmdLen);
     
     /**
     * @brief Read data from publish-subscribe agent
@@ -130,9 +132,6 @@ private:
     /* Gateway socket */
     boost::asio::local::stream_protocol::socket *socket_;
 
-    /* Read data buffer */
-    uint8_t data_[ATLAS_PUB_SUB_AGENT_BUF_LEN];
-
     /* Filter rules lock */
     std::mutex mutex_;
 
@@ -144,6 +143,9 @@ private:
 
     /* Fixed window rate limiting timer object */
     boost::asio::deadline_timer timer_;
+
+    /* Command transfer over stream channel */
+    AtlasCommandXfer cmdXfer_;
 };
 
 } // namespace atlas
