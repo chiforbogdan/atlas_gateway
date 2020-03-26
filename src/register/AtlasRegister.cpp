@@ -51,8 +51,13 @@ AtlasCoapResponse AtlasRegister::keepaliveCallback(const std::string &path, cons
 
     ATLAS_LOGGER_INFO1("Process KEEPALIVE command from client with DTLS PSK identity ", pskIdentity);
 
-    AtlasDevice& device = AtlasDeviceManager::getInstance().getDevice(pskIdentity);
-    if (!device.isRegistered()) {
+    AtlasDevice* device = AtlasDeviceManager::getInstance().getDevice(pskIdentity);
+    if(!device) {
+        ATLAS_LOGGER_ERROR("No client device exists in db with identity " + pskIdentity);
+        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    }
+
+    if (!device->isRegistered()) {
         ATLAS_LOGGER_ERROR("Received KEEPALIVE command for a device which is not registered...");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
@@ -116,10 +121,10 @@ AtlasCoapResponse AtlasRegister::keepaliveCallback(const std::string &path, cons
     ATLAS_LOGGER_INFO1("Keep-alive SUCCESS sent by client with identity ", identity);
 
     /* Notify device that a keep-alive was just received */
-    device.keepAliveNow();
+    device->keepAliveNow();
 
     /* Save ip address in device client*/
-    device.setIpPort(ipPort);
+    device->setIpPort(ipPort);
     
     return ATLAS_COAP_RESP_OK;
 }
@@ -178,14 +183,20 @@ AtlasCoapResponse AtlasRegister::registerCallback(const std::string &path, const
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
 
-    ATLAS_LOGGER_INFO1("New ATLAS client registered with identity ", identity);
+    ATLAS_LOGGER_INFO1("New ATLAS client is trying to register with identity ", identity);
 
+    AtlasDevice* device = AtlasDeviceManager::getInstance().getDevice(identity);
+    if(!device) {
+        ATLAS_LOGGER_ERROR("No client device exists in db with identity " + pskIdentity);
+        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    }
+    
     /* Create device (if necessary) and set IP */
-    AtlasDeviceManager::getInstance().getDevice(identity).registerNow();
-    AtlasDeviceManager::getInstance().getDevice(identity).setIpPort(ipPort);
+    device->registerNow();
+    device->setIpPort(ipPort);
 
     /* Install alerts on client device */
-    AtlasDeviceManager::getInstance().getDevice(identity).pushAlerts();
+    device->pushAlerts();
 
     return ATLAS_COAP_RESP_OK;
 }

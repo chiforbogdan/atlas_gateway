@@ -33,7 +33,7 @@ public:
     * @param[in] deviceCloud Cloud back-end manager
     * @return none
     */
-    AtlasDevice(const std::string &identity, std::shared_ptr<AtlasDeviceCloud> deviceCloud);
+    AtlasDevice(const std::string &identity, const std::string &psk, std::shared_ptr<AtlasDeviceCloud> deviceCloud);
 
     /**
     * @brief Set PSK for client device

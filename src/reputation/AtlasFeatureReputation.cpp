@@ -42,8 +42,13 @@ AtlasCoapResponse AtlasFeatureReputation::requestReputationCallback(const std::s
 
     ATLAS_LOGGER_INFO1("Process FEATURE command from client with DTLS PSK identity ", pskIdentity);
 
-    AtlasDevice& device = AtlasDeviceManager::getInstance().getDevice(pskIdentity);
-    if (!device.isRegistered()) {
+    AtlasDevice* device = AtlasDeviceManager::getInstance().getDevice(pskIdentity);
+    if(!device) {
+        ATLAS_LOGGER_ERROR("No client device exists in db with identity " + pskIdentity);
+        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    }
+
+    if (!device->isRegistered()) {
         ATLAS_LOGGER_ERROR("Received FEATURE command for a device which is not registered...");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
@@ -133,8 +138,13 @@ AtlasCoapResponse AtlasFeatureReputation::feedbackReputationCallback(const std::
 
     ATLAS_LOGGER_INFO1("Process FEEDBACK command from client with DTLS PSK identity ", pskIdentity);
 
-    AtlasDevice& device = AtlasDeviceManager::getInstance().getDevice(pskIdentity);
-    if (!device.isRegistered()) {
+    AtlasDevice* device = AtlasDeviceManager::getInstance().getDevice(pskIdentity);
+    if(!device) {
+        ATLAS_LOGGER_ERROR("No client device exists in db with identity " + pskIdentity);
+        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    }
+    
+    if (!device->isRegistered()) {
         ATLAS_LOGGER_ERROR("Received FEEDBACK command for a device which is not registered...");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }

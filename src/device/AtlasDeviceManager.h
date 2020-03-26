@@ -36,11 +36,12 @@ public:
 
     /**
     * @brief Get the client device associated with the given identity. If the client
-    * device does not exist, then it will be created.
+    * device does not exist in cache, but exists in db then it will be created. If not
+    * cache return nullptr
     * @param[in] identity Client device identity
     * @return Instance to client device
     */
-    AtlasDevice& getDevice(const std::string& identity);
+    AtlasDevice* getDevice(const std::string& identity);
 
     /**
     * @brief Parse each device

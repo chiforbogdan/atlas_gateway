@@ -37,8 +37,13 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
 
     ATLAS_LOGGER_INFO1("Process FIREWALL POLICY INSTALL command from client with DTLS PSK identity ", pskIdentity);
 
-    AtlasDevice& device = AtlasDeviceManager::getInstance().getDevice(pskIdentity);
-    if (!device.isRegistered()) {
+    AtlasDevice* device = AtlasDeviceManager::getInstance().getDevice(pskIdentity);
+    if(!device) {
+        ATLAS_LOGGER_ERROR("No client device exists in db with identity " + pskIdentity);
+        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    }
+
+    if (!device->isRegistered()) {
         ATLAS_LOGGER_ERROR("Received FIREWALL POLICY INSTALL command for a device which is not registered...");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
@@ -96,10 +101,10 @@ AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, c
     policyAux->setPayloadLen(*payloadLen);
 
     /* Set policy info in this device */
-    device.setPolicyInfo(std::move(policyAux));
+    device->setPolicyInfo(std::move(policyAux));
 
     /* Install firewall policy in mosquitto plug-in */
-    AtlasPubSubAgent::getInstance().installFirewallRule(pskIdentity, device.getPolicy());
+    AtlasPubSubAgent::getInstance().installFirewallRule(pskIdentity, device->getPolicy());
 
     return ATLAS_COAP_RESP_OK;
 }

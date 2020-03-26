@@ -37,18 +37,23 @@ void AtlasAlert::respCallback(AtlasCoapResponse respStatus, const uint8_t *resp_
 
 void AtlasAlert::push()
 {
-    AtlasDevice &device = AtlasDeviceManager::getInstance().getDevice(deviceIdentity_);
-    std::string url = device.getUrl() + "/" + path_;
+    AtlasDevice *device = AtlasDeviceManager::getInstance().getDevice(deviceIdentity_);
+    if(!device) {
+        ATLAS_LOGGER_ERROR("No client device exists in db with identity " + deviceIdentity_);
+        return;
+    }
+    
+    std::string url = device->getUrl() + "/" + path_;
 
     ATLAS_LOGGER_DEBUG("Creating command for telemetry alert push");
 
-    if (!device.isRegistered()) {
+    if (!device->isRegistered()) {
         ATLAS_LOGGER_INFO1("Cannot push telemetry alert for OFFLINE device with identity ", deviceIdentity_);
         return;
     }
 
     /* Set DTLS information for this client device */
-    AtlasCoapClient::getInstance().setDtlsInfo(deviceIdentity_, device.getPsk());
+    AtlasCoapClient::getInstance().setDtlsInfo(deviceIdentity_, device->getPsk());
 
     pushCommand(url);
 }

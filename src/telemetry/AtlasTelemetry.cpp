@@ -201,8 +201,13 @@ AtlasCoapResponse AtlasTelemetry::featureCallback(const std::string &path, const
 
     ATLAS_LOGGER_INFO1("Process TELEMETRY command from client with DTLS PSK identity ", pskIdentity);
 
-    AtlasDevice& device = AtlasDeviceManager::getInstance().getDevice(pskIdentity);
-    if (!device.isRegistered()) {
+    AtlasDevice *device = AtlasDeviceManager::getInstance().getDevice(pskIdentity);
+    if(!device) {
+        ATLAS_LOGGER_ERROR("No client device exists in db with identity " + pskIdentity);
+        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    }
+
+    if (!device->isRegistered()) {
         ATLAS_LOGGER_ERROR("Received TELEMETRY command for a device which is not registered...");
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
@@ -243,9 +248,9 @@ AtlasCoapResponse AtlasTelemetry::featureCallback(const std::string &path, const
     }
 
     /* Set device telemetry feature */
-    device.setFeature(feature.first, feature.second);
+    device->setFeature(feature.first, feature.second);
 
-    ATLAS_LOGGER_INFO1("Device telemetry state for identity " + identity + " changed to ", device.telemetryInfoToJSON());
+    ATLAS_LOGGER_INFO1("Device telemetry state for identity " + identity + " changed to ", device->telemetryInfoToJSON());
     
     return ATLAS_COAP_RESP_OK;
 }

@@ -35,7 +35,9 @@ const std::string ATLAS_DATA_REPUTATION_JSON_KEY = "temperatureReputation";
 } // anonymous namespace
 
 AtlasDevice::AtlasDevice(const std::string &identity,
+                         const std::string &psk,
                          std::shared_ptr<AtlasDeviceCloud> deviceCloud) : identity_(identity),
+                                                                          psk_(psk),
                                                                           deviceCloud_(deviceCloud),
                                                                           registered_(false),
                                                                           regIntervalSec_(0),

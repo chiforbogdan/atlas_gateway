@@ -129,6 +129,13 @@ public:
     */
     bool checkDeviceForStats(const std::string &identity);
 
+    /**
+    * @brief Check if a device exists in db
+    * @param[in] identity Device identity
+    * @return true if device exist, false on error or not exist
+    */
+    bool checkDevice(const std::string &identity);
+
     AtlasSQLite(const AtlasSQLite&) = delete;
     AtlasSQLite& operator=(const AtlasSQLite&) = delete;
 
