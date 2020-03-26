@@ -212,12 +212,8 @@ void AtlasCoapServer::setDtlsPsk(coap_context_t *ctx)
     psk.validate_id_call_back = &AtlasCoapServer::verifyIdentity;
 
     /* Set PSK */
-    if (!coap_context_set_psk2(ctx, &psk)) {
-        coap_free_context(ctx);
-        throw AtlasCoapException("CoAP DTLS PSK setup data failed");
-    }
+    coap_context_set_psk2(ctx, &psk);
  }
-
 
 coap_context_t* AtlasCoapServer::getContext(uint16_t port, AtlasCoapServerMode mode)
 {

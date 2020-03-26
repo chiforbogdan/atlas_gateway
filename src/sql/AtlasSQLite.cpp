@@ -783,38 +783,4 @@ bool AtlasSQLite::checkDeviceForStats(const std::string &identity)
     return false;
 }
 
-bool AtlasSQLite::checkDevice(const std::string &identity)
-{
-    sqlite3_stmt *stmt = nullptr;
-    
-    BOOST_SCOPE_EXIT(&stmt) {
-        sqlite3_finalize(stmt);
-    } BOOST_SCOPE_EXIT_END
-
-    if(!isConnected())
-        return false;
-
-    if(sqlite3_prepare_v2(pCon_, SQL_GET_ID_DEVICE,-1, &stmt, 0) != SQLITE_OK) {
-        ATLAS_LOGGER_ERROR("Could not prepare, fct:checkDevice, stmt:SQL_GET_ID_DEVICE, error:" + std::string(sqlite3_errmsg(pCon_)));
-	    return false;
-    }
-
-    if (sqlite3_bind_text(stmt, 1, identity.c_str(), identity.length(),	SQLITE_STATIC) != SQLITE_OK) {
-        ATLAS_LOGGER_ERROR("Could not bind, fct:checkDevice, stmt:SQL_GET_ID_DEVICE, error:" + std::string(sqlite3_errmsg(pCon_)));
-        return false;
-    }
-
-    int stat = sqlite3_step(stmt);
-    if (stat != SQLITE_DONE && stat != SQLITE_ROW) {
-        ATLAS_LOGGER_ERROR("Could not step, fct:checkDevice, stmt:SQL_GET_ID_DEVICE, error:" + std::string(sqlite3_errmsg(pCon_)));
-        return false;
-    }
-
-    if (stat == SQLITE_ROW){
-        return true;
-    }
-
-    return false;
-}
-
 } // namespace atlas

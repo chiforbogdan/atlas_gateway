@@ -252,18 +252,14 @@ void AtlasDeviceManager::initDataReputation(AtlasDevice &device)
 AtlasDevice* AtlasDeviceManager::getDevice(const std::string& identity)
 {
     if (devices_.find(identity) == devices_.end()) {
-        ATLAS_LOGGER_INFO1("New client device created with identity ", identity);
-
-        if(!AtlasSQLite::getInstance().checkDevice(identity)) {
-            ATLAS_LOGGER_ERROR("No client device exists in db with identity " + identity);
-            return nullptr; 
-        }
-
+        
         std::string psk = AtlasSQLite::getInstance().selectDevicePsk(identity);
         if(psk == "") {
             ATLAS_LOGGER_ERROR("PSK is empty for identity " + identity);
             return nullptr; 
         }
+
+        ATLAS_LOGGER_INFO1("New client device created with identity ", identity);
 
         devices_[identity] = AtlasDevice(identity, 
                                          psk,
