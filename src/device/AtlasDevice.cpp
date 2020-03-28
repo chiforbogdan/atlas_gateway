@@ -69,27 +69,50 @@ void AtlasDevice::installDefaultAlerts()
     ATLAS_LOGGER_INFO1("Install default telemetry alerts for client with identity ", identity_);
     
     /* Install default push alerts */
+    
+    /* Sysinfo number of processes */
     pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_SYSINFO_PROCS, identity_);
     pushAlerts_[TELEMETRY_SYSINFO_PROCS] = std::unique_ptr<AtlasAlert>(pushAlert);
-    
+    /* Sysinfo uptime */
     pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_SYSINFO_UPTIME, identity_);
     pushAlerts_[TELEMETRY_SYSINFO_UPTIME] = std::unique_ptr<AtlasAlert>(pushAlert);
+    /* Sysinfo freeram */
+    pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_SYSINFO_FREERAM, identity_);
+    pushAlerts_[TELEMETRY_SYSINFO_FREERAM] = std::unique_ptr<AtlasAlert>(pushAlert);
+    /* Sysinfo shared RAM */
+    pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_SYSINFO_SHAREDRAM, identity_);
+    pushAlerts_[TELEMETRY_SYSINFO_SHAREDRAM] = std::unique_ptr<AtlasAlert>(pushAlert);
+    /* Sysinfo buffer RAM */
+    pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_SYSINFO_BUFFERRAM, identity_);
+    pushAlerts_[TELEMETRY_SYSINFO_BUFFERRAM] = std::unique_ptr<AtlasAlert>(pushAlert);
+    /* Sysinfo total swap */
+    pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_SYSINFO_TOTALSWAP, identity_);
+    pushAlerts_[TELEMETRY_SYSINFO_TOTALSWAP] = std::unique_ptr<AtlasAlert>(pushAlert);
+    /* Sysinfo free swap */
+    pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_SYSINFO_FREESWAP, identity_);
+    pushAlerts_[TELEMETRY_SYSINFO_FREESWAP] = std::unique_ptr<AtlasAlert>(pushAlert);
+    /* Sysinfo load1 */
+    pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_SYSINFO_LOAD1, identity_);
+    pushAlerts_[TELEMETRY_SYSINFO_LOAD1] = std::unique_ptr<AtlasAlert>(pushAlert);
+    /* Sysinfo load5 */
+    pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_SYSINFO_LOAD5, identity_);
+    pushAlerts_[TELEMETRY_SYSINFO_LOAD5] = std::unique_ptr<AtlasAlert>(pushAlert);
+    /* Sysinfo load15 */
+    pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_SYSINFO_LOAD15, identity_);
+    pushAlerts_[TELEMETRY_SYSINFO_LOAD15] = std::unique_ptr<AtlasAlert>(pushAlert);
 
+    /* Data plane packets per minute*/
     pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE, identity_);
     pushAlerts_[TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE] = std::unique_ptr<AtlasAlert>(pushAlert);
-
+    /* Data plane average packets length */
     pushAlert = AtlasAlertFactory::getPushAlert(TELEMETRY_PACKETS_INFO_PACKETS_AVG, identity_);
     pushAlerts_[TELEMETRY_PACKETS_INFO_PACKETS_AVG] = std::unique_ptr<AtlasAlert>(pushAlert);
 
     /* Install default threshold alerts */
+
+    /* Sysinfo number of processes */
     thresholdAlert = AtlasAlertFactory::getThresholdAlert(TELEMETRY_SYSINFO_PROCS, identity_);
     thresholdAlerts_[TELEMETRY_SYSINFO_PROCS] = std::unique_ptr<AtlasAlert>(thresholdAlert);
-
-    thresholdAlert = AtlasAlertFactory::getThresholdAlert(TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE, identity_);
-    thresholdAlerts_[TELEMETRY_PACKETS_INFO_PACKETS_PER_MINUTE] = std::unique_ptr<AtlasAlert>(thresholdAlert);
-
-    thresholdAlert = AtlasAlertFactory::getThresholdAlert(TELEMETRY_PACKETS_INFO_PACKETS_AVG, identity_);
-    thresholdAlerts_[TELEMETRY_PACKETS_INFO_PACKETS_AVG] = std::unique_ptr<AtlasAlert>(thresholdAlert);
 }
 
 void AtlasDevice::pushAlerts()
