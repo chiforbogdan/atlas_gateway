@@ -57,9 +57,9 @@ target_link_libraries(${PROJECT_NAME} ${SQLITE_LIBRARIES} ${COAP_LIBRARIES} ${Bo
 target_link_libraries(atlas_gateway_cli ${SQLITE_LIBRARIES} ${COAP_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(atlas_gateway_reputation_test ${Boost_LIBRARIES})
 
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
-target_compile_options(atlas_gateway_cli PRIVATE -Wall)
-target_compile_options(atlas_gateway_reputation_test PRIVATE -Wall)
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wno-psabi)
+target_compile_options(atlas_gateway_cli PRIVATE -Wall -Wno-psabi)
+target_compile_options(atlas_gateway_reputation_test PRIVATE -Wall -Wno-psabi)
 
 # Mosquitto dependency
 pkg_check_modules(MOSQUITTO libmosquitto REQUIRED)
@@ -69,5 +69,6 @@ file(GLOB ATLAS_GATEWAY_MOSQUITTO_PLUGIN_SOURCES "src/mosquitto_plugin/*.cpp" "s
 
 add_library(atlas_gateway_mosquitto_plugin SHARED ${ATLAS_GATEWAY_MOSQUITTO_PLUGIN_SOURCES})
 target_link_libraries(${PROJECT_NAME}_mosquitto_plugin ${MOSQUITTO_LIBRARIES} ${Boost_LIBRARIES})
+target_compile_options(${PROJECT_NAME}_mosquitto_plugin PRIVATE -Wno-psabi)
 
 install(TARGETS ${PROJECT_NAME} atlas_gateway_cli DESTINATION bin)
