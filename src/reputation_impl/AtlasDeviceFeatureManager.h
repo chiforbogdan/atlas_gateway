@@ -77,7 +77,7 @@ public:
      * @brief Returns the reputation value of current device
      * @return Reputation value
     */
-    double getReputation() { return deviceReputation_; }
+    double getReputationScore() { return deviceReputation_; }
 
     /**
      * @brief Updates the device reputation value

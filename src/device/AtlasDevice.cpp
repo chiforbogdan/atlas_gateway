@@ -244,10 +244,12 @@ std::string AtlasDevice::reputationToJSON(AtlasDeviceNetworkType netType)
     std::string tmpRet = "\"";
     switch (netType) {
         case AtlasDeviceNetworkType::ATLAS_NETWORK_SYSTEM:
-            tmpRet = tmpRet + ATLAS_SYSTEM_REPUTATION_JSON_KEY + "\": \"" + std::to_string(deviceReputation_[netType].getReputation()) + "\"";
+            tmpRet = tmpRet + ATLAS_SYSTEM_REPUTATION_JSON_KEY + "\": \"" +
+                     std::to_string(deviceReputation_[netType].getReputationScore()) + "\"";
             break;    
         case AtlasDeviceNetworkType::ATLAS_NETWORK_SENSOR_TEMPERATURE:
-            tmpRet = tmpRet + ATLAS_DATA_REPUTATION_JSON_KEY + "\": \"" + std::to_string(deviceReputation_[netType].getReputation()) + "\"";
+            tmpRet = tmpRet + ATLAS_DATA_REPUTATION_JSON_KEY + "\": \"" +
+                     std::to_string(deviceReputation_[netType].getReputationScore()) + "\"";
             break;
         default:
             ATLAS_LOGGER_ERROR("Unknown reputation network type in JSON serialize");

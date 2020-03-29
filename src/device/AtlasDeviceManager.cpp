@@ -32,6 +32,12 @@ const double ATLAS_SYSTEM_REPUTATION_THRESHOLD = 0.8;
 /* Data reputation threshold value */
 const double ATLAS_DATA_REPUTATION_THRESHOLD = 0.8;
 
+/* Global reputation score weight:
+ * data network score * <weight1> + system network score * <weight2>, where
+ weight1 + weight2 = 1  */
+const double ATLAS_SYSTEM_REPUTATION_WEIGHT = 0.7;
+const double ATLAS_DATA_REPUTATION_WEIGHT = 0.3;
+
 } // anonymous namespace
 
 AtlasDeviceManager& AtlasDeviceManager::getInstance()
@@ -51,6 +57,8 @@ AtlasDeviceManager::AtlasDeviceManager(): deviceCloud_(new AtlasDeviceCloud()),
     fsAlarm_.start();
     /* Start system reputation alarm */
     sysRepAlarm_.start();
+    /* Add reputation type for the most trusted devices */
+    trustedDevices_[AtlasDeviceNetworkType::ATLAS_NETWORK_SENSOR_TEMPERATURE] = "";
 }
 
 void AtlasDeviceManager::firewallStatisticsAlarmCallback()
@@ -58,9 +66,9 @@ void AtlasDeviceManager::firewallStatisticsAlarmCallback()
     ATLAS_LOGGER_INFO("Firewall-statistics alarm callback");
 
     forEachDevice([] (AtlasDevice& device) 
-                     {     
+                     {
                          if(device.getPolicy()) {
-                             AtlasPubSubAgent::getInstance().getFirewallRuleStats((device.getPolicy()->getClientId()));
+                             AtlasPubSubAgent::getInstance().getFirewallRuleStats(device.getPolicy()->getClientId());
                             
                              /* update in db previous stats sample */
                              bool result = AtlasSQLite::getInstance().updateStats(device.getIdentity(),
@@ -69,6 +77,41 @@ void AtlasDeviceManager::firewallStatisticsAlarmCallback()
                                  ATLAS_LOGGER_ERROR("Uncommited update on statistics data");
                          }
                      });
+}
+
+std::string AtlasDeviceManager::getTrustedDevice(AtlasDeviceNetworkType networkType)
+{
+    /* If reputation network type does not exist (a new entry cannot be added) */
+    if (trustedDevices_.find(networkType) == trustedDevices_.end())
+        return "";
+
+    return trustedDevices_[networkType];
+}
+
+void AtlasDeviceManager::updateReputationOrder(AtlasDeviceNetworkType networkType)
+{
+    double repVal;
+    double repValMax = 0;
+    std::string mostTrusted;
+
+    ATLAS_LOGGER_INFO("Update global reputation order");
+
+    forEachDevice([&] (AtlasDevice& device)
+                     {
+                         if (!device.hasReputation(networkType))
+                             return;
+                        
+                         AtlasDeviceFeatureManager& sysRep = device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_SYSTEM); 
+                         AtlasDeviceFeatureManager& dataRep = device.getReputation(networkType); 
+                         repVal = sysRep.getReputationScore() * ATLAS_SYSTEM_REPUTATION_WEIGHT +
+                                  dataRep.getReputationScore() * ATLAS_DATA_REPUTATION_WEIGHT;
+                         if (repVal > repValMax) {
+                             repValMax = repVal;
+                             mostTrusted = device.getIdentity();
+                         }
+                     });
+
+    trustedDevices_[networkType] = mostTrusted;
 }
 
 void AtlasDeviceManager::subAlarmCallback(AtlasDevice& device)
@@ -101,6 +144,10 @@ void AtlasDeviceManager::sysRepAlarmCallback()
                          {     
                             subAlarmCallback(device);
                          });
+
+    /* After the system reputation is changed, update the reputation order */
+    for (auto it = trustedDevices_.begin(); it != trustedDevices_.end(); ++it)
+        updateReputationOrder(it->first);
 }
 
 void AtlasDeviceManager::updateDataReputation(const std::string &identity,
@@ -134,11 +181,9 @@ void AtlasDeviceManager::updateDataReputation(const std::string &identity,
 
     /* Compute system reputation using naive-bayes */
     double repVal = AtlasReputationNaiveBayes::computeReputation(dataReputation, feedbackMatrix);
+    
     ATLAS_LOGGER_INFO("Data reputation for device with identity " + device.getIdentity() +
                       " is " + std::to_string(repVal));
-    std::cout << "Data reputation for device with identity " + device.getIdentity() + " is " + std::to_string(repVal) << std::endl;
-    for (auto &elem : feedbackMatrix)
-        std::cout << " " << elem.second << std::endl;
 
     device.syncReputation(networkType);
 

@@ -36,15 +36,15 @@ const uint16_t ATLAS_PUSH_ALERT_FREESWAP_RATE_SEC_DEFAULT = 300;
 const std::string ATLAS_PUSH_ALERT_FREESWAP_PATH = "client/telemetry/sysinfo/freeswap/alerts/push";
 
 /* Sysinfo load1 default push alert values */
-const uint16_t ATLAS_PUSH_ALERT_LOAD1_RATE_SEC_DEFAULT = 300;
+const uint16_t ATLAS_PUSH_ALERT_LOAD1_RATE_SEC_DEFAULT = 120;
 const std::string ATLAS_PUSH_ALERT_LOAD1_PATH = "client/telemetry/sysinfo/load1/alerts/push";
 
 /* Sysinfo load5 default push alert values */
-const uint16_t ATLAS_PUSH_ALERT_LOAD5_RATE_SEC_DEFAULT = 300;
+const uint16_t ATLAS_PUSH_ALERT_LOAD5_RATE_SEC_DEFAULT = 120;
 const std::string ATLAS_PUSH_ALERT_LOAD5_PATH = "client/telemetry/sysinfo/load5/alerts/push";
 
 /* Sysinfo load15 default push alert values */
-const uint16_t ATLAS_PUSH_ALERT_LOAD15_RATE_SEC_DEFAULT = 300;
+const uint16_t ATLAS_PUSH_ALERT_LOAD15_RATE_SEC_DEFAULT = 120;
 const std::string ATLAS_PUSH_ALERT_LOAD15_PATH = "client/telemetry/sysinfo/load15/alerts/push";
 
 /* Packets per minute default push alert values */

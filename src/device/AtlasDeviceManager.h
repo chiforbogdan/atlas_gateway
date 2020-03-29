@@ -61,6 +61,13 @@ public:
                               AtlasDeviceNetworkType networkType,
                               std::vector<std::pair<AtlasDeviceFeatureType, double>> &feedbackMatrix);
 
+    /**
+    * @brief Get the most trusted device within a categiry (sensor type)
+    * @param[in] networkType Reputation network type
+    * @return Identity of the most trusted device
+    */
+    std::string getTrustedDevice(AtlasDeviceNetworkType networkType);
+
     AtlasDeviceManager(const AtlasDeviceManager&) = delete;
     AtlasDeviceManager& operator=(const AtlasDeviceManager&) = delete;
 
@@ -116,6 +123,14 @@ private:
    */
     void initDataReputation(AtlasDevice &device);
 
+    /**
+    * @brief Update reputation order to deliver the most trusted
+    *        device within a category
+    * @param[in] networkType Reputation network type (sensor type)
+    * @return none
+    */
+    void updateReputationOrder(AtlasDeviceNetworkType networkType);
+
     /* Client devices */
     std::unordered_map<std::string, AtlasDevice> devices_;
 
@@ -133,6 +148,9 @@ private:
 
     /* System reputation alarm */
     AtlasAlarm sysRepAlarm_;
+
+    /* Holds the most trusted device within a sensor category */
+    std::unordered_map<AtlasDeviceNetworkType, std::string> trustedDevices_;
 };
 
 } // namespace atlas

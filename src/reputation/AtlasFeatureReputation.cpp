@@ -36,7 +36,6 @@ AtlasCoapResponse AtlasFeatureReputation::requestReputationCallback(const std::s
     boost::optional<uint16_t> sensorType;
     uint16_t tmp;
     uint8_t *buf = nullptr;
-    const char *clientRepId = "client3";
     
     ATLAS_LOGGER_DEBUG("Feature callback executed...");
 
@@ -94,13 +93,16 @@ AtlasCoapResponse AtlasFeatureReputation::requestReputationCallback(const std::s
         return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
     }
 
-
     ATLAS_LOGGER_INFO("Device with identity " + identity + " sent a reputation request for feature " + std::to_string(*sensorType));
     
-    /* FIXME get response from reputation module (naive bayes) */
+    std::string mostTrusted = AtlasDeviceManager::getInstance().getTrustedDevice((AtlasDeviceNetworkType) *sensorType);
+    if (mostTrusted == "" || mostTrusted == identity) {
+        ATLAS_LOGGER_INFO("Cannot find the most trusted device for feature" + std::to_string(*sensorType));
+        return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
+    }
 
     /* Add feature command */
-    AtlasCommand cmdPush(ATLAS_CMD_FEATURE_REQUEST, strlen(clientRepId), (uint8_t *) clientRepId);
+    AtlasCommand cmdPush(ATLAS_CMD_FEATURE_REQUEST, mostTrusted.size(), (uint8_t *) mostTrusted.c_str());
     cmdBatch.addCommand(cmdPush);
 
     /* Serialize response */
