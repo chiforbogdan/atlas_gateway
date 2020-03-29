@@ -3,7 +3,7 @@
 
 namespace atlas {
 
-AtlasPacketPolicer::AtlasPacketPolicer(uint8_t maxQos, uint16_t ppm, uint16_t maxPayloadLen) : statPktDrop_(0), statPktPass_(0), windowPpm_(0)
+AtlasPacketPolicer::AtlasPacketPolicer(uint8_t maxQos, uint16_t ppm, uint16_t maxPayloadLen) : windowPpm_(0), statPktDrop_(0), statPktPass_(0)
 {
     maxQos_ = maxQos;
     ppm_ = ppm;
