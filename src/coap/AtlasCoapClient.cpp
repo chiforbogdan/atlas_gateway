@@ -200,7 +200,7 @@ void AtlasCoapClient::scheduleCallback(coap_context_t *ctx, int fd)
 {
     ATLAS_LOGGER_DEBUG("CoAP request scheduler called");
 
-    coap_run_once(ctx, COAP_RUN_NONBLOCK);
+    coap_io_process(ctx, COAP_RUN_NONBLOCK);
 
     /* Cancel scheduling entry if the requests does not exist anymore */
     if (requests_[ctx].getContext() != ctx)
