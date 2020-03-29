@@ -97,19 +97,19 @@ void AtlasDeviceManager::updateReputationOrder(AtlasDeviceNetworkType networkTyp
     ATLAS_LOGGER_INFO("Update global reputation order");
 
     forEachDevice([&] (AtlasDevice& device)
-                     {
-                         if (!device.hasReputation(networkType))
-                             return;
+                      {
+                          if (!device.hasReputation(networkType))
+                              return;
                         
-                         AtlasDeviceFeatureManager& sysRep = device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_SYSTEM); 
-                         AtlasDeviceFeatureManager& dataRep = device.getReputation(networkType); 
-                         repVal = sysRep.getReputationScore() * ATLAS_SYSTEM_REPUTATION_WEIGHT +
-                                  dataRep.getReputationScore() * ATLAS_DATA_REPUTATION_WEIGHT;
-                         if (repVal > repValMax) {
-                             repValMax = repVal;
-                             mostTrusted = device.getIdentity();
-                         }
-                     });
+                          AtlasDeviceFeatureManager& sysRep = device.getReputation(AtlasDeviceNetworkType::ATLAS_NETWORK_SYSTEM); 
+                          AtlasDeviceFeatureManager& dataRep = device.getReputation(networkType); 
+                          repVal = sysRep.getReputationScore() * ATLAS_SYSTEM_REPUTATION_WEIGHT +
+                                   dataRep.getReputationScore() * ATLAS_DATA_REPUTATION_WEIGHT;
+                          if (repVal > repValMax) {
+                              repValMax = repVal;
+                              mostTrusted = device.getIdentity();
+                          }
+                      });
 
     trustedDevices_[networkType] = mostTrusted;
 }
@@ -193,6 +193,9 @@ void AtlasDeviceManager::updateDataReputation(const std::string &identity,
                                                                dataReputation);
     if(!result)
         ATLAS_LOGGER_ERROR("Uncommited update on naiveBayes params for System");
+
+    /* Update sensor reputation order */
+    updateReputationOrder(networkType);
 }
 
 
