@@ -302,7 +302,7 @@ bool AtlasSQLite::insertNetwork(const std::string &identity, int networkTypeId, 
     if (sqlite3_bind_int(stmt, 1, deviceId) != SQLITE_OK ||
         sqlite3_bind_int(stmt, 2, networkTypeId) != SQLITE_OK ||
         sqlite3_bind_int(stmt, 3, manager.getTotalTransactions()) != SQLITE_OK ||
-        sqlite3_bind_int(stmt, 4, manager.getTotalSuccessfulTransactions()) != SQLITE_OK){ 
+        sqlite3_bind_int(stmt, 4, manager.getTotalSuccessfulTransactions()) != SQLITE_OK) { 
         ATLAS_LOGGER_ERROR("Could not bind, fct:insertNetwork, stmt:SQL_INSERT_NETWORK, error:" + std::string(sqlite3_errmsg(pCon_)));
         return false;
     }
@@ -419,7 +419,7 @@ bool AtlasSQLite::insertFeatures(const std::string &identity, int networkTypeId,
         sqlite3_bind_int(stmt, 2, stats.getRuleDroppedPkts()) != SQLITE_OK ||
         sqlite3_bind_int(stmt, 3, stats.getRulePassedPkts()) != SQLITE_OK ||
         sqlite3_bind_int(stmt, 4, stats.getTxDroppedPkts()) != SQLITE_OK ||
-        sqlite3_bind_int(stmt, 5, stats.getTxPassedPkts()) != SQLITE_OK){ 
+        sqlite3_bind_int(stmt, 5, stats.getTxPassedPkts()) != SQLITE_OK) { 
         ATLAS_LOGGER_ERROR("Could not bind, fct:insertStats, stmt:SQL_INSERT_STATS, error:" + std::string(sqlite3_errmsg(pCon_)));
         return false;
     }
@@ -505,7 +505,7 @@ bool AtlasSQLite::selectNetwork(const std::string &identity, int networkTypeId, 
         return false;
     }
 
-    if (stat == SQLITE_ROW){
+    if (stat == SQLITE_ROW) {
         manager.setTotalTransactions(sqlite3_column_int(stmt, 0));
         manager.setTotalSuccessfulTransactions(sqlite3_column_int(stmt, 1));
     }
@@ -540,11 +540,11 @@ bool AtlasSQLite::selectFeatures(const std::string &identity, int networkTypeId,
     for (;;)
     {
         stat = sqlite3_step(stmt);
-        if (stat == SQLITE_DONE){
+        if (stat == SQLITE_DONE) {
             break;
         }
 
-        if(stat != SQLITE_ROW){
+        if(stat != SQLITE_ROW) {
             ATLAS_LOGGER_ERROR("Could not step, fct:selectFeatures, stmt:SQL_GET_FEATURE, error:" + std::string(sqlite3_errmsg(pCon_)));
             return false;
         }
@@ -583,7 +583,7 @@ bool AtlasSQLite::selectStats(const std::string &identity, AtlasFirewallStats &s
         return false;
     }
 
-    if (stat == SQLITE_ROW){
+    if (stat == SQLITE_ROW) {
         stats.addRuleDroppedPkts(sqlite3_column_int(stmt, 0));
         stats.addRulePassedPkts(sqlite3_column_int(stmt, 1));
         stats.addTxDroppedPkts(sqlite3_column_int(stmt, 2));
@@ -742,7 +742,7 @@ bool AtlasSQLite::checkDeviceForFeatures(const std::string &identity, int networ
         return false;
     }
 
-    if (stat == SQLITE_ROW){
+    if (stat == SQLITE_ROW) {
         return true;
     }
 
@@ -776,7 +776,7 @@ bool AtlasSQLite::checkDeviceForStats(const std::string &identity)
         return false;
     }
 
-    if (stat == SQLITE_ROW){
+    if (stat == SQLITE_ROW) {
         return true;
     }
 

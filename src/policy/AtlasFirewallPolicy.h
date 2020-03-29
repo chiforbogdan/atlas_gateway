@@ -14,7 +14,7 @@ public:
     * @brief Default ctor for firewall policy
     * @return none
     */
-    AtlasFirewallPolicy() : clientId_(""){}
+    AtlasFirewallPolicy() : clientId_("") {}
 
     /**
     * @brief Overwrite = operator

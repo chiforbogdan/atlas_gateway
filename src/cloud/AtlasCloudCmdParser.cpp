@@ -9,7 +9,7 @@
 
 namespace atlas {
 
-AtlasCloudCmdParser::AtlasCloudCmdParser() : connected_(false){}
+AtlasCloudCmdParser::AtlasCloudCmdParser() : connected_(false) {}
 
 AtlasCloudCmdParser& AtlasCloudCmdParser::getInstance()
 {

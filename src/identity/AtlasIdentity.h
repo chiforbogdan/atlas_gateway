@@ -46,7 +46,7 @@ private:
     * @brief Default ctor for client device
     * @return none
     */
-    AtlasIdentity(){};
+    AtlasIdentity() {};
 
     /**
     * @brief Generate gateway identity

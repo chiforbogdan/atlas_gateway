@@ -73,7 +73,7 @@ AtlasCoapResponse AtlasFeatureReputation::requestReputationCallback(const std::s
                 ATLAS_LOGGER_ERROR("Feature end-point called with SPOOFED identity");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
-        } else if(cmdEntry.getType() == ATLAS_CMD_FEATURE_REQUEST){
+        } else if(cmdEntry.getType() == ATLAS_CMD_FEATURE_REQUEST) {
             if (cmdEntry.getLen() != sizeof(tmp)) {
                 ATLAS_LOGGER_ERROR("Feature end-point called with empty FEATURE command");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
@@ -172,7 +172,7 @@ AtlasCoapResponse AtlasFeatureReputation::feedbackReputationCallback(const std::
                 ATLAS_LOGGER_ERROR("Feedback end-point called with SPOOFED identity");
                 return ATLAS_COAP_RESP_NOT_ACCEPTABLE;
             }
-        } else if(cmdEntry.getType() == ATLAS_CMD_FEEDBACK){
+        } else if(cmdEntry.getType() == ATLAS_CMD_FEEDBACK) {
             /* Parse feedback command */
             if (!cmdEntry.getLen()) {
                 ATLAS_LOGGER_ERROR("Empty FEEDBACK command");

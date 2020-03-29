@@ -18,7 +18,7 @@ const std::string ATLAS_FIREWALLPOLICY_URI = "gateway/policy";
 
 AtlasPolicy::AtlasPolicy() : firewallPolicyResource_(ATLAS_FIREWALLPOLICY_URI,
                                                     ATLAS_COAP_METHOD_PUT,
-                                                    boost::bind(&AtlasPolicy::firewallPolicyCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)){}
+                                                    boost::bind(&AtlasPolicy::firewallPolicyCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)) {}
 
 
 AtlasCoapResponse AtlasPolicy::firewallPolicyCallback(const std::string &path, const std::string &pskIdentity,

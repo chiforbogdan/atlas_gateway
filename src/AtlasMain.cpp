@@ -102,7 +102,7 @@ int main(int argc, char **argv)
     atlas::AtlasCloudCmdParser::getInstance().start();
 
     /*open local.db connection*/
-    if(!atlas::AtlasSQLite::getInstance().openConnection(atlas::ATLAS_DB_PATH)){
+    if(!atlas::AtlasSQLite::getInstance().openConnection(atlas::ATLAS_DB_PATH)) {
         ATLAS_LOGGER_ERROR("Error opening database!");
         return 1;
     }
