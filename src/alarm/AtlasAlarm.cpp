@@ -20,9 +20,14 @@ void AtlasAlarm::timerHandler(const boost::system::error_code& ec)
             cancel();
        
         this->callback_();
-    } else
-        ATLAS_LOGGER_ERROR("Timer handler called with error");
+
+    } else if (ec == boost::asio::error::operation_aborted) {
+        ATLAS_LOGGER_DEBUG("Timer aborted");
         
+    } else {
+        ATLAS_LOGGER_ERROR("Timer handler called with error message: " + ec.message());
+
+    }
 }
 
 AtlasAlarm::AtlasAlarm(uint32_t periodMs, bool once, std::function<void()> callback) : timer_(nullptr)
@@ -55,7 +60,7 @@ void AtlasAlarm::cancel()
     if (timer_) {
         ATLAS_LOGGER_DEBUG("Alarm was cancelled");
         timer_->cancel();
-	delete timer_;
+	    delete timer_;
         timer_ = nullptr;
     }
 }
