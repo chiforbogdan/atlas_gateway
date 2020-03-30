@@ -35,12 +35,20 @@ public:
     * @param[in] reqPayloadLen CoAP client request payload length
     * @param[in] timeout Timeout in ms
     * @param[in] callback CoAP request callback
+    * @return context
+    */
+    
+    void* sendRequest(const std::string &uri, AtlasCoapMethod method, const uint8_t *reqPayload,
+                     size_t reqPayloadLen, uint32_t timeout,
+                     coap_request_callback_t callback);
+
+    /**
+    * @brief Cancel CoAP client request
+    * @param[in] context
     * @return none
     */
     
-    void sendRequest(const std::string &uri, AtlasCoapMethod method, const uint8_t *reqPayload,
-                     size_t reqPayloadLen, uint32_t timeout,
-                     coap_request_callback_t callback);
+    void cancelRequest(void *ctx);
 
     /**
     * @brief Set DTLS information

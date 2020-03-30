@@ -33,10 +33,8 @@ void AtlasThresholdAlert::pushCommand(const std::string &url)
     cmdBuf = cmdBatch.getSerializedAddedCommands();
 
     /* Send CoAP request */
-    AtlasCoapClient::getInstance().sendRequest(url, ATLAS_COAP_METHOD_PUT, cmdBuf.first, cmdBuf.second,
+    coapToken_ = AtlasCoapClient::getInstance().sendRequest(url, ATLAS_COAP_METHOD_PUT, cmdBuf.first, cmdBuf.second,
                                                ATLAS_ALERT_COAP_TIMEOUT_MS, boost::bind(&AtlasThresholdAlert::respCallback, this, _1, _2, _3));
-
-    /* FIXME what if object is destroyed while response is hanging and callback reaches the dead object */
 }
 
 } // namespace atlas
