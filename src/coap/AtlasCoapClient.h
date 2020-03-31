@@ -35,7 +35,7 @@ public:
     * @param[in] reqPayloadLen CoAP client request payload length
     * @param[in] timeout Timeout in ms
     * @param[in] callback CoAP request callback
-    * @return context
+    * @return Pointer to coap request token which can be used to cancel the request
     */
     
     void* sendRequest(const std::string &uri, AtlasCoapMethod method, const uint8_t *reqPayload,
@@ -44,7 +44,7 @@ public:
 
     /**
     * @brief Cancel CoAP client request
-    * @param[in] context
+    * @param[in] coap request token
     * @return none
     */
     

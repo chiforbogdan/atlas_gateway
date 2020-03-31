@@ -32,9 +32,16 @@ void AtlasThresholdAlert::pushCommand(const std::string &url)
     cmdBatch.addCommand(cmdThreshold);
     cmdBuf = cmdBatch.getSerializedAddedCommands();
 
-    /* Send CoAP request */
-    coapToken_ = AtlasCoapClient::getInstance().sendRequest(url, ATLAS_COAP_METHOD_PUT, cmdBuf.first, cmdBuf.second,
-                                               ATLAS_ALERT_COAP_TIMEOUT_MS, boost::bind(&AtlasThresholdAlert::respCallback, this, _1, _2, _3));
+    try
+    {
+        /* Send CoAP request */
+        coapToken_ = AtlasCoapClient::getInstance().sendRequest(url, ATLAS_COAP_METHOD_PUT, cmdBuf.first, cmdBuf.second,
+                                                ATLAS_ALERT_COAP_TIMEOUT_MS, boost::bind(&AtlasThresholdAlert::respCallback, this, _1, _2, _3));
+    }
+    catch(const char *e)
+    {
+        ATLAS_LOGGER_ERROR(e);
+    }
 }
 
 } // namespace atlas

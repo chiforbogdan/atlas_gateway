@@ -60,8 +60,8 @@ void AtlasAlert::push()
 
 AtlasAlert::~AtlasAlert()
 {
-    if(coapToken_)
-        AtlasCoapClient::getInstance().cancelRequest(coapToken_);
+    /* Destroy reference callbacks to this instance*/
+    AtlasCoapClient::getInstance().cancelRequest(coapToken_);
 }
 
 } // namespace atlas
