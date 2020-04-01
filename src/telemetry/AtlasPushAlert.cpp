@@ -28,11 +28,16 @@ void AtlasPushAlert::pushCommand(const std::string &url)
     cmdBatch.addCommand(cmdPush);
     cmdBuf = cmdBatch.getSerializedAddedCommands();
 
-    /* Send CoAP request */
-    AtlasCoapClient::getInstance().sendRequest(url, ATLAS_COAP_METHOD_PUT, cmdBuf.first, cmdBuf.second,
-                                               ATLAS_ALERT_COAP_TIMEOUT_MS, boost::bind(&AtlasPushAlert::respCallback, this, _1, _2, _3));
-
-    /* FIXME what if object is destroyed while response is hanging and callback reaches the dead object */
+    try
+    {
+        /* Send CoAP request */
+        coapToken_ = AtlasCoapClient::getInstance().sendRequest(url, ATLAS_COAP_METHOD_PUT, cmdBuf.first, cmdBuf.second,
+                                                            ATLAS_ALERT_COAP_TIMEOUT_MS, boost::bind(&AtlasPushAlert::respCallback, this, _1, _2, _3));
+    }
+    catch(const char *e)
+    {
+        ATLAS_LOGGER_ERROR(e);
+    }
 }
 
 } // namespace atlas

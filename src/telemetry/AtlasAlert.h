@@ -29,7 +29,7 @@ public:
     * @brief Dtor for alert
     * @return none
     */
-    virtual ~AtlasAlert() {}
+    virtual ~AtlasAlert();
 protected:
      /**
     * @brief CoAP response callbacl
@@ -42,6 +42,8 @@ protected:
    
     virtual void pushCommand(const std::string &path) = 0;
 
+    /* CoAP context*/
+    void *coapToken_;
 private:
 
     /* Client device identity */

@@ -246,7 +246,7 @@ void AtlasCoapClient::addRequest(coap_context_t *ctx, coap_session_t *session,
     ATLAS_LOGGER_DEBUG("CoAP client request was added");
 }
 
-void AtlasCoapClient::sendRequest(const std::string &uri, AtlasCoapMethod method, const uint8_t *reqPayload,
+void* AtlasCoapClient::sendRequest(const std::string &uri, AtlasCoapMethod method, const uint8_t *reqPayload,
                                   size_t reqPayloadLen, uint32_t timeout, coap_request_callback_t callback)
 {
     coap_uri_t coapUri;
@@ -377,6 +377,8 @@ void AtlasCoapClient::sendRequest(const std::string &uri, AtlasCoapMethod method
         /* Send request */
         ATLAS_LOGGER_DEBUG("Sending CoAP client request...");
         coap_send(session, reqPdu);
+        return static_cast<void *>(ctx);
+
     } catch(const char *e) {
         ATLAS_LOGGER_ERROR(e);
 
@@ -384,6 +386,16 @@ void AtlasCoapClient::sendRequest(const std::string &uri, AtlasCoapMethod method
         coap_free_context(ctx);
 
         throw AtlasCoapException(e);
+    }
+}
+
+void AtlasCoapClient::cancelRequest(void *context)
+{
+    ATLAS_LOGGER_DEBUG("Canceling CoAP client request...");
+    coap_context_t *ctx = static_cast<coap_context_t *>(context);
+    if(ctx) {
+        requests_.erase(ctx);
+        timeouts_.erase(ctx);
     }
 }
 

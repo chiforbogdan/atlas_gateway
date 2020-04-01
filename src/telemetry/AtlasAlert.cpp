@@ -9,7 +9,7 @@
 
 namespace atlas {
 
-AtlasAlert::AtlasAlert(const std::string &deviceIdentity, const std::string &path)
+AtlasAlert::AtlasAlert(const std::string &deviceIdentity, const std::string &path):coapToken_(nullptr)
 {
     deviceIdentity_ = deviceIdentity;
     path_ = path;
@@ -56,6 +56,12 @@ void AtlasAlert::push()
     AtlasCoapClient::getInstance().setDtlsInfo(deviceIdentity_, device->getPsk());
 
     pushCommand(url);
+}
+
+AtlasAlert::~AtlasAlert()
+{
+    /* Destroy reference callbacks to this instance*/
+    AtlasCoapClient::getInstance().cancelRequest(coapToken_);
 }
 
 } // namespace atlas
