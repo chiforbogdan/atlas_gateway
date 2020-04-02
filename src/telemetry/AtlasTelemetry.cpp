@@ -20,8 +20,6 @@ const std::string ATLAS_TELEMETRY_SYSINFO_BUFFERRAM_URI = "gateway/telemetry/sys
 const std::string ATLAS_TELEMETRY_SYSINFO_TOTALSWAP_URI = "gateway/telemetry/sysinfo/totalswap";
 const std::string ATLAS_TELEMETRY_SYSINFO_FREESWAP_URI  = "gateway/telemetry/sysinfo/freeswap";
 const std::string ATLAS_TELEMETRY_SYSINFO_PROCS_URI     = "gateway/telemetry/sysinfo/procs";
-const std::string ATLAS_TELEMETRY_SYSINFO_TOTALHIGH_URI = "gateway/telemetry/sysinfo/totalhigh";
-const std::string ATLAS_TELEMETRY_SYSINFO_FREEHIGH_URI  = "gateway/telemetry/sysinfo/freehigh";
 const std::string ATLAS_TELEMETRY_SYSINFO_LOAD1_URI     = "gateway/telemetry/sysinfo/load1";
 const std::string ATLAS_TELEMETRY_SYSINFO_LOAD5_URI     = "gateway/telemetry/sysinfo/load5";
 const std::string ATLAS_TELEMETRY_SYSINFO_LOAD15_URI    = "gateway/telemetry/sysinfo/load15";
@@ -69,14 +67,6 @@ AtlasTelemetry::AtlasTelemetry() : hostnameResource_(ATLAS_TELEMETRY_HOSTNAME_UR
                                                    ATLAS_COAP_METHOD_PUT,
                                                    boost::bind(&AtlasTelemetry::featureCallback,
                                                                this, _1, _2, _3, _4, _5, _6, _7, _8)),
-                                   totalhighResource_(ATLAS_TELEMETRY_SYSINFO_TOTALHIGH_URI,
-                                                   ATLAS_COAP_METHOD_PUT,
-                                                   boost::bind(&AtlasTelemetry::featureCallback,
-                                                               this, _1, _2, _3, _4, _5, _6, _7, _8)),
-                                   freehighResource_(ATLAS_TELEMETRY_SYSINFO_FREEHIGH_URI,
-                                                   ATLAS_COAP_METHOD_PUT,
-                                                   boost::bind(&AtlasTelemetry::featureCallback,
-                                                               this, _1, _2, _3, _4, _5, _6, _7, _8)),
                                    load1Resource_(ATLAS_TELEMETRY_SYSINFO_LOAD1_URI,
                                                    ATLAS_COAP_METHOD_PUT,
                                                    boost::bind(&AtlasTelemetry::featureCallback,
@@ -111,8 +101,6 @@ AtlasTelemetry::AtlasTelemetry() : hostnameResource_(ATLAS_TELEMETRY_HOSTNAME_UR
     AtlasCoapServer::getInstance().addResource(totalswapResource_);
     AtlasCoapServer::getInstance().addResource(freeswapResource_);
     AtlasCoapServer::getInstance().addResource(procsResource_);
-    AtlasCoapServer::getInstance().addResource(totalhighResource_);
-    AtlasCoapServer::getInstance().addResource(freehighResource_);
     AtlasCoapServer::getInstance().addResource(load1Resource_);
     AtlasCoapServer::getInstance().addResource(load5Resource_);
     AtlasCoapServer::getInstance().addResource(load15Resource_);
@@ -160,12 +148,6 @@ std::pair<std::string,std::string> AtlasTelemetry::getFeature(const std::string 
     else if (std::strstr(path.c_str(), ATLAS_TELEMETRY_SYSINFO_PROCS_URI.c_str()) &&
              cmd.getType() == ATLAS_CMD_TELEMETRY_SYSINFO_PROCS)
         ret.first = TELEMETRY_SYSINFO_PROCS;
-    else if (std::strstr(path.c_str(), ATLAS_TELEMETRY_SYSINFO_TOTALHIGH_URI.c_str()) &&
-             cmd.getType() == ATLAS_CMD_TELEMETRY_SYSINFO_TOTALHIGH)
-        ret.first = TELEMETRY_SYSINFO_TOTALHIGH;
-    else if (std::strstr(path.c_str(), ATLAS_TELEMETRY_SYSINFO_FREEHIGH_URI.c_str()) &&
-             cmd.getType() == ATLAS_CMD_TELEMETRY_SYSINFO_FREEHIGH)
-        ret.first = TELEMETRY_SYSINFO_FREEHIGH;
     else if (std::strstr(path.c_str(), ATLAS_TELEMETRY_SYSINFO_LOAD1_URI.c_str()) &&
              cmd.getType() == ATLAS_CMD_TELEMETRY_SYSINFO_LOAD1)
         ret.first = TELEMETRY_SYSINFO_LOAD1;

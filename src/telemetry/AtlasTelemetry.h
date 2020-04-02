@@ -71,13 +71,7 @@ private:
     
     /* Sysinfo procs telemetry CoAP resource*/
     AtlasCoapResource procsResource_;
-    
-    /* Sysinfo totalhigh telemetry CoAP resource*/
-    AtlasCoapResource totalhighResource_;
-    
-    /* Sysinfo freehigh telemetry CoAP resource*/
-    AtlasCoapResource freehighResource_;
-    
+        
     /* Sysinfo load1 telemetry CoAP resource*/
     AtlasCoapResource load1Resource_;
     
