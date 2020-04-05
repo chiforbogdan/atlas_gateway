@@ -61,6 +61,33 @@ AtlasDeviceManager::AtlasDeviceManager(): deviceCloud_(new AtlasDeviceCloud()),
     trustedDevices_[AtlasDeviceNetworkType::ATLAS_NETWORK_SENSOR_TEMPERATURE] = "";
 }
 
+void AtlasDeviceManager::updateFirewallStats(const AtlasFirewallStats &firewallStats)
+{
+    ATLAS_LOGGER_DEBUG("Update firewall statistics for device with identity " +
+                       firewallStats.getClientId());
+
+    AtlasDevice* device = AtlasDeviceManager::getInstance().getDevice(firewallStats.getClientId());
+    if(!device) {
+        ATLAS_LOGGER_ERROR("No client device exists in db with identity " +
+                           firewallStats.getClientId());
+        return;
+    }
+
+    device->getFirewallStats().addRuleDroppedPkts(firewallStats.getRuleDroppedPkts());
+    device->getFirewallStats().addRulePassedPkts(firewallStats.getRulePassedPkts());
+    device->getFirewallStats().addTxDroppedPkts(firewallStats.getTxDroppedPkts());
+    device->getFirewallStats().addTxPassedPkts(firewallStats.getTxPassedPkts());
+
+    /* Save to firewall statistics into the database */
+    bool result = AtlasSQLite::getInstance().updateStats(device->getIdentity(),
+                                                         device->getFirewallStats());
+    if(!result)
+        ATLAS_LOGGER_ERROR("Uncommited update on statistics data");
+
+    ATLAS_LOGGER_DEBUG("Sync firewall statistics with the cloud back-end");
+    device->syncFirewallStatistics();
+}
+
 void AtlasDeviceManager::firewallStatisticsAlarmCallback()
 {
     ATLAS_LOGGER_INFO("Firewall-statistics alarm callback");
@@ -69,12 +96,6 @@ void AtlasDeviceManager::firewallStatisticsAlarmCallback()
                      {
                          if(device.getPolicy()) {
                              AtlasPubSubAgent::getInstance().getFirewallRuleStats(device.getPolicy()->getClientId());
-                            
-                             /* update in db previous stats sample */
-                             bool result = AtlasSQLite::getInstance().updateStats(device.getIdentity(),
-                                                                                  device.getFirewallStats());
-                             if(!result)
-                                 ATLAS_LOGGER_ERROR("Uncommited update on statistics data");
                          }
                      });
 }

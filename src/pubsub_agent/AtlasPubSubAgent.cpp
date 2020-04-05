@@ -175,23 +175,20 @@ void AtlasPubSubAgent::processFirewallRuleStat(const uint8_t *cmdBuf, uint16_t c
         return;
     }
 
-    AtlasDevice* device = AtlasDeviceManager::getInstance().getDevice(clientId);
-    if(!device) {
-        ATLAS_LOGGER_ERROR("No client device exists in db with identity " + clientId);
-        return; 
-    }
-
     /* If at least one value is not zero, update the device firewall statistics
     and sync the info with the cloud back-end */
     if (*ruleDroppedPkts || *rulePassedPkts ||
-        *txDroppedPkts || *txPassedPkts) {    
-        device->getFirewallStats().addRuleDroppedPkts(*ruleDroppedPkts);
-        device->getFirewallStats().addRulePassedPkts(*rulePassedPkts);
-        device->getFirewallStats().addTxDroppedPkts(*txDroppedPkts);
-        device->getFirewallStats().addTxPassedPkts(*txPassedPkts);
-   
-        ATLAS_LOGGER_DEBUG("Sync firewall statistics with the cloud back-end"); 
-        device->syncFirewallStatistics();
+        *txDroppedPkts || *txPassedPkts) {
+        AtlasFirewallStats firewallStats;
+
+        firewallStats.setClientId(clientId);        
+        firewallStats.addRuleDroppedPkts(*ruleDroppedPkts);
+        firewallStats.addRulePassedPkts(*rulePassedPkts);
+        firewallStats.addTxDroppedPkts(*txDroppedPkts);
+        firewallStats.addTxPassedPkts(*txPassedPkts);
+ 
+        /* Update firewall statistics with delta measurements */ 
+        AtlasDeviceManager::getInstance().updateFirewallStats(firewallStats); 
     }
 }
 

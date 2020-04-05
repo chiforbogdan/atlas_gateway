@@ -61,6 +61,14 @@ public:
                               AtlasDeviceNetworkType networkType,
                               std::vector<std::pair<AtlasDeviceFeatureType, double>> &feedbackMatrix);
 
+   
+    /**
+    * @brief Update firewall statistics
+    * @param[in] firewallStats New firewall statistics (delta from previous sample)
+    * @return none
+    */ 
+    void updateFirewallStats(const AtlasFirewallStats &firewallStats);
+
     /**
     * @brief Get the most trusted device within a categiry (sensor type)
     * @param[in] networkType Reputation network type
