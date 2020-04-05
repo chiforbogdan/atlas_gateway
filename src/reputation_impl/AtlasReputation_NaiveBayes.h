@@ -10,23 +10,34 @@ namespace atlas
 {
 class AtlasReputationNaiveBayes
 {
-public:
+private:
 
     /**
      * @brief Computes reputation for a single Feature, either a DataPlane or ControlPlane type
-     * @param[in] Feature manager
-     * @param[in] Feature type
+     * @param[in] manager Feature manager
+     * @param[in] feature Feature type
      * @return Reputation value of the feature
     */
-    static double computeReputationForFeature(AtlasDeviceFeatureManager&, AtlasDeviceFeatureType);
+    static double computeReputationForFeature(const AtlasDeviceFeatureManager &manager, const AtlasDeviceFeature &feature);
+
+public:
 
     /**
      * @brief Generic computation of reputation for a Device, (Method used in simulations)
-     * @param[in] Feature manager
-     * @param[in] Vector of pairs containing FeatureType, as first value, and DataPlane Feedback, as second value
+     * @param[in] manager Feature manager
+     * @param[in] feedbackMatrix Vector of pairs containing FeatureType, as first value, and DataPlane Feedback, as second value
      * @return Reputation value for the Device
     */
-    static double computeReputation(AtlasDeviceFeatureManager&, std::vector<std::pair<AtlasDeviceFeatureType, double>>&);
+    static double computeReputation(AtlasDeviceFeatureManager &manager,
+                                    std::vector<std::pair<AtlasDeviceFeatureType, double>>& feedbackMatrix);
+
+    /**
+     * @brief Generic computation of reputation for a Device using the current reputation
+     * statistics (without taking into consideration a feedback matrix)
+     * @param[in] Feature manager
+     * @return Reputation value for the Device
+    */
+    static double computeReputation(AtlasDeviceFeatureManager&);
 };
 
 } //namespace atlas

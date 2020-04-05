@@ -215,7 +215,12 @@ void AtlasDeviceManager::initSystemReputation(AtlasDevice &device)
         result = AtlasSQLite::getInstance().selectBayesParams(device.getIdentity(), 
                                                              (int)AtlasDeviceNetworkType::ATLAS_NETWORK_SYSTEM,
                                                              systemReputation);
-        if (!result)
+        if (result) {
+            /* Compute system reputation using naive-bayes */
+            double repVal = AtlasReputationNaiveBayes::computeReputation(systemReputation);
+            ATLAS_LOGGER_INFO("System reputation for device with identity " + device.getIdentity() +
+                              " is " + std::to_string(repVal));
+        } else
             ATLAS_LOGGER_ERROR("Uncommited select on naiveBayes params data");
     } else {
         systemReputation.addFeature(AtlasDeviceFeatureType::ATLAS_FEATURE_REGISTER_TIME,
@@ -276,11 +281,15 @@ void AtlasDeviceManager::initDataReputation(AtlasDevice &device)
         /* Get from db*/
         ATLAS_LOGGER_INFO("Get data from local.db");
         result = AtlasSQLite::getInstance().selectBayesParams(device.getIdentity(), 
-                                                             (int)AtlasDeviceNetworkType::ATLAS_NETWORK_SENSOR_TEMPERATURE,
-                                                             dataReputation);
-        if (!result)
+                                                              (int)AtlasDeviceNetworkType::ATLAS_NETWORK_SENSOR_TEMPERATURE,
+                                                              dataReputation);
+        if (result) {
+            /* Compute system reputation using naive-bayes */
+            double repVal = AtlasReputationNaiveBayes::computeReputation(dataReputation);
+            ATLAS_LOGGER_INFO("Data reputation for device with identity " + device.getIdentity() +
+                              " is " + std::to_string(repVal));
+        } else
             ATLAS_LOGGER_ERROR("Uncommited select on naiveBayes params data");
-
     } else {
 
         dataReputation.addFeature(AtlasDeviceFeatureType::ATLAS_DEVICE_FEATURE_SENSOR, ATLAS_SENSOR_WEIGHT);

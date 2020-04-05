@@ -16,6 +16,7 @@ bool AtlasDeviceFeatureManager::addFeature(AtlasDeviceFeatureType type, double f
 
     features_.push_back(AtlasDeviceFeature(type, featureWeight));
     ATLAS_LOGGER_INFO("AtlasDeviceFeatureManager: New feature added to device");
+    
     return true;
 }
 
@@ -33,16 +34,19 @@ bool AtlasDeviceFeatureManager::removeFeature(AtlasDeviceFeatureType type)
         ATLAS_LOGGER_INFO("AtlasDeviceFeatureManager: No features available for device. Delete operation aborted!");
         return false;
     }
+    
     return true;
 }
 
 AtlasDeviceFeature& AtlasDeviceFeatureManager::operator [] (AtlasDeviceFeatureType type) 
 { 
-    int poz = 0;
+    int pos = 0;
+
     for (auto it = features_.begin(); (it != features_.end()) && ((*it).getFeatureType() != type); it++) {
-        poz++;
-    }  
-    return features_[poz];
+        pos++;
+    }
+
+    return features_[pos];
 }
 
 } //namespace atlas

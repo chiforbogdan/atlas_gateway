@@ -24,12 +24,6 @@ public:
     AtlasDeviceFeature(AtlasDeviceFeatureType featureType, double featureWeight) : featureType_(featureType), weight_(featureWeight), successTrans_(0) {}
 
     /**
-     * @brief Get feature type
-     * @return Current feature type
-    */
-    AtlasDeviceFeatureType getFeatureType() { return featureType_; }
-
-    /**
      * @brief Get feature type (const method)
      * @return Current feature type
     */
@@ -39,7 +33,7 @@ public:
      * @brief Get feature Weight value
      * @return Current Weight value
     */
-    double getWeight() { return weight_; }
+    double getWeight() const { return weight_; }
 
     /**
      * @brief Set feature Weight value
@@ -58,7 +52,7 @@ public:
      * @brief Return number of successful transactions (required by Naive Bayes component)
      * @return Number of Successful Transactions
     */
-    int getSuccessfulTransactions() { return successTrans_; }
+    int getSuccessfulTransactions() const { return successTrans_; }
 
     /**
      * @brief Set number of successful transactions (required by Naive Bayes component)
