@@ -76,13 +76,13 @@ void parse_options(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
+    atlas::initLog();
+
     atlas::AtlasRegister reg;
     atlas::AtlasPolicy policy;
     atlas::AtlasFeatureReputation reputation;
 
     parse_options(argc, argv);
-
-    atlas::initLog();
     
     ATLAS_LOGGER_DEBUG("Starting Atlas gateway...");
 
