@@ -92,8 +92,11 @@ int main(int argc, char **argv)
     }
 
     /* Connect to cloud back-end */
-    atlas::AtlasMqttClient::getInstance().connect(cloudHostname,
-                                                  atlas::AtlasIdentity::getInstance().getIdentity());
+    std::string identity = atlas::AtlasIdentity::getInstance().getIdentity();
+    if (!atlas::AtlasMqttClient::getInstance().initConnection(cloudHostname, identity)) {
+        ATLAS_LOGGER_ERROR("Error in initializing cloud back-end connection!");
+        return 1;
+    }
 
     /* Start cloud register module */
     atlas::AtlasRegisterCloud::getInstance().start();

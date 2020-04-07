@@ -1,6 +1,5 @@
 #include "AtlasMqttClient_callback.h"
 #include "../logger/AtlasLogger.h"
-#include "AtlasMqttException.h"
 #include "../scheduler/AtlasScheduler.h"
 #include "../cloud/AtlasCloudCmdParser.h"
 
@@ -14,9 +13,10 @@ namespace {
     const int ATLAS_MQTT_RECONNECT_INTERVAL_MS = 5000;
 } // anonymous namespace
 
-AtlasMqttClient_callback::AtlasMqttClient_callback(mqtt::async_client& client, mqtt::connect_options& connOpts) : client_(client), connOpts_(connOpts),
-                                                                                                                  alarm_(ATLAS_MQTT_RECONNECT_INTERVAL_MS, true,
-                                                                                                                         boost::bind(&AtlasMqttClient_callback::alarmCallback, this)) {}
+AtlasMqttClient_callback::AtlasMqttClient_callback(mqtt::async_client& client,
+                                                   mqtt::connect_options& connOpts) : client_(client), connOpts_(connOpts),
+                                                                                      alarm_(ATLAS_MQTT_RECONNECT_INTERVAL_MS, true,
+                                                                                             boost::bind(&AtlasMqttClient_callback::alarmCallback, this)) {}
 
 void AtlasMqttClient_callback::connection_lost(const std::string& cause)
 {
@@ -45,7 +45,6 @@ void AtlasMqttClient_callback::alarmCallback()
         client_.connect(connOpts_, nullptr, *this);
     } catch (const mqtt::exception& e) {
         ATLAS_LOGGER_DEBUG("AtlasMqttClient_Callback (reconnect): Error on reconnect --> what(): " + std::string(e.what()));
-        throw AtlasMqttException(e.what());
     }
 }
 

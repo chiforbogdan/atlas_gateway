@@ -20,12 +20,18 @@ public:
     static AtlasMqttClient& getInstance();
 
     /**
-     * @brief Connect to a Atlas Cloud module with explicit parameters
-     * @param[in] IP address of the Atlas Cloud module
-     * @param[in] Gateway ID
+     * @brief Default Dtor for MQTT client
+     * @return none 
+    */
+    ~AtlasMqttClient();
+
+    /**
+     * @brief Init connection to Atlas Cloud module with explicit parameters
+     * @param[in] IP address or hostname of the Atlas Cloud module
+     * @param[in] clientID MQTT client id
      * @return none
     */
-    void connect(const std::string &address, const std::string &clientID);
+    bool initConnection(const std::string &address, const std::string &clientID);
 
     /**
      * @brief Subscribe to a topic on the Atlas Cloud module
@@ -33,7 +39,7 @@ public:
      * @param[in] Desired QoS
      * @return True on success, False otherwise
     */
-    bool subscribeTopic(const std::string &topic, int QoS = 2);
+    bool subscribeTopic(const std::string &topic, int qos = 2);
 
     /**
      * @brief Disconnect from a Atlas Cloud module
@@ -48,29 +54,7 @@ public:
      * @param[in] QoS for message publishing
      * @return True on publish succes, False otherwise 
     */
-    bool tryPublishMessage(const std::string &topic, const std::string &message, const int QoS = 2);
-
-    AtlasMqttClient(const AtlasMqttClient &) = delete;
-    AtlasMqttClient & operator = (const AtlasMqttClient &) = delete;
-
-    /**
-     * @brief Default Dtor for MQTT client
-     * @return none 
-    */
-    ~AtlasMqttClient();
-
-    /**
-     * @brief Set ID for gateway
-     * @param[in] Gateway ID
-     * @return none
-    */
-    void setClientID(std::string id) { clientID_ = id; }
-    
-    /**
-     * @brief Get gateway ID
-     * @return Gateway ID as std::string
-    */
-    std::string getClientID() { return clientID_; }
+    bool tryPublishMessage(const std::string &topic, const std::string &message, int qos = 2);
 
     /**
     * @brief Add connection state callback
@@ -86,15 +70,28 @@ public:
     */
     void removeConnectionCb(IAtlasMqttState *connCb);
 
+    AtlasMqttClient(const AtlasMqttClient &) = delete;
+    AtlasMqttClient & operator = (const AtlasMqttClient &) = delete;
+
 private:	
-    std::string cloudHost_;
-    std::string clientID_;
+    /* MQTT client */
     mqtt::async_client *client_;
-    mqtt::token_ptr connTok_, discTok_;
-    mqtt::delivery_token_ptr pubTok_;
-    mqtt::token_ptr subTok_;
-    mqtt::connect_options connOps_;
+    
+    /* MQTT client callback */
     AtlasMqttClient_callback *cb_;
+   
+    /* MQTT connect token */ 
+    mqtt::token_ptr connTok_;
+    
+    /* MQTT disconnect token */
+    mqtt::token_ptr discTok_;
+   
+    /* MQTT publish token */ 
+    mqtt::delivery_token_ptr pubTok_;
+   
+    /* MQTT connection options */ 
+    mqtt::connect_options connOps_;
+    
     AtlasMqttClient_connectActionListener connectActList_;
     AtlasMqttClient_deliveryActionListener deliveryActList_;
     AtlasMqttClient_disconnectActionListener disconnectActList_;
@@ -105,7 +102,14 @@ private:
      * @return none
     */
     AtlasMqttClient();
+
+    /**
+     * @brief Connect to cloud back-end
+     * @return none
+    */
+    void connect();
 };
+
 } //namespace atlas
 
 #endif /*__ATLAS_MQTT_CLIENT_H__*/
