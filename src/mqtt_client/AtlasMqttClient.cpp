@@ -34,6 +34,9 @@ bool AtlasMqttClient::initConnection(const std::string &address, const std::stri
 
     /* Set connection options */
     connOps_.set_clean_session(true);
+    mqtt::ssl_options sslopts;
+    sslopts.set_trust_store("/etc/mosquitto/certs/certificate.crt");
+    connOps_.set_ssl(sslopts);
     
     /* Create callback */
     cb_ = new AtlasMqttClient_callback(*client_, connOps_);
