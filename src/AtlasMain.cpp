@@ -92,8 +92,10 @@ int main(int argc, char **argv)
     }
 
     /* Connect to cloud back-end */
-    std::string identity = atlas::AtlasIdentity::getInstance().getIdentity();
-    if (!atlas::AtlasMqttClient::getInstance().initConnection("ssl://127.0.0.1:8883", identity)) {
+    if (!atlas::AtlasMqttClient::getInstance().initConnection("ssl://127.0.0.1:8883",
+                                                              atlas::AtlasIdentity::getInstance().getIdentity(),
+                                                              atlas::AtlasIdentity::getInstance().getIdentity(),
+                                                              atlas::AtlasIdentity::getInstance().getPsk())) {
         ATLAS_LOGGER_ERROR("Error in initializing cloud back-end connection!");
         return 1;
     }

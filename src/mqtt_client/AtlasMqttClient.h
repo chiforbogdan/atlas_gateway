@@ -29,9 +29,12 @@ public:
      * @brief Init connection to Atlas Cloud module with explicit parameters
      * @param[in] IP address or hostname of the Atlas Cloud module
      * @param[in] clientID MQTT client id
+     * @param[in] username MQTT username
+     * @param[in] password MQTT password
      * @return none
     */
-    bool initConnection(const std::string &address, const std::string &clientID);
+    bool initConnection(const std::string &address, const std::string &clientID,
+                        const std::string &username, const std::string &password);
 
     /**
      * @brief Subscribe to a topic on the Atlas Cloud module

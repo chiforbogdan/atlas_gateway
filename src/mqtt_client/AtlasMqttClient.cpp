@@ -15,7 +15,8 @@ AtlasMqttClient& AtlasMqttClient::getInstance()
     return instance;
 }
 
-bool AtlasMqttClient::initConnection(const std::string &address, const std::string &clientID)
+bool AtlasMqttClient::initConnection(const std::string &address, const std::string &clientID,
+                                     const std::string &username, const std::string &password)
 {
     mqtt::connect_options connOps;
     mqtt::ssl_options sslopts;
@@ -39,8 +40,8 @@ bool AtlasMqttClient::initConnection(const std::string &address, const std::stri
     sslopts.set_trust_store("/etc/mosquitto/certs/certificate.crt");
     
     /* Set connection options */
-    connOps.set_user_name("test3");
-    connOps.set_password("password3");
+    connOps.set_user_name(username);
+    connOps.set_password(password);
     connOps.set_ssl(sslopts);
     connOps.set_clean_session(true);
     
