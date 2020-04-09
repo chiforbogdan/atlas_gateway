@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "THIS SCRIPT WILL NOW BEGING INSTALLING ALL THE DEPENDENCIES NEEDED BY THE ATLAS_GATEWAY"
+echo "THIS SCRIPT WILL NOW BEGIN INSTALLING ALL THE DEPENDENCIES NEEDED BY THE ATLAS_GATEWAY"
 
 # Update repository definitions
 echo "*********************************************************"
@@ -29,7 +29,6 @@ cmake -Bbuild -H. -DPAHO_WITH_SSL=ON -DPAHO_ENABLE_TESTING=OFF
 sudo cmake --build build/ --target install
 sudo ldconfig
 cd ..
-rm -r paho.mqtt.c
 echo "******************* Step 2 finished! ********************"
 # __build Paho with support for C++__
 echo "** Step 3. Building Eclipse Paho with support for C++ ***"
@@ -39,7 +38,6 @@ cmake -Bbuild -H. -DPAHO_BUILD_DOCUMENTATION=FALSE -DPAHO_BUILD_SAMPLES=FALSE -D
 sudo cmake --build build/ --target install
 sudo ldconfig
 cd ..
-rm -r paho.mqtt.cpp
 echo "******************* Step 3 finished! ********************"
 echo "*********************************************************"
 echo "********* Eclipse Paho successfully installed! **********"
@@ -60,8 +58,6 @@ sudo sh ./configure --with-openssl --enable-shared --disable-documentation --dis
 make
 sudo make install
 cd ..
-rm ltmain.sh
-rm -r libcoap
 echo "*********************************************************"
 echo "****************** CoAP support added *******************"
 echo "*********************************************************"
@@ -114,7 +110,6 @@ git checkout atlas_plugin
 make binary
 sudo make install
 cd ..
-rm -r mosquitto
 echo "*********************************************************"
 echo "******* Eclipse Mosquitto successfully installed! *******"
 echo "*********************************************************"
