@@ -88,9 +88,6 @@ private:
    
     /* MQTT publish token */ 
     mqtt::delivery_token_ptr pubTok_;
-   
-    /* MQTT connection options */ 
-    mqtt::connect_options connOps_;
     
     AtlasMqttClient_connectActionListener connectActList_;
     AtlasMqttClient_deliveryActionListener deliveryActList_;
@@ -105,9 +102,10 @@ private:
 
     /**
      * @brief Connect to cloud back-end
+     * @param[in] connOps Connection options
      * @return none
     */
-    void connect();
+    void connect(mqtt::connect_options &connOps);
 };
 
 } //namespace atlas

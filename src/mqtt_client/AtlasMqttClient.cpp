@@ -17,6 +17,9 @@ AtlasMqttClient& AtlasMqttClient::getInstance()
 
 bool AtlasMqttClient::initConnection(const std::string &address, const std::string &clientID)
 {
+    mqtt::connect_options connOps;
+    mqtt::ssl_options sslopts;
+
     ATLAS_LOGGER_INFO("Initializing client (" + clientID + ") connection to server (" + address + ")");
 
     if (client_) {
@@ -32,29 +35,32 @@ bool AtlasMqttClient::initConnection(const std::string &address, const std::stri
         return false;
     }        
 
-    /* Set connection options */
-    connOps_.set_clean_session(true);
-    mqtt::ssl_options sslopts;
+    /* Set SSL options */
     sslopts.set_trust_store("/etc/mosquitto/certs/certificate.crt");
-    connOps_.set_ssl(sslopts);
+    
+    /* Set connection options */
+    connOps.set_user_name("test3");
+    connOps.set_password("password3");
+    connOps.set_ssl(sslopts);
+    connOps.set_clean_session(true);
     
     /* Create callback */
-    cb_ = new AtlasMqttClient_callback(*client_, connOps_);
+    cb_ = new AtlasMqttClient_callback(*client_, connOps);
     client_->set_callback(*cb_);
 
     /* Try to establish a connection */
-    connect();
+    connect(connOps);
 
     return true;
 } 
 
-void AtlasMqttClient::connect()
+void AtlasMqttClient::connect(mqtt::connect_options &connOps)
 {
     ATLAS_LOGGER_INFO("Connecting to cloud back-end");
 
     /* Connecting to remote server */
     try {
-        connTok_ = client_->connect(connOps_, nullptr, *cb_);
+        connTok_ = client_->connect(connOps, nullptr, *cb_);
         ATLAS_LOGGER_INFO("Connection to cloud back-end will be establshed.");
     } catch(const mqtt::exception& e) {
         ATLAS_LOGGER_ERROR("Exception caught in AtlasMqttClient_connect: " + std::string(e.what()));

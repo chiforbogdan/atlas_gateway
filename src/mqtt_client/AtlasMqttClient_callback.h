@@ -77,7 +77,7 @@ private:
     mqtt::async_client& client_;
 
     /* Reference to MQTT connection options */
-    mqtt::connect_options& connOpts_;
+    mqtt::connect_options connOpts_;
 
     /* MQTT reconnect alarm */
     AtlasAlarm alarm_;
