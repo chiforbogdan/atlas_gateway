@@ -51,7 +51,7 @@ See [LICENSE] file to read the full text.
 [Atlas_client]: https://github.com/chiforbogdan/atlas_client
 [UEFISCDI]: https://uefiscdi.gov.ro/
 [LICENSE]: https://github.com/chiforbogdan/atlas_gateway/blob/master/LICENSE
-[dep_script]: https://github.com/chiforbogdan/atlas_gateway/blob/master/scripts/dependencies.sh
-[script_dir]: https://github.com/chiforbogdan/atlas_gateway/blob/master/scripts/
-[build_script]: https://github.com/chiforbogdan/atlas_gateway/blob/master/build.sh
-[root_dir]: https://github.com/chiforbogdan/atlas_gateway/blob/master/
+[dep_script]: https://github.com/chiforbogdan/atlas_gateway/tree/mqtt_cloud_ssl/scripts/dependencies.sh
+[script_dir]: https://github.com/chiforbogdan/atlas_gateway/tree/mqtt_cloud_ssl/scripts/
+[build_script]: https://github.com/chiforbogdan/atlas_gateway/blob/mqtt_cloud_ssl/build.sh
+[root_dir]: https://github.com/chiforbogdan/atlas_gateway/tree/mqtt_cloud_ssl/
