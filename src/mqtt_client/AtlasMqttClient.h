@@ -31,10 +31,12 @@ public:
      * @param[in] clientID MQTT client id
      * @param[in] username MQTT username
      * @param[in] password MQTT password
+     * @param[in] certFile Mosquitto certificate file
      * @return none
     */
     bool initConnection(const std::string &address, const std::string &clientID,
-                        const std::string &username, const std::string &password);
+                        const std::string &username, const std::string &password,
+                        const std::string &certFile);
 
     /**
      * @brief Subscribe to a topic on the Atlas Cloud module

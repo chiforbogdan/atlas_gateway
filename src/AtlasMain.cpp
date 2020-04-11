@@ -21,13 +21,22 @@
 namespace {
 
 const std::string ATLAS_GATEWAY_DESC = "Atlas gateway";
-const int ATLAS_COAP_MAX_PORT = 65535;
+const int ATLAS_MAX_PORT = 65535;
 
 /* Cloud back-end hostname*/
 std::string cloudHostname;
 
+/* Cloud back-end port */
+int cloudPort;
+
 /* CoAP listen port for the client connection */
 int coapPort;
+
+/* Mosquitto certificate file for Cloud connection */
+std::string certFile;   
+
+/* Cloud connection string */
+std::string cloudConnStr;
 
 } // anonymous namespace
 
@@ -39,8 +48,9 @@ void parse_options(int argc, char **argv)
     desc.add_options()
     ("help", "Display help message")
     ("cloud,c", boost::program_options::value<std::string>(&cloudHostname), "IP address for the cloud broker - used to connect the gateway with the cloud back-end")
-    ("listen,l", boost::program_options::value<int>(&coapPort), "Listen port number for the gateway CoAP server - used to connect the gateway with the client");
-
+    ("port,p", boost::program_options::value<int>(&cloudPort), "Port of Atlas_Cloud back-end - used to connect the gateway with the cloud back-end")
+    ("listen,l", boost::program_options::value<int>(&coapPort), "Listen port number for the gateway CoAP server - used to connect the gateway with the client")
+    ("certFile,f", boost::program_options::value<std::string>(&certFile), "Certificate file with cloud back-end identity");
 
     try {
 
@@ -54,9 +64,16 @@ void parse_options(int argc, char **argv)
 
         boost::program_options::notify(vm);
     
-        /* Port validation */
-        if (coapPort <= 0 || coapPort > ATLAS_COAP_MAX_PORT) {
+        /* CoAP Port validation */
+        if (coapPort <= 0 || coapPort > ATLAS_MAX_PORT) {
             std::cout << "ERROR: Invalid listening port" << std::endl;
+            std::cout << desc << std::endl;
+            exit(1);
+        }
+
+        /* Cloud port validation */
+        if (cloudPort <= 0 || cloudPort > ATLAS_MAX_PORT) {
+            std::cout << "ERROR: Invalid cloud connection port" << std::endl;
             std::cout << desc << std::endl;
             exit(1);
         }
@@ -67,6 +84,28 @@ void parse_options(int argc, char **argv)
             std::cout << desc << std::endl;
             exit(1);
         }
+
+        /* Mosquitto certificate validation */
+        if (certFile == "") {
+            std::cout << "ERROR: Invalid Mosquitto certificate file" << std::endl;
+            std::cout << desc << std::endl;
+            exit(1);
+        } else {
+            if ([&]() {
+                FILE *tmp = fopen(certFile.c_str(), "r");
+                if (tmp != nullptr) { 
+                    fclose(tmp);
+                    return true;
+                }
+                return false;
+            }() == false) {
+                std::cout << "ERROR while trying to open Mosquitto certificate file" << std::endl;
+                std::cout << desc << std::endl;
+                exit(1);
+            }
+        }        
+
+        cloudConnStr = "ssl://" + cloudHostname + ":" + std::to_string(cloudPort);
 
     } catch(boost::program_options::error& e) {
         std::cout << desc << std::endl;
@@ -92,10 +131,11 @@ int main(int argc, char **argv)
     }
 
     /* Connect to cloud back-end */
-    if (!atlas::AtlasMqttClient::getInstance().initConnection("ssl://127.0.0.1:8883",
+    if (!atlas::AtlasMqttClient::getInstance().initConnection(cloudConnStr.c_str(),
                                                               atlas::AtlasIdentity::getInstance().getIdentity(),
                                                               atlas::AtlasIdentity::getInstance().getIdentity(),
-                                                              atlas::AtlasIdentity::getInstance().getPsk())) {
+                                                              atlas::AtlasIdentity::getInstance().getPsk(),
+                                                              certFile)) {
         ATLAS_LOGGER_ERROR("Error in initializing cloud back-end connection!");
         return 1;
     }
