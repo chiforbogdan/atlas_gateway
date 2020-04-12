@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <boost/program_options.hpp>
 #include "scheduler/AtlasScheduler.h"
 #include "coap/AtlasCoapServer.h"
@@ -22,6 +23,7 @@ namespace {
 
 const std::string ATLAS_GATEWAY_DESC = "Atlas gateway";
 const int ATLAS_MAX_PORT = 65535;
+const std::string ATLAS_CLOUD_MQTT_CONN_TYPE = "ssl://";
 
 /* Cloud back-end hostname*/
 std::string cloudHostname;
@@ -39,6 +41,20 @@ std::string certFile;
 std::string cloudConnStr;
 
 } // anonymous namespace
+
+int file_size(const std::string &filePath)
+{
+    std::ifstream file(filePath.c_str(), std::ifstream::in | std::ifstream::binary);
+
+    if(!file.is_open())
+        return -1;
+
+    file.seekg(0, std::ios::end);
+    int fileSize = file.tellg();
+    file.close();
+
+    return fileSize;
+}
 
 void parse_options(int argc, char **argv)
 {
@@ -90,22 +106,12 @@ void parse_options(int argc, char **argv)
             std::cout << "ERROR: Invalid Mosquitto certificate file" << std::endl;
             std::cout << desc << std::endl;
             exit(1);
-        } else {
-            if ([&]() {
-                FILE *tmp = fopen(certFile.c_str(), "r");
-                if (tmp != nullptr) { 
-                    fclose(tmp);
-                    return true;
-                }
-                return false;
-            }() == false) {
-                std::cout << "ERROR while trying to open Mosquitto certificate file" << std::endl;
-                std::cout << desc << std::endl;
-                exit(1);
-            }
-        }        
+        } else if (file_size(certFile) <= 0) {
+            std::cout << "ERROR while trying to open Mosquitto certificate file" << std::endl;
+            exit(1);
+        }
 
-        cloudConnStr = "ssl://" + cloudHostname + ":" + std::to_string(cloudPort);
+        cloudConnStr = ATLAS_CLOUD_MQTT_CONN_TYPE + cloudHostname + ":" + std::to_string(cloudPort);
 
     } catch(boost::program_options::error& e) {
         std::cout << desc << std::endl;
