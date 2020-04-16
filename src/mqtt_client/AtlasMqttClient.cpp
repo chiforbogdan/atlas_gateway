@@ -63,7 +63,7 @@ void AtlasMqttClient::connect(mqtt::connect_options &connOps)
     /* Connecting to remote server */
     try {
         connTok_ = client_->connect(connOps, nullptr, *cb_);
-        ATLAS_LOGGER_INFO("Connection to cloud back-end will be establshed.");
+        ATLAS_LOGGER_INFO("Connection to cloud back-end will be established.");
     } catch(const mqtt::exception& e) {
         ATLAS_LOGGER_ERROR("Exception caught in AtlasMqttClient_connect: " + std::string(e.what()));
     } catch(const char* e) {
