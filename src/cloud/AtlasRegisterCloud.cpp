@@ -15,8 +15,8 @@ const int ATLAS_KEEPALIVE_CLOUD_INTERVAL_MS = 60000;
 } // anonymous namespace
 
 AtlasRegisterCloud::AtlasRegisterCloud() : registered_(false),
-                                           kaAlarm_(ATLAS_KEEPALIVE_CLOUD_INTERVAL_MS, false,
-                                                    boost::bind(&AtlasRegisterCloud::keepaliveAlarmCb, this)) {}
+                                           kaAlarm_("AtlasRegisterCloud", ATLAS_KEEPALIVE_CLOUD_INTERVAL_MS,
+                                                    false, boost::bind(&AtlasRegisterCloud::keepaliveAlarmCb, this)) {}
 
 AtlasRegisterCloud& AtlasRegisterCloud::getInstance()
 {

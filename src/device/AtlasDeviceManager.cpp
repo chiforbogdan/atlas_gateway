@@ -48,10 +48,10 @@ AtlasDeviceManager& AtlasDeviceManager::getInstance()
 }
 
 AtlasDeviceManager::AtlasDeviceManager(): deviceCloud_(new AtlasDeviceCloud()),
-                                          fsAlarm_(ATLAS_FIREWALL_STATISTICS_INTERVAL_MS, false,
-                                                   boost::bind(&AtlasDeviceManager::firewallStatisticsAlarmCallback, this)),
-                                          sysRepAlarm_(ATLAS_SYSTEM_REPUTATION_INTERVAL_MS, false,
-                                                       boost::bind(&AtlasDeviceManager::sysRepAlarmCallback, this))
+                                          fsAlarm_("AtlasDeviceManagerFirewall", ATLAS_FIREWALL_STATISTICS_INTERVAL_MS,
+                                                   false, boost::bind(&AtlasDeviceManager::firewallStatisticsAlarmCallback, this)),
+                                          sysRepAlarm_("AtlasDeviceManagerSysRep", ATLAS_SYSTEM_REPUTATION_INTERVAL_MS,
+                                                       false, boost::bind(&AtlasDeviceManager::sysRepAlarmCallback, this))
 {
     /* Start firewall statistics alarm */
     fsAlarm_.start();

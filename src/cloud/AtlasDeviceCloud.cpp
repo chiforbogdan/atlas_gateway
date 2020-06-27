@@ -17,7 +17,8 @@ const std::string ATLAS_CMD_IDENTITY_JSON_KEY = "identity";
 
 } // anonymous namespace
 
-AtlasDeviceCloud::AtlasDeviceCloud() : syncAlarm_(ATLAS_SYNC_TIMER_INTERVAL_MS, false, boost::bind(&AtlasDeviceCloud::syncAlarmCallback, this)),
+AtlasDeviceCloud::AtlasDeviceCloud() : syncAlarm_("AtlasDeviceCloudSync", ATLAS_SYNC_TIMER_INTERVAL_MS, false,
+                                                  boost::bind(&AtlasDeviceCloud::syncAlarmCallback, this)),
                                        syncScheduled_(false) {}
 
 void AtlasDeviceCloud::updateDevice(const std::string &identity, const std::string &jsonInfo)

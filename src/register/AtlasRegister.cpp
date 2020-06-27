@@ -23,7 +23,8 @@ AtlasRegister::AtlasRegister() : registerResource_(ATLAS_REGISTER_URI,
                                  keepAliveResource_(ATLAS_KEEPALIVE_URI,
                                                     ATLAS_COAP_METHOD_PUT,
                                                     boost::bind(&AtlasRegister::keepaliveCallback, this, _1, _2, _3, _4, _5, _6, _7, _8)),
-                                 kaAlarm_(ATLAS_KEEP_ALIVE_INTERVAL_MS, false, boost::bind(&AtlasRegister::keepaliveAlarmCallback, this)) {}
+                                 kaAlarm_("AtlasRegisterKeepAlive", ATLAS_KEEP_ALIVE_INTERVAL_MS,
+                                          false, boost::bind(&AtlasRegister::keepaliveAlarmCallback, this)) {}
 
 void AtlasRegister::keepaliveAlarmCallback()
 {

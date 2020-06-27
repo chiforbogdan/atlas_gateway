@@ -15,7 +15,8 @@ namespace {
 
 AtlasMqttClient_callback::AtlasMqttClient_callback(mqtt::async_client& client,
                                                    mqtt::connect_options& connOpts) : client_(client), connOpts_(connOpts),
-                                                                                      alarm_(ATLAS_MQTT_RECONNECT_INTERVAL_MS, true,
+                                                                                      alarm_("AtlasMqttClientReconnect",
+                                                                                             ATLAS_MQTT_RECONNECT_INTERVAL_MS, true,
                                                                                              boost::bind(&AtlasMqttClient_callback::alarmCallback, this)) {}
 
 void AtlasMqttClient_callback::connection_lost(const std::string& cause)
