@@ -19,6 +19,7 @@ echo "************ Step 1. Installing dependencies ************"
 sudo apt-get install -y build-essential gcc make cmake cmake-gui cmake-curses-gui
 sudo apt-get install -y libssl-dev
 sudo apt-get install -y git
+sudo apt-get install -y libjsoncpp-dev
 echo "******************* Step 1 finished! ********************"
 # __build Paho with support for C__
 echo "*** Step 2. Building Eclipse Paho with support for C ****"
