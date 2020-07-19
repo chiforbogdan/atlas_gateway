@@ -36,10 +36,19 @@ int cloudPort;
 int coapPort;
 
 /* Mosquitto certificate file for Cloud connection */
-std::string certFile;   
+std::string certFile;
 
 /* Cloud connection string */
 std::string cloudConnStr;
+
+/* HTTPs certificate file for internal HTTPs server */
+std::string httpCertFile;
+
+/* HTTPs private key file for internal HTTPs server */
+std::string httpPrivKeyFile;
+
+/* HTTPs listening port for internal HTTPs server */
+int httpPort;
 
 } // anonymous namespace
 
@@ -64,11 +73,14 @@ void parse_options(int argc, char **argv)
     
     desc.add_options()
     ("help", "Display help message")
-    ("cloud,c", boost::program_options::value<std::string>(&cloudHostname), "IP address for the cloud broker - used to connect the gateway with the cloud back-end")
-    ("port,p", boost::program_options::value<int>(&cloudPort), "Port of Atlas_Cloud back-end - used to connect the gateway with the cloud back-end")
-    ("listen,l", boost::program_options::value<int>(&coapPort), "Listen port number for the gateway CoAP server - used to connect the gateway with the client")
-    ("certFile,f", boost::program_options::value<std::string>(&certFile), "Certificate file with cloud back-end identity");
-
+    ("cloudHostname", boost::program_options::value<std::string>(&cloudHostname), "Hostname for the cloud broker - used to connect the gateway with the cloud back-end")
+    ("cloudPort", boost::program_options::value<int>(&cloudPort), "Port of Atlas_Cloud back-end - used to connect the gateway with the cloud back-end")
+    ("cloudCertFile", boost::program_options::value<std::string>(&certFile), "Certificate file with cloud back-end identity")
+    ("coapPort", boost::program_options::value<int>(&coapPort), "Listen port number for the gateway CoAP server - used to connect the gateway with the client")
+    ("httpCertFile", boost::program_options::value<std::string>(&httpCertFile), "Certificate file for internal HTTPs server")
+    ("httpPrivKeyFile", boost::program_options::value<std::string>(&httpPrivKeyFile), "Private key file for internal HTTPs server")
+    ("httpPort", boost::program_options::value<int>(&httpPort), "Listen port for internal HTTPs server");
+    
     try {
 
         boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
@@ -83,7 +95,7 @@ void parse_options(int argc, char **argv)
     
         /* CoAP Port validation */
         if (coapPort <= 0 || coapPort > ATLAS_MAX_PORT) {
-            std::cout << "ERROR: Invalid listening port" << std::endl;
+            std::cout << "ERROR: Invalid CoAP listening port" << std::endl;
             std::cout << desc << std::endl;
             exit(1);
         }
@@ -109,6 +121,33 @@ void parse_options(int argc, char **argv)
             exit(1);
         } else if (file_size(certFile) <= 0) {
             std::cout << "ERROR while trying to open Mosquitto certificate file" << std::endl;
+            exit(1);
+        }
+
+        /* HTTP certificate validation */
+        if (httpCertFile == "") {
+            std::cout << "ERROR: Invalid HTTPs certificate file" << std::endl;
+            std::cout << desc << std::endl;
+            exit(1);
+	} else if (file_size(httpCertFile) <= 0) {
+            std::cout << "ERROR while trying to open the HTTPs certificate file" << std::endl;
+            exit(1);
+	}
+
+        /* HTTP private key validation */
+        if (httpPrivKeyFile == "") {
+            std::cout << "ERROR: Invalid HTTPs private key file" << std::endl;
+            std::cout << desc << std::endl;
+            exit(1);
+	} else if (file_size(httpPrivKeyFile) <= 0) {
+            std::cout << "ERROR while trying to open the HTTPs private key file" << std::endl;
+            exit(1);
+	}
+
+        /* HTTP Port validation */
+        if (httpPort <= 0 || httpPort > ATLAS_MAX_PORT) {
+            std::cout << "ERROR: Invalid HTTP listening port" << std::endl;
+            std::cout << desc << std::endl;
             exit(1);
         }
 
@@ -163,7 +202,7 @@ int main(int argc, char **argv)
     atlas::AtlasCoapServer::getInstance().start(coapPort, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 
 
     /* Start internal HTTP server */
-    atlas::AtlasHttpServer::getInstance().start();
+    atlas::AtlasHttpServer::getInstance().start(httpCertFile, httpPrivKeyFile, httpPort);
 
     /* Start policy module */
     policy.start();

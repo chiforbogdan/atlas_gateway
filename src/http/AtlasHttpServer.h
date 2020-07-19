@@ -22,7 +22,7 @@ public:
      * @brief Start HTTP2 server
      * @return true if server is started, false otherwise
      */
-    bool start();
+    bool start(const std::string &certFile, const std::string &privKeyFile, int port);
 
     /**
      * @brief Stop HTTP server
@@ -35,7 +35,7 @@ private:
      * @brief Default ctor
      * @return none
      */
-    AtlasHttpServer() = default;
+    AtlasHttpServer();
     
     /**
      * @brief Copy ctor
@@ -45,6 +45,9 @@ private:
 
     /* HTTP2 server */
     http2 server_;
+
+    /* TLS context */
+    boost::asio::ssl::context tls_;
 };
 
 } // namespace atlas

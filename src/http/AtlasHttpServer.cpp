@@ -16,9 +16,16 @@ AtlasHttpServer& AtlasHttpServer::getInstance()
     return server;
 }
 
-bool AtlasHttpServer::start()
+AtlasHttpServer::AtlasHttpServer() : tls_(boost::asio::ssl::context::tlsv13) {}
+
+bool AtlasHttpServer::start(const std::string &certFile, const std::string &privKeyFile, int port)
 {
     boost::system::error_code ec;
+
+    tls_.use_private_key_file(privKeyFile, boost::asio::ssl::context::pem);
+    tls_.use_certificate_chain_file(certFile);
+
+    configure_tls_context_easy(ec, tls_);
 
     /* Install default index handler */
     server_.handle(INDEX, [](const request &req, const response &res) {
@@ -26,7 +33,7 @@ bool AtlasHttpServer::start()
         res.end(INDEX_PAYLOAD);
     });
 
-    if (server_.listen_and_serve(ec, "localhost", "3000", true)) {
+    if (server_.listen_and_serve(ec, tls_, "localhost", std::to_string(port), true)) {
     	ATLAS_LOGGER_ERROR("Error when starting HTTP2 server (listen and server)");
         return false;
     }
