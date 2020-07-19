@@ -18,6 +18,7 @@
 #include "reputation/AtlasFeatureReputation.h"
 #include "cloud/AtlasCloudCmdParser.h"
 #include "sql/AtlasSQLite.h"
+#include "http/AtlasHttpServer.h"
 
 namespace {
 
@@ -160,6 +161,9 @@ int main(int argc, char **argv)
 
     /* Start internal CoAP server */
     atlas::AtlasCoapServer::getInstance().start(coapPort, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 
+
+    /* Start internal HTTP server */
+    atlas::AtlasHttpServer::getInstance().start();
 
     /* Start policy module */
     policy.start();
