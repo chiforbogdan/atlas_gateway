@@ -5,8 +5,11 @@
 namespace atlas {
 
 namespace {
-    const std::string INDEX = "/";
-    const std::string INDEX_PAYLOAD = "ATLAS Gateway internal HTTP2 server!";
+
+const std::string INDEX = "/";
+const std::string INDEX_PAYLOAD = "ATLAS Gateway internal HTTP2 server!";
+const std::string ANY_ADDRESS = "0.0.0.0";
+
 } // anonymous namespace
 
 AtlasHttpServer& AtlasHttpServer::getInstance()
@@ -33,7 +36,7 @@ bool AtlasHttpServer::start(const std::string &certFile, const std::string &priv
         res.end(INDEX_PAYLOAD);
     });
 
-    if (server_.listen_and_serve(ec, tls_, "localhost", std::to_string(port), true)) {
+    if (server_.listen_and_serve(ec, tls_, ANY_ADDRESS, std::to_string(port), true)) {
     	ATLAS_LOGGER_ERROR("Error when starting HTTP2 server (listen and server)");
         return false;
     }
