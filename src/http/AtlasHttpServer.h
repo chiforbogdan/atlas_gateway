@@ -31,8 +31,18 @@ public:
     void stop();
 
 private:
+    /**
+     * @brief Default ctor
+     * @return none
+     */
     AtlasHttpServer() = default;
     
+    /**
+     * @brief Copy ctor
+     * @return none
+     */
+    AtlasHttpServer(const AtlasHttpServer&) = delete;
+
     /* HTTP2 server */
     http2 server_;
 };
