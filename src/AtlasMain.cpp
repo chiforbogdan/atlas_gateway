@@ -19,6 +19,7 @@
 #include "cloud/AtlasCloudCmdParser.h"
 #include "sql/AtlasSQLite.h"
 #include "http/AtlasHttpServer.h"
+#include "claim_approve/AtlasClaim.h"
 
 namespace {
 
@@ -166,6 +167,7 @@ int main(int argc, char **argv)
     atlas::AtlasRegister reg;
     atlas::AtlasPolicy policy;
     atlas::AtlasFeatureReputation reputation;
+    atlas::AtlasClaim claimProto;
 
     parse_options(argc, argv);
     

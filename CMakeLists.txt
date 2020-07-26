@@ -40,7 +40,7 @@ include_directories(${JSONCPP_INCLUDE_DIRS})
 include_directories(${NGHTTP2_ASIO_INCLUDE_DIRS})
 
 # Atlas gateway files
-file(GLOB ATLAS_GATEWAY_SOURCES "src/*.cpp" "src/sql/AtlasSQLite.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp" "src/pubsub_agent/*.cpp" "src/device/*.cpp" "src/telemetry/*.cpp" "src/policy/*.cpp" "src/mqtt_client/*.cpp" "src/identity/*.cpp" "src/cloud/*.cpp" "src/statistics/*.cpp" "src/reputation/*.cpp" "src/reputation_impl/*cpp" "src/device/reputation_feedback/*.cpp" "src/http/*.cpp")
+file(GLOB ATLAS_GATEWAY_SOURCES "src/*.cpp" "src/sql/AtlasSQLite.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp" "src/pubsub_agent/*.cpp" "src/device/*.cpp" "src/telemetry/*.cpp" "src/policy/*.cpp" "src/mqtt_client/*.cpp" "src/identity/*.cpp" "src/cloud/*.cpp" "src/statistics/*.cpp" "src/reputation/*.cpp" "src/reputation_impl/*cpp" "src/device/reputation_feedback/*.cpp" "src/http/*.cpp" "src/claim_approve/*.cpp")
 
 # Atlas_gateway_cli files
 file(GLOB ATLAS_GATEWAY_CLI_SOURCES "src/sql/cli/*.cpp" "src/sql/*.cpp" "src/logger/*.cpp" "src/reputation_impl/*cpp")
