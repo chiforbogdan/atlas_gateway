@@ -32,7 +32,18 @@ public:
      */
     void stop();
 
+    /**
+     * @brief Add HTTP callback (add callbacks before starting the HTTP server)
+     * @param[in] httpCallback HTTP callback
+     * @return true if callback is added, false otherwise
+     */
     bool addCallback(const AtlasHttpCallback &httpCallback);
+
+    /**
+     * @brief Get HTTP server boost::asio service (the main assumption here is that the server runs on a single thread)
+     * @return HTTP server service
+     */
+    inline boost::asio::io_service& getService() { assert(server_.io_services().size() == 1); return *server_.io_services()[0]; }
 
 private:
     /**
@@ -47,6 +58,12 @@ private:
      */
     AtlasHttpServer(const AtlasHttpServer&) = delete;
 
+    /**
+     * @brief Handle HTTP request
+     * @param[in] req HTTP request
+     * @param[in] res HTTP response 
+     * @return none
+     */
     void handleRequest(const request &req, const response &res);
 
     /* HTTP2 server */

@@ -21,7 +21,11 @@ AtlasHttpServer& AtlasHttpServer::getInstance()
     return server;
 }
 
-AtlasHttpServer::AtlasHttpServer() : tls_(boost::asio::ssl::context::tlsv13) {}
+AtlasHttpServer::AtlasHttpServer() : tls_(boost::asio::ssl::context::tlsv13)
+{
+    /* Configure the HTTP server with only 1 thread (an important assumption) */
+    server_.num_threads(1);
+}
 
 bool AtlasHttpServer::start(const std::string &certFile, const std::string &privKeyFile, int port)
 {
@@ -79,10 +83,11 @@ void AtlasHttpServer::handleRequest(const request &req, const response &res)
         ATLAS_LOGGER_ERROR("Unsupported HTTP method " + req.method() + " for path: " + req.uri().path);
 	res.write_head(404);
 	res.end();
+	return;
     }
 
     if (method != callback.getMethod()) {
-        ATLAS_LOGGER_ERROR("HTTP method " + req.method() + "unavailable for path: " + req.uri().path);
+        ATLAS_LOGGER_ERROR("HTTP method " + req.method() + " unavailable for path: " + req.uri().path);
         res.write_head(404);
 	res.end();
 	return;
@@ -92,24 +97,30 @@ void AtlasHttpServer::handleRequest(const request &req, const response &res)
         ATLAS_LOGGER_ERROR("Handler method unavailbale for path: " + req.uri().path);
 	res.write_head(404);
         res.end();
+	return;
     }
 
-    req.on_data([method, &callback, &res] (const uint8_t *data, std::size_t len) { 
+    req.on_data([method, callback, &res] (const uint8_t *data, std::size_t len) { 
+        if (!data || !len)
+            return;
+
         std::string reqPayload((const char*) data, len);
         
 	/* Execute high layer application callback (post the operation on the main scheduler thread) */
-	AtlasScheduler::getInstance().getService().post([method, reqPayload, &callback, &res] () {
+	AtlasScheduler::getInstance().getService().post([method, callback, reqPayload, &res] () {
             ATLAS_LOGGER_INFO("Execute HTTP callback handler for path: " + callback.getPath());
-            AtlasHttpResponse httpResp = callback.getHandler()(method, callback.getPath(), reqPayload);
+	    AtlasHttpResponse httpResp = callback.getHandler()(method, callback.getPath(), reqPayload);
 
-            /* Set response status */
-            res.write_head(httpResp.getStatusCode());
-
-            /* Set response payload */
-            if (httpResp.getPayload())
-                res.end(*httpResp.getPayload());
-            else
-                res.end();
+            /* Post response back on the HTTP server thread */
+	    AtlasHttpServer::getInstance().getService().post([httpResp, &res]() {
+                /* Set response status */
+                res.write_head(httpResp.getStatusCode());
+                /* Set response payload */
+                if (httpResp.getPayload())
+                    res.end(*httpResp.getPayload());
+                else
+                    res.end();
+            });
         });
     });
 }
