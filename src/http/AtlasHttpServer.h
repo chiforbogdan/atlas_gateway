@@ -2,7 +2,9 @@
 #define __ATLAS_HTTP_SERVER_H__
 
 #include <string>
+#include <unordered_map>
 #include <nghttp2/asio_http2_server.h>
+#include "AtlasHttpCallback.h"
 
 using namespace nghttp2::asio_http2;
 using namespace nghttp2::asio_http2::server;
@@ -30,6 +32,8 @@ public:
      */
     void stop();
 
+    bool addCallback(const AtlasHttpCallback &httpCallback);
+
 private:
     /**
      * @brief Default ctor
@@ -43,11 +47,16 @@ private:
      */
     AtlasHttpServer(const AtlasHttpServer&) = delete;
 
+    void handleRequest(const request &req, const response &res);
+
     /* HTTP2 server */
     http2 server_;
 
     /* TLS context */
     boost::asio::ssl::context tls_;
+
+    /* HTTP callbacks */
+    std::unordered_map<std::string, AtlasHttpCallback> callbacks_;
 };
 
 } // namespace atlas

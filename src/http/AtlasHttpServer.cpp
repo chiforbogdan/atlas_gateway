@@ -1,5 +1,7 @@
 #include <iostream>
+#include <boost/bind.hpp>
 #include "AtlasHttpServer.h"
+#include "../scheduler/AtlasScheduler.h"
 #include "../logger/AtlasLogger.h"
 
 namespace atlas {
@@ -49,6 +51,77 @@ void AtlasHttpServer::stop()
     /* Stop HTTP2 server */
     server_.join();
     server_.stop();
+}
+
+void AtlasHttpServer::handleRequest(const request &req, const response &res)
+{
+    /* If path is not registered */
+    if (callbacks_.find(req.uri().path) == callbacks_.end()) {
+        ATLAS_LOGGER_ERROR("Path " + req.uri().path + " is not found");
+        res.write_head(404);
+        res.end();
+        return;
+    }
+
+    AtlasHttpCallback &callback = callbacks_[req.uri().path];
+
+    AtlasHttpMethod method;
+
+    if (req.method() == "GET")
+        method = AtlasHttpMethod::ATLAS_HTTP_GET;
+    else if (req.method() == "POST")
+        method = AtlasHttpMethod::ATLAS_HTTP_POST;
+    else if (req.method() == "PUT")
+        method = AtlasHttpMethod::ATLAS_HTTP_PUT;
+    else if (req.method() == "DELETE")
+        method = AtlasHttpMethod::ATLAS_HTTP_DEL;
+    else {
+        ATLAS_LOGGER_ERROR("Unsupported HTTP method " + req.method() + " for path: " + req.uri().path);
+	res.write_head(404);
+	res.end();
+    }
+
+    if (method != callback.getMethod()) {
+        ATLAS_LOGGER_ERROR("HTTP method " + req.method() + "unavailable for path: " + req.uri().path);
+        res.write_head(404);
+	res.end();
+	return;
+    }
+
+    if (!callback.getHandler()) {
+        ATLAS_LOGGER_ERROR("Handler method unavailbale for path: " + req.uri().path);
+	res.write_head(404);
+        res.end();
+    }
+
+    req.on_data([method, &callback, &res] (const uint8_t *data, std::size_t len) { 
+        std::string reqPayload((const char*) data, len);
+        
+	/* Execute high layer application callback (post the operation on the main scheduler thread) */
+	AtlasScheduler::getInstance().getService().post([method, reqPayload, &callback, &res] () {
+            ATLAS_LOGGER_INFO("Execute HTTP callback handler for path: " + callback.getPath());
+            AtlasHttpResponse httpResp = callback.getHandler()(method, callback.getPath(), reqPayload);
+
+            /* Set response status */
+            res.write_head(httpResp.getStatusCode());
+
+            /* Set response payload */
+            if (httpResp.getPayload())
+                res.end(*httpResp.getPayload());
+            else
+                res.end();
+        });
+    });
+}
+
+bool AtlasHttpServer::addCallback(const AtlasHttpCallback &httpCallback)
+{
+    bool ret = server_.handle(httpCallback.getPath(), boost::bind(&AtlasHttpServer::handleRequest, this, _1, _2));
+
+    if (ret)
+        callbacks_[httpCallback.getPath()] = httpCallback;
+    
+    return ret;
 }
 
 } // namespace atlas
