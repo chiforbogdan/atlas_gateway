@@ -22,14 +22,32 @@ private:
      */
     void alarmCallback();
 
+    /**
+     * @brief Handle claim request
+     * @param[in] method HTTP method
+     * @param[in] path HTTP path
+     * @param[in] payload Claim request payload (JSON format which contains the following fields: short code,
+     * claim secret key, owner identifier)
+     * @return HTTP response
+     */
     AtlasHttpResponse handleClaimReq(AtlasHttpMethod method, const std::string &path,
                                      const std::string &payload);
+
+
+    /**
+     * @brief Generate short code
+     * @return short code
+     */
+    std::string generateShortCode();
 
     /* Short code alarm */
     AtlasAlarm shortCodeAlarm_;
 
     /* HTTP claim request callback */
     AtlasHttpCallback claimCallback_;
+
+    /* Short code used for authenticating claim requests */
+    std::string shortCode_;
 };
 
 } // namespace atlas
