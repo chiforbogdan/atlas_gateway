@@ -132,6 +132,9 @@ AtlasHttpResponse AtlasClaim::handleClaimReq(AtlasHttpMethod method, const std::
 
     ATLAS_LOGGER_INFO("Gateway is successfully claimed!");
 
+    // TODO cancel alarm!!!!
+    shortCodeAlarm_.cancel();
+
     return AtlasHttpResponse(200, ATLAS_CLAIM_SUCCESS_MSG + ownerIdentity_);
 }
 
