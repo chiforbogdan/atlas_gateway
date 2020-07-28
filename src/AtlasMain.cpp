@@ -203,6 +203,12 @@ int main(int argc, char **argv)
     /* Start internal CoAP server */
     atlas::AtlasCoapServer::getInstance().start(coapPort, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 
 
+    /* Start gateway claim protocol */
+    if (!claimProto.start()) {
+        ATLAS_LOGGER_ERROR("Error in starting the gateway claim protocol");
+	return 1;
+    }
+
     /* Start internal HTTP server */
     atlas::AtlasHttpServer::getInstance().start(httpCertFile, httpPrivKeyFile, httpPort);
 

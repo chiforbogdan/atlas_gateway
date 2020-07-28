@@ -38,6 +38,11 @@ namespace {
                                     "Weight REAL DEFAULT 0," \
                                     "FOREIGN KEY (NetworkId) REFERENCES NaiveBayesNetwork(Id));"\
 
+                                    "CREATE TABLE IF NOT EXISTS Owner("  \
+                                    "Id INTEGER PRIMARY KEY AUTOINCREMENT," \
+                                    "SecretKey TEXT NOT NULL," \
+                                    "Identity TEXT NOT NULL );" \
+
                                     "CREATE UNIQUE INDEX IF NOT EXISTS idxDeviceIdentity "\
                                     "ON Device(Identity);"\
                                     "COMMIT;";
@@ -97,6 +102,10 @@ namespace {
                                     "INNER JOIN NaiveBayesNetwork ON NaiveBayesNetwork.Id == NaiveBayesFeature.NetworkId "\
                                     "INNER JOIN Device ON Device.Id == NaiveBayesNetwork.DeviceId "\
                                     "WHERE Device.Identity=? AND NaiveBayesNetwork.NetworkTypeId=?;";
+
+    const char *SQL_INSERT_OWNER = "INSERT INTO Owner(SecretKey, Identity) VALUES (?,?);";
+
+    const char *SQL_GET_OWNER = "SELECT Owner.SecretKey, Owner.Identity FROM Owner;";
 } // anonymous namespace
 
 AtlasSQLite& AtlasSQLite::getInstance()
@@ -181,6 +190,7 @@ bool AtlasSQLite::openConnection(const std::string &databasePath)
 
     return isConnected_;
 }
+
 bool AtlasSQLite::insertDevice(const std::string &identity, const  std::string &psk)
 {
     sqlite3_stmt *stmt = nullptr;
@@ -274,7 +284,7 @@ bool AtlasSQLite::insertNetwork(const std::string &identity, int networkTypeId, 
     if(!isConnected_)
         return false;
 	
-    /*get deviceId fron db*/
+    /*get deviceId from db*/
     if(sqlite3_prepare_v2(pCon_, SQL_GET_ID_DEVICE,  -1, &stmt, 0) != SQLITE_OK) {
         ATLAS_LOGGER_ERROR("Could not prepare, fct:insertNetwork, stmt:SQL_GET_ID_DEVICE, error:" + std::string(sqlite3_errmsg(pCon_)));
         return false;
@@ -781,6 +791,73 @@ bool AtlasSQLite::checkDeviceForStats(const std::string &identity)
     }
 
     return false;
+}
+
+bool AtlasSQLite::insertOwner(const std::string &secretKey, const std::string &identity)
+{
+    sqlite3_stmt *stmt = nullptr;
+
+    BOOST_SCOPE_EXIT(&stmt) {
+        sqlite3_finalize(stmt);
+    } BOOST_SCOPE_EXIT_END
+    
+    if(!isConnected_)
+        return false;
+	
+    if(sqlite3_prepare_v2(pCon_, SQL_INSERT_OWNER,  -1, &stmt, 0) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not prepare, fct:insertOwner, stmt:SQL_INSERT_OWNER, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    if (sqlite3_bind_text(stmt, 1, secretKey.c_str(), secretKey.length(), SQLITE_STATIC) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not bind, fct:insertOwner, stmt:SQL_INSERT_OWNER, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    if (sqlite3_bind_text(stmt, 2, identity.c_str(), identity.length(), SQLITE_STATIC) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not bind, fct:insertOwner, stmt:SQL_INSERT_OWNER, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    int stat = sqlite3_step(stmt);
+    if (stat != SQLITE_DONE && stat != SQLITE_ROW) {
+        ATLAS_LOGGER_ERROR("Could not step, fct:insertOwner, stmt:SQL_INSERT_OWNER, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    return true;
+}
+
+bool AtlasSQLite::selectOwnerInfo(std::string &secretKey, std::string &identity)
+{
+    sqlite3_stmt *stmt = nullptr;
+    int stat = -1;
+
+    BOOST_SCOPE_EXIT(&stmt) {
+        sqlite3_finalize(stmt);
+    } BOOST_SCOPE_EXIT_END
+
+    if(!isConnected())
+        return false;
+
+    /* Select owner information */
+    if(sqlite3_prepare_v2(pCon_, SQL_GET_OWNER,-1, &stmt, 0) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not prepare, fct:selectOwnerInfo, stmt:SQL_GET_OWNER, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    stat = sqlite3_step(stmt);
+
+    if(stat != SQLITE_ROW) {
+        ATLAS_LOGGER_ERROR("Could not step, fct:selectFeatures, stmt:SQL_GET_FEATURE, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    /* Assign owner secret key and identity */
+    secretKey = std::string((const char *) sqlite3_column_text(stmt, 0));
+    identity = std::string((const char *) sqlite3_column_text(stmt, 1));
+
+    return true;
 }
 
 } // namespace atlas

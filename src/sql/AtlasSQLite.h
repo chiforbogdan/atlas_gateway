@@ -129,6 +129,22 @@ public:
     */
     bool checkDeviceForStats(const std::string &identity);
 
+    /**
+     * @brief Execute query on databaseL insert owner using secretKey and identity
+     * @param[in] secretKey Owner secret key
+     * @param[in] identity Owner identity
+     * @return true on success, false on error
+     */
+    bool insertOwner(const std::string &secretKey, const std::string &identity);
+
+    /**
+     * Execute query on database: select owner (gateway claim) information
+     * @param[out] secretKey Owner secret key
+     * @param[out] identity Owner identity
+     * @return true on success, false on error
+     */
+    bool selectOwnerInfo(std::string &secretKey, std::string &identity);
+
     AtlasSQLite(const AtlasSQLite&) = delete;
     AtlasSQLite& operator=(const AtlasSQLite&) = delete;
 
