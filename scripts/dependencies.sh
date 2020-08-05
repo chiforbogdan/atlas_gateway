@@ -108,7 +108,7 @@ echo "*********************************************************"
 git clone https://github.com/chiforbogdan/mosquitto.git
 cd mosquitto
 git checkout atlas_plugin
-make binary
+make
 sudo make install
 cd ..
 echo "*********************************************************"
