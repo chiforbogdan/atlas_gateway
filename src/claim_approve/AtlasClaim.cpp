@@ -33,6 +33,12 @@ const std::string ATLAS_CLAIM_ERR_DATABASE = "Cannot save owner information into
 
 } // anonymous namespace
 
+AtlasClaim& AtlasClaim::getInstance()
+{
+    static AtlasClaim instance;
+    return instance;
+}
+
 AtlasClaim::AtlasClaim() : shortCodeAlarm_("AtlasClaim", ATLAS_CLAIM_ALARM_PERIOD_MS, false,
                                            boost::bind(&AtlasClaim::alarmCallback, this)),
                            claimCallback_(AtlasHttpMethod::ATLAS_HTTP_POST, ATLAS_CLAIM_REQUEST_PATH,

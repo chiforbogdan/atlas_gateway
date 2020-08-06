@@ -10,10 +10,10 @@ class AtlasClaim {
 
 public:
     /**
-     * @brief Ctor for claiming protocol
-     * @return none
-     */
-    AtlasClaim();
+    * @brief Get instance for claiming module
+    * @return Claiming module instance
+    */
+    static AtlasClaim& getInstance();
 
     /**
      * @brief Start claim protocol
@@ -40,6 +40,13 @@ public:
     std::string getOwnerIdentity() const { return ownerIdentity_; }
 
 private:
+
+    /**
+     * @brief Ctor for claiming protocol
+     * @return none
+     */
+    AtlasClaim();
+
     /**
      * @brief Short code alarm callback
      * @return none
