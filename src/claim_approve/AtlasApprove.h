@@ -21,6 +21,12 @@ public:
     void checkCmdPayload(const std::string &cmdPayload);
 
     /**
+    * @brief Response with an ACK to cloud back-end
+    * @return none
+    */
+    void ResponseCmd();
+
+    /**
     * @brief Relay approved cmd to targeted device
     * @return none
     */

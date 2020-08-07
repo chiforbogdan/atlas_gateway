@@ -4,6 +4,9 @@
 #include "../sql/AtlasSQLite.h"
 #include "../logger/AtlasLogger.h"
 #include "../device/AtlasDeviceManager.h"
+#include "../cloud/AtlasCommandsCloud.h"
+#include "../mqtt_client/AtlasMqttClient.h"
+#include "../identity/AtlasIdentity.h"
 
 namespace atlas {
 
@@ -88,6 +91,25 @@ void AtlasApprove::checkCmdPayload(const std::string &cmdPayload)
         ATLAS_LOGGER_ERROR("Cannot save device command into the database");
 	    return;
     }
+
+    ResponseCmd();
+}
+
+void AtlasApprove::ResponseCmd()
+{
+    std::string cmd = "{\n";
+    
+    ATLAS_LOGGER_INFO("Send ACK response to cloud back-end");
+
+    /* Add header */
+    cmd += "\"" + ATLAS_CMD_TYPE_JSON_KEY + "\": \"" + ATLAS_CMD_GATEWAY_CLIENT_ACK + "\"";
+    cmd += "\n\"" + ATLAS_CMD_PAYLOAD_JSON_KEY + "\": \"" + std::to_string(sequenceNumber_) + "\"";
+    cmd += "\n}";
+
+    /* Send ACK command */
+    bool delivered = AtlasMqttClient::getInstance().tryPublishMessage(AtlasIdentity::getInstance().getPsk() + ATLAS_TO_CLOUD_TOPIC, cmd);
+    if (!delivered)
+        ATLAS_LOGGER_ERROR("ACK command was not sent to cloud back-end");
 }
 
 
