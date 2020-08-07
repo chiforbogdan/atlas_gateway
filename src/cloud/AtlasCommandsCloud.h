@@ -19,6 +19,7 @@ const std::string ATLAS_CMD_GATEWAY_KEEPALIVE = "ATLAS_CMD_GATEWAY_KEEPALIVE";
 /* Cloud command type send from cloud to gateway */
 const std::string ATLAS_CMD_GATEWAY_GET_ALL_DEVICES = "ATLAS_CMD_GATEWAY_GET_ALL_DEVICES";
 const std::string ATLAS_CMD_GATEWAY_REGISTER_REQUEST = "ATLAS_CMD_GATEWAY_REGISTER_REQUEST";
+const std::string ATLAS_CMD_GATEWAY_CLIENT = "ATLAS_CMD_GATEWAY_CLIENT";
 } // namespace atlas
 
 

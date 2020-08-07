@@ -6,6 +6,7 @@
 #include "../mqtt_client/AtlasMqttClient.h"
 #include "../device/AtlasDeviceManager.h"
 #include "../identity/AtlasIdentity.h"
+#include "../claim_approve/AtlasApprove.h"
 
 namespace atlas {
 
@@ -29,6 +30,11 @@ void AtlasCloudCmdParser::reqRegisterCmd()
     AtlasRegisterCloud::getInstance().sendRegisterCmd();
 }
 
+void AtlasCloudCmdParser::deviceApprovedCmd(const std::string &cmdPayload)
+{
+    ATLAS_LOGGER_INFO("ATLAS_CMD_IOT_CLIENT command was sent by cloud back-end");
+    AtlasApprove::getInstance().checkCmdPayload(cmdPayload);
+}
 
 void AtlasCloudCmdParser::start()
 {
@@ -37,7 +43,7 @@ void AtlasCloudCmdParser::start()
     AtlasMqttClient::getInstance().addConnectionCb(this);
 }
 
-void AtlasCloudCmdParser::parseCmd(std::string const &cmd)
+void AtlasCloudCmdParser::parseCmd(const std::string &cmd)
 {
     Json::Reader reader;
     Json::Value obj;
@@ -47,6 +53,8 @@ void AtlasCloudCmdParser::parseCmd(std::string const &cmd)
         getAllDevicesCmd();
     else if (obj[ATLAS_CMD_TYPE_JSON_KEY].asString() == ATLAS_CMD_GATEWAY_REGISTER_REQUEST)
         reqRegisterCmd();
+    else if (obj[ATLAS_CMD_TYPE_JSON_KEY].asString() == ATLAS_CMD_GATEWAY_CLIENT)
+        deviceApprovedCmd(obj[ATLAS_CMD_PAYLOAD_JSON_KEY].asString());
 }
 
 void AtlasCloudCmdParser::onConnect()

@@ -47,7 +47,7 @@ public:
     * @param[in] command
     * @return none
     */
-    void parseCmd(std::string const &cmd);
+    void parseCmd(const std::string &cmd);
 
     AtlasCloudCmdParser(const AtlasCloudCmdParser &) = delete;
     AtlasCloudCmdParser& operator=(const AtlasCloudCmdParser &) = delete;
@@ -70,6 +70,13 @@ private:
     * @return none
     */
     void reqRegisterCmd();
+
+    /**
+    * @brief Callback for ATLAS_CMD_IOT_CLIENT command
+    * @param[in] cmdPayload Command payload
+    * @return none
+    */
+    void deviceApprovedCmd(const std::string &cmdPayload);
 
     /* Indicates if the cloud module is connected */
     bool connected_;

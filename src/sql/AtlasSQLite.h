@@ -130,7 +130,7 @@ public:
     bool checkDeviceForStats(const std::string &identity);
 
     /**
-     * @brief Execute query on databaseL insert owner using secretKey and identity
+     * @brief Execute query on database: insert owner using secretKey and identity
      * @param[in] secretKey Owner secret key
      * @param[in] identity Owner identity
      * @return true on success, false on error
@@ -144,6 +144,17 @@ public:
      * @return true on success, false on error
      */
     bool selectOwnerInfo(std::string &secretKey, std::string &identity);
+
+    /**
+     * @brief Execute query on database: insert command device
+     * @param[in] sequenceNumber Command sequence number
+     * @param[in] commandType Command Type
+     * @param[in] commandPayload Command payload
+     * @param[in] deviceIdentity Device identity
+     * @return true on success, false on error
+     */
+    bool insertDeviceCommand(const uint32_t sequenceNumber, const std::string &commandType,
+                             const std::string &commandPayload, const std::string &deviceIdentity);
 
     AtlasSQLite(const AtlasSQLite&) = delete;
     AtlasSQLite& operator=(const AtlasSQLite&) = delete;
