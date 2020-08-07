@@ -167,7 +167,6 @@ int main(int argc, char **argv)
     atlas::AtlasRegister reg;
     atlas::AtlasPolicy policy;
     atlas::AtlasFeatureReputation reputation;
-    atlas::AtlasClaim claimProto;
 
     parse_options(argc, argv);
     
@@ -204,7 +203,7 @@ int main(int argc, char **argv)
     atlas::AtlasCoapServer::getInstance().start(coapPort, atlas::ATLAS_COAP_SERVER_MODE_DTLS_PSK); 
 
     /* Start gateway claim protocol */
-    if (!claimProto.start()) {
+    if (!atlas::AtlasClaim::getInstance().start()) {
         ATLAS_LOGGER_ERROR("Error in starting the gateway claim protocol");
 	return 1;
     }
