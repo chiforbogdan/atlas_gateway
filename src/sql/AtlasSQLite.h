@@ -155,6 +155,19 @@ public:
      */
     bool insertDeviceCommand(const uint32_t sequenceNumber, const std::string &commandType,
                              const std::string &commandPayload, const std::string &deviceIdentity);
+    /**
+     * @brief Execute query on database: check if a command device exists
+     * @param[in] sequenceNumber Command sequence number
+     * @return true on success, false on error
+     */
+    bool checkDeviceCommand(const uint32_t sequenceNumber);
+
+    /**
+     * @brief Execute query on database: set field 'executed' to 1
+     * @param[in] sequenceNumber Command sequence number
+     * @return true on success, false on error
+     */
+    bool updateDeviceCommand(const uint32_t sequenceNumber);
 
     AtlasSQLite(const AtlasSQLite&) = delete;
     AtlasSQLite& operator=(const AtlasSQLite&) = delete;

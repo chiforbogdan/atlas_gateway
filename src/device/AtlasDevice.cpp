@@ -326,9 +326,4 @@ void AtlasDevice::setFeature(const std::string &featureType, const std::string &
     }
 }
 
-void AtlasDevice::addCommandClient(const AtlasCommandClient& cmd)
-{
-    cmds_.push(cmd);
-}
-
 } // namespace atlas

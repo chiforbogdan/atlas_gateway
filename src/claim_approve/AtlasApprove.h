@@ -2,6 +2,7 @@
 #define __ATLAS_APPROVE_H__
 
 #include <string>
+#include "../alarm/AtlasAlarm.h"
 
 namespace atlas {
 
@@ -15,22 +16,37 @@ public:
     static AtlasApprove& getInstance();
 
     /**
+     * @brief Start approve protocol
+     * @return none
+     */
+    void start();
+
+    /**
+     * @brief Stop approve protocol
+     * @return none
+     */
+    void stop();
+
+    /**
     * @brief Check approved cmd payload received from cloud back-end
+    * @param[in] payload Command payload
     * @return none
     */
-    void checkCmdPayload(const std::string &cmdPayload);
+    void checkCommandPayload(const std::string &payload);
 
     /**
-    * @brief Response with an ACK to cloud back-end
+    * @brief Response with an ACK status to cloud back-end for a specific sequence number
+    * @param[in] sequenceNumber Command sequnce number
     * @return none
     */
-    void ResponseCmd();
+    void ResponseCommandACK(const uint32_t sequenceNumber);
 
     /**
-    * @brief Relay approved cmd to targeted device
+    * @brief Response with a DONE status to cloud back-end for a specific sequence number
+    * @param[in] sequenceNumber Command sequnce number
     * @return none
     */
-    void RelayCmd(std::string const &cmd);
+    void ResponseCommandDONE(const uint32_t sequenceNumber);
 
     AtlasApprove(const AtlasApprove &) = delete;
     AtlasApprove& operator=(const AtlasApprove &) = delete;
@@ -42,8 +58,18 @@ private:
     */
     AtlasApprove();
 
-    /* Sequence number of the last authenticated command */
+    /**
+     * @brief Push top-command alarm callback
+     * @return none
+     */
+    void alarmCallback();
+
+    /* Push top-command alarm */
+    AtlasAlarm pushCommandAlarm_;
+
+    /* Sequence number of the last command */
     static uint32_t sequenceNumber_;
+    
 };
 
 } // namespace atlas

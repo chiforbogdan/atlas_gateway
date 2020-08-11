@@ -20,6 +20,7 @@
 #include "sql/AtlasSQLite.h"
 #include "http/AtlasHttpServer.h"
 #include "claim_approve/AtlasClaim.h"
+#include "claim_approve/AtlasApprove.h"
 
 namespace {
 
@@ -193,6 +194,9 @@ int main(int argc, char **argv)
     /* Start cloud command parser module*/
     atlas::AtlasCloudCmdParser::getInstance().start();
 
+    /* Start device approved command module*/
+    atlas::AtlasApprove::getInstance().start();
+
     /*open local.db connection*/
     if(!atlas::AtlasSQLite::getInstance().openConnection(atlas::ATLAS_DB_PATH)) {
         ATLAS_LOGGER_ERROR("Error opening database!");
@@ -228,6 +232,9 @@ int main(int argc, char **argv)
 
     /* Stop cloud command parser module*/
     atlas::AtlasCloudCmdParser::getInstance().stop();
+
+    /* Stop device approved command module*/
+    atlas::AtlasApprove::getInstance().stop();
 
     /* Stop cloud register module */
     atlas::AtlasRegisterCloud::getInstance().stop();

@@ -1,11 +1,11 @@
 #ifndef __ATLAS_DEVICE_H__
 #define __ATLAS_DEVICE_H__
 
-#include <queue>
 #include <string>
 #include <memory>
 #include <boost/optional.hpp>
 #include <unordered_map>
+#include <queue>
 #include "../telemetry/AtlasTelemetryInfo.h"
 #include "../telemetry/AtlasAlert.h"
 #include "../commands/AtlasCommandType.h"
@@ -13,7 +13,7 @@
 #include "../policy/AtlasFirewallPolicy.h"
 #include "../statistics/AtlasFirewallStats.h"
 #include "../reputation_impl/AtlasDeviceFeatureManager.h"
-#include "../commands/AtlasCommandClient.h"
+#include "../commands/AtlasCommandDevice.h"
 
 namespace atlas {
 
@@ -215,11 +215,11 @@ public:
     void syncFirewallStatistics();
 
     /**
-    * @brief Push a client command in Q
-    * @param[in] cmd Client command
-    * @return none
+    * @brief Get priority q with commands
+    * @return Reference to cmds_
     */
-    void addCommandClient(const AtlasCommandClient& cmd);
+    inline std::priority_queue<AtlasCommandDevice>& GetQCommands() {return cmds_;};
+
 
 private:
     /**
@@ -306,8 +306,9 @@ private:
     /* System reputation */
     std::unordered_map<AtlasDeviceNetworkType, AtlasDeviceFeatureManager> deviceReputation_;
 
-    /* Priority Q (sequence number) to store the ATLAS_CMD_GATEWAY_CLIENT commands*/
-    std::priority_queue<AtlasCommandClient> cmds_;
+    /* Priority Q (sequence number) to store the device commands*/
+    std::priority_queue<AtlasCommandDevice> cmds_;
+
 };
 
 } // namespace atlas

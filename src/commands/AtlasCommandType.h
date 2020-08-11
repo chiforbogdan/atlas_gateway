@@ -149,6 +149,13 @@ enum AtlasCommandType {
 
     /* Feedbck response time command: payload is the feedback score for response time */
     ATLAS_CMD_FEEDBACK_RESPONSE_TIME,
+
+    /* Approved commands for devices*/
+    /* Restart command: payload is empty*/
+    ATLAS_CMD_DEVICE_RESTART = 2000,
+
+    /* Shutdown command: payload is empty*/
+    ATLAS_CMD_DEVICE_SHUTDOWN,
 };
 
 } // namespace atlas
