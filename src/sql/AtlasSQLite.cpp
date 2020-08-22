@@ -49,7 +49,8 @@ namespace {
                                     "SequenceNumber INTEGER NOT NULL," \
                                     "CommandType TEXT NOT NULL," \
                                     "CommandPayload TEXT NULL," \
-                                    "Executed INTEGER DEFAULT 0," \
+                                    "IsExecuted INTEGER DEFAULT 0," \
+                                    "IsDone INTEGER DEFAULT 0," \
                                     "FOREIGN KEY (DeviceId) REFERENCES Device(Id));" \
 
                                     "CREATE UNIQUE INDEX IF NOT EXISTS idxDeviceIdentity "\
@@ -117,8 +118,21 @@ namespace {
     const char *SQL_GET_OWNER = "SELECT Owner.SecretKey, Owner.Identity FROM Owner;";
 
     const char *SQL_INSERT_DEVICE_COMMAND = "INSERT INTO DeviceCommand(DeviceId, SequenceNumber, CommandType, CommandPayload) VALUES (?,?,?,?);";
-    const char *SQL_CHECK_DEVICE_COMMAND =  "SELECT 1 FROM DeviceCommand WHERE SequenceNumber=?;";
-    const char *SQL_UPDATE_DEVICE_COMMAND =  "UPDATE DeviceCommand SET Executed=1 WHERE SequenceNumber=?;";
+    const char *SQL_CHECK_DEVICE_COMMAND_BY_SEQ_NO =  "SELECT 1 FROM DeviceCommand WHERE SequenceNumber=?;";
+    const char *SQL_CHECK_DEVICE_COMMAND_BY_IDENTITY =  "SELECT 1 FROM DeviceCommand "\
+                                                        "INNER JOIN Device ON Device.Id == DeviceCommand.DeviceId "\
+                                                        "WHERE Device.Identity=?;";
+    const char *SQL_CHECK_DEVICE_COMMAND_EXECUTION_BY_SEQ_NO =  "SELECT 1 FROM DeviceCommand WHERE SequenceNumber=? AND IsExecuted=1;";
+    const char *SQL_MARK_AS_EXECUTED_DEVICE_COMMAND =  "UPDATE DeviceCommand SET IsExecuted=1 WHERE SequenceNumber=?;";
+    const char *SQL_MARK_AS_DONE_DEVICE_COMMAND =  "UPDATE DeviceCommand SET IsDone=1 WHERE SequenceNumber=?;";
+    const char *SQL_GET_SEQ_NO_FOR_EXECUTED_UNDONE_DEVICE_COMMAND =  "SELECT DeviceCommand.SequenceNumber FROM DeviceCommand "\
+                                                                     "INNER JOIN Device ON Device.Id == DeviceCommand.DeviceId "\
+                                                                     "WHERE Device.Identity=? AND DeviceCommand.IsExecuted=1 AND DeviceCommand.IsDone=0"\
+                                                                     "ORDE BY DeviceCommand.SequenceNumber ASC"\
+                                                                     "LIMIT 1;";
+    const char *SQL_GET_DEVICE_COMMAND_BY_IDENTITY = "SELECT DeviceCommand.SequenceNumber, DeviceCommand.CommandType, DeviceCommand.CommandPayload FROM DeviceCommand "\
+                                                     "INNER JOIN Device ON Device.Id == DeviceCommand.DeviceId "\
+                                                     "WHERE Device.Identity=?;";
 
 } // anonymous namespace
 
@@ -929,7 +943,7 @@ bool AtlasSQLite::insertDeviceCommand(const uint32_t sequenceNumber, const std::
     return true;
 }
 
-bool AtlasSQLite::checkDeviceCommand(const uint32_t sequenceNumber)
+bool AtlasSQLite::checkDeviceCommandBySeqNo(const uint32_t sequenceNumber)
 {
     sqlite3_stmt *stmt = nullptr;
     
@@ -940,19 +954,19 @@ bool AtlasSQLite::checkDeviceCommand(const uint32_t sequenceNumber)
     if(!isConnected())
         return false;
 
-    if(sqlite3_prepare_v2(pCon_, SQL_CHECK_DEVICE_COMMAND,-1, &stmt, 0) != SQLITE_OK) {
-        ATLAS_LOGGER_ERROR("Could not prepare, fct:checkDeviceCommand, stmt:SQL_CHECK_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
+    if(sqlite3_prepare_v2(pCon_, SQL_CHECK_DEVICE_COMMAND_BY_SEQ_NO,-1, &stmt, 0) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not prepare, fct:checkDeviceCommand, stmt:SQL_CHECK_DEVICE_COMMAND_BY_SEQ_NO, error:" + std::string(sqlite3_errmsg(pCon_)));
 	    return false;
     }
 
     if (sqlite3_bind_int(stmt, 1, sequenceNumber) != SQLITE_OK) {
-        ATLAS_LOGGER_ERROR("Could not bind, fct:checkDeviceCommand, stmt:SQL_CHECK_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
+        ATLAS_LOGGER_ERROR("Could not bind, fct:checkDeviceCommand, stmt:SQL_CHECK_DEVICE_COMMAND_BY_SEQ_NO, error:" + std::string(sqlite3_errmsg(pCon_)));
         return false;
     }
 
     int stat = sqlite3_step(stmt);
     if (stat != SQLITE_DONE && stat != SQLITE_ROW) {
-        ATLAS_LOGGER_ERROR("Could not step, fct:checkDeviceCommand, stmt:SQL_CHECK_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
+        ATLAS_LOGGER_ERROR("Could not step, fct:checkDeviceCommand, stmt:SQL_CHECK_DEVICE_COMMAND_BY_SEQ_NO, error:" + std::string(sqlite3_errmsg(pCon_)));
         return false;
     }
 
@@ -963,7 +977,75 @@ bool AtlasSQLite::checkDeviceCommand(const uint32_t sequenceNumber)
     return false;
 }
 
-bool AtlasSQLite::updateDeviceCommand(const uint32_t sequenceNumber) 
+bool AtlasSQLite::checkDeviceCommandByIdentity(const std::string &identity)
+{
+    sqlite3_stmt *stmt = nullptr;
+    
+    BOOST_SCOPE_EXIT(&stmt) {
+        sqlite3_finalize(stmt);
+    } BOOST_SCOPE_EXIT_END
+
+    if(!isConnected())
+        return false;
+
+    if(sqlite3_prepare_v2(pCon_, SQL_CHECK_DEVICE_COMMAND_BY_IDENTITY,-1, &stmt, 0) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not prepare, fct:checkDeviceCommandByIdentity, stmt:SQL_CHECK_DEVICE_COMMAND_BY_IDENTITY, error:" + std::string(sqlite3_errmsg(pCon_)));
+	    return false;
+    }
+
+    if (sqlite3_bind_text(stmt, 1, identity.c_str(), identity.length(),	SQLITE_STATIC) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not bind, fct:checkDeviceCommandByIdentity, stmt:SQL_CHECK_DEVICE_COMMAND_BY_IDENTITY, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    int stat = sqlite3_step(stmt);
+    if (stat != SQLITE_DONE && stat != SQLITE_ROW) {
+        ATLAS_LOGGER_ERROR("Could not step, fct:checkDeviceCommandByIdentity, stmt:SQL_CHECK_DEVICE_COMMAND_BY_IDENTITY, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    if (stat == SQLITE_ROW) {
+        return true;
+    }
+
+    return false;
+}
+
+bool AtlasSQLite::checkDeviceCommandForExecution(const uint32_t sequenceNumber) 
+{
+    sqlite3_stmt *stmt = nullptr;
+    
+    BOOST_SCOPE_EXIT(&stmt) {
+        sqlite3_finalize(stmt);
+    } BOOST_SCOPE_EXIT_END
+
+    if(!isConnected())
+        return false;
+
+    if(sqlite3_prepare_v2(pCon_, SQL_CHECK_DEVICE_COMMAND_EXECUTION_BY_SEQ_NO,-1, &stmt, 0) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not prepare, fct:checkDeviceCommandForExecution, stmt:SQL_CHECK_DEVICE_COMMAND_EXECUTION_BY_SEQ_NO, error:" + std::string(sqlite3_errmsg(pCon_)));
+	    return false;
+    }
+
+    if (sqlite3_bind_int(stmt, 1, sequenceNumber) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not bind, fct:checkDeviceCommandForExecution, stmt:SQL_CHECK_DEVICE_COMMAND_EXECUTION_BY_SEQ_NO, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    int stat = sqlite3_step(stmt);
+    if (stat != SQLITE_DONE && stat != SQLITE_ROW) {
+        ATLAS_LOGGER_ERROR("Could not step, fct:checkDeviceCommandForExecution, stmt:SQL_CHECK_DEVICE_COMMAND_EXECUTION_BY_SEQ_NO, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    if (stat == SQLITE_ROW) {
+        return true;
+    }
+
+    return false;
+}
+
+bool AtlasSQLite::markExecutedDeviceCommand(const uint32_t sequenceNumber) 
 {
 
     sqlite3_stmt *stmt = nullptr;
@@ -977,22 +1059,139 @@ bool AtlasSQLite::updateDeviceCommand(const uint32_t sequenceNumber)
         return false;
 
     /*update features for given identity*/
-    if(sqlite3_prepare_v2(pCon_, SQL_UPDATE_DEVICE_COMMAND,-1, &stmt, 0) != SQLITE_OK) {
-        ATLAS_LOGGER_ERROR("Could not prepare, fct:updateDeviceCommand, stmt:SQL_UPDATE_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
+    if(sqlite3_prepare_v2(pCon_, SQL_MARK_AS_EXECUTED_DEVICE_COMMAND,-1, &stmt, 0) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not prepare, fct:markExecutedDeviceCommand, stmt:SQL_MARK_AS_EXECUTED_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
 	    return false;
     }
 
     if (sqlite3_bind_int(stmt, 1, sequenceNumber) != SQLITE_OK) {
-        ATLAS_LOGGER_ERROR("Could not bind, fct:updateDeviceCommand, stmt:SQL_UPDATE_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
+        ATLAS_LOGGER_ERROR("Could not bind, fct:markExecutedDeviceCommand, stmt:SQL_MARK_AS_EXECUTED_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
         return false;
     }
 
     stat = sqlite3_step(stmt);
     if (stat != SQLITE_DONE && stat != SQLITE_ROW) {
-        ATLAS_LOGGER_ERROR("Could not step, fct:updateDeviceCommand, stmt:SQL_UPDATE_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
+        ATLAS_LOGGER_ERROR("Could not step, fct:markExecutedDeviceCommand, stmt:SQL_MARK_AS_EXECUTED_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
         return false;
     }
 
+    return true;
+}
+
+bool AtlasSQLite::markDoneDeviceCommand(const uint32_t sequenceNumber) 
+{
+
+    sqlite3_stmt *stmt = nullptr;
+    int stat = -1;
+
+    BOOST_SCOPE_EXIT(&stmt) {
+        sqlite3_finalize(stmt);
+    } BOOST_SCOPE_EXIT_END
+    
+    if(!isConnected_)
+        return false;
+
+    /*update features for given identity*/
+    if(sqlite3_prepare_v2(pCon_, SQL_MARK_AS_DONE_DEVICE_COMMAND,-1, &stmt, 0) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not prepare, fct:markDoneDeviceCommand, stmt:SQL_MARK_AS_DONE_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
+	    return false;
+    }
+
+    if (sqlite3_bind_int(stmt, 1, sequenceNumber) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not bind, fct:markDoneDeviceCommand, stmt:SQL_MARK_AS_DONE_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    stat = sqlite3_step(stmt);
+    if (stat != SQLITE_DONE && stat != SQLITE_ROW) {
+        ATLAS_LOGGER_ERROR("Could not step, fct:markDoneDeviceCommand, stmt:SQL_MARK_AS_DONE_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    return true;
+}
+
+bool AtlasSQLite::selectSeqNoForUndoneDeviceCommand(const std::string &identity)
+{
+    sqlite3_stmt *stmt = nullptr;
+    int stat = -1;
+    
+    BOOST_SCOPE_EXIT(&stmt) {
+        sqlite3_finalize(stmt);
+    } BOOST_SCOPE_EXIT_END
+
+    if(!isConnected())
+        return false;
+
+    /*select device commands for given identity*/
+    if(sqlite3_prepare_v2(pCon_, SQL_GET_SEQ_NO_FOR_EXECUTED_UNDONE_DEVICE_COMMAND,-1, &stmt, 0) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not prepare, fct:selectSeqNoForUndoneDeviceCommand, stmt:SQL_GET_SEQ_NO_FOR_EXECUTED_UNDONE_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
+	    return false;
+    }
+
+    if (sqlite3_bind_text(stmt, 1, identity.c_str(), identity.length(),	SQLITE_STATIC) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not bind, fct:selectSeqNoForUndoneDeviceCommand, stmt:SQL_GET_SEQ_NO_FOR_EXECUTED_UNDONE_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    stat = sqlite3_step(stmt);
+
+    if(stat != SQLITE_ROW || stat != SQLITE_DONE) {
+        ATLAS_LOGGER_ERROR("Could not step, fct:selectSeqNoForUndoneDeviceCommand, stmt:SQL_GET_SEQ_NO_FOR_EXECUTED_UNDONE_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    if(stat == SQLITE_DONE) {
+        ATLAS_LOGGER_ERROR("No device command found in undone state, fct:selectSeqNoForUndoneDeviceCommand, stmt:SQL_GET_SEQ_NO_FOR_EXECUTED_UNDONE_DEVICE_COMMAND");
+        return false;
+    }
+
+    AtlasApprove::getInstance().setSequenceNumberDONE(sqlite3_column_int(stmt, 0));
+    
+    return true;
+}
+
+bool AtlasSQLite::selectDeviceCommand(const std::string &identity, std::priority_queue<AtlasCommandDevice> &cmds)
+{
+    sqlite3_stmt *stmt = nullptr;
+    int stat = -1;
+    
+    BOOST_SCOPE_EXIT(&stmt) {
+        sqlite3_finalize(stmt);
+    } BOOST_SCOPE_EXIT_END
+
+    if(!isConnected())
+        return false;
+
+    /*select device commands for given identity*/
+    if(sqlite3_prepare_v2(pCon_, SQL_GET_DEVICE_COMMAND_BY_IDENTITY,-1, &stmt, 0) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not prepare, fct:selectDeviceCommand, stmt:SQL_GET_DEVICE_COMMAND_BY_IDENTITY, error:" + std::string(sqlite3_errmsg(pCon_)));
+	    return false;
+    }
+
+    if (sqlite3_bind_text(stmt, 1, identity.c_str(), identity.length(),	SQLITE_STATIC) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not bind, fct:selectDeviceCommand, stmt:SQL_GET_DEVICE_COMMAND_BY_IDENTITY, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    for (;;)
+    {
+        stat = sqlite3_step(stmt);
+        if (stat == SQLITE_DONE) {
+            break;
+        }
+
+        if(stat != SQLITE_ROW) {
+            ATLAS_LOGGER_ERROR("Could not step, fct:selectDeviceCommand, stmt:SQL_GET_DEVICE_COMMAND_BY_IDENTITY, error:" + std::string(sqlite3_errmsg(pCon_)));
+            return false;
+        }
+
+        AtlasCommandDevice cmd(identity, sqlite3_column_int(stmt, 0), 
+                               std::string((const char *) sqlite3_column_text(stmt, 1)), 
+                               std::string((const char *) sqlite3_column_text(stmt, 2)));
+        cmds.push(std::move(cmd));
+    }
+    
     return true;
 }
 

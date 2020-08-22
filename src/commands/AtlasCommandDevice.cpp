@@ -19,6 +19,9 @@ const std::string ATLAS_CMD_DEVICE_RESTART_CLOUD = "ATLAS_CMD_DEVICE_RESTART";
 const std::string ATLAS_CMD_DEVICE_SHUTDOWN_CLOUD = "ATLAS_CMD_DEVICE_SHUTDOWN";
 const std::string ATLAS_PUSH_APPROVED_COMMAND = "client/approved/command/push";
 
+/* Number of accepted timeouts before stop sending device command */
+const uint8_t ATLAS_PUSH_COMMAND_RETRY_NO = 3; 
+
 } // anonymous namespace
 
 
@@ -26,14 +29,14 @@ AtlasCommandDevice::AtlasCommandDevice( const std::string &deviceIdentity, const
                                         const std::string &commandType, const std::string &commandPayload) : 
                                         coapToken_(nullptr), deviceIdentity_(deviceIdentity), 
                                         sequenceNumber_(sequenceNumber), commandTypeCloud_(commandType), 
-                                        commandPayload_(commandPayload) 
+                                        commandPayload_(commandPayload), counterTimeouts_(0)
 {
     if(commandType == ATLAS_CMD_DEVICE_RESTART_CLOUD) {
         commandTypeDevice_ = ATLAS_CMD_DEVICE_RESTART;
     } else if(commandType == ATLAS_CMD_DEVICE_SHUTDOWN_CLOUD) {
         commandTypeDevice_ = ATLAS_CMD_DEVICE_SHUTDOWN;
     } else {
-        commandTypeDevice_ = 0;
+        commandTypeDevice_ = ATLAS_CMD_DEVICE_UNKNOWN;
     }
 }
 
@@ -54,7 +57,7 @@ void AtlasCommandDevice::pushCommand()
         return;
     }
 
-    if (commandTypeDevice_ == 0) {
+    if (commandTypeDevice_ == ATLAS_CMD_DEVICE_UNKNOWN) {
         ATLAS_LOGGER_ERROR("Unknown commmand type received from cloud for device with identity " + deviceIdentity_);
         return;
     }
@@ -94,29 +97,60 @@ void AtlasCommandDevice::respCallback(AtlasCoapResponse respStatus, const uint8_
         ATLAS_LOGGER_INFO1("Command executed on device with identity ", deviceIdentity_);
         /* Change status in local db*/
 
+        /* Reset number of timeouts */
+        if(counterTimeouts_ != 0) {
+            counterTimeouts_ = 0;
+        }
+        
+
         /* Pop from Q */
-        if(!AtlasDeviceManager::getInstance().getDevice(deviceIdentity_)->GetQCommands().empty())
-        {
+        if(!AtlasDeviceManager::getInstance().getDevice(deviceIdentity_)->GetQCommands().empty()) {
             AtlasDeviceManager::getInstance().getDevice(deviceIdentity_)->GetQCommands().pop();
         }
 
-        bool result = AtlasSQLite::getInstance().updateDeviceCommand(sequenceNumber_);
+        bool result = AtlasSQLite::getInstance().markExecutedDeviceCommand(sequenceNumber_);
         if(!result) {
-            ATLAS_LOGGER_ERROR("Cannot update device command into the database!");
+            ATLAS_LOGGER_ERROR("Cannot update device command as executed into the database!");
             return;
         }
 
-        AtlasApprove::getInstance().ResponseCommandDONE(sequenceNumber_);
+        /* Set only if there is no scheduled DONE message */
+        if(!AtlasApprove::getInstance().getMsgDONEScheduled()) {
+            AtlasApprove::getInstance().setSequenceNumberDONE(sequenceNumber_);
+
+            result = AtlasApprove::getInstance().responseCommandDONE();
+            if(!result) {
+                ATLAS_LOGGER_ERROR("DONE message was not sent to cloud back-end");
+                return;
+            }    
+        }
+
         return;
     }
 
     /* If client processed this request and returned an error */
     if (respStatus != ATLAS_COAP_RESP_TIMEOUT) {
         ATLAS_LOGGER_INFO("Command URI error on the client side. Abording request...");
-        /* Keep unexecuted status for the command*/
+
+        /* Reset number of timeouts */
+        if(counterTimeouts_ != 0) {
+            counterTimeouts_ = 0;
+        }
+        return;
+    }
+
+    if(counterTimeouts_ == ATLAS_PUSH_COMMAND_RETRY_NO) {
+        ATLAS_LOGGER_ERROR("Client is in an error state. Abort resending command");
+        
+        /* Reset number of timeouts */
+        if(counterTimeouts_ != 0) {
+            counterTimeouts_ = 0;
+        }
 
         return;
     }
+
+    counterTimeouts_++;
 
     /* Try to push again the command to device*/
     pushCommand();

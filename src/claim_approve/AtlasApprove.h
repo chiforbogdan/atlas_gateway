@@ -30,23 +30,34 @@ public:
     /**
     * @brief Check approved cmd payload received from cloud back-end
     * @param[in] payload Command payload
-    * @return none
+    * @return true if the command was handled without error, false otherwise
     */
-    void checkCommandPayload(const std::string &payload);
+    bool checkCommandPayload(const std::string &payload);
 
     /**
     * @brief Response with an ACK status to cloud back-end for a specific sequence number
-    * @param[in] sequenceNumber Command sequnce number
-    * @return none
+    * @return true if the command was notified without error, false otherwise
     */
-    void ResponseCommandACK(const uint32_t sequenceNumber);
+    bool responseCommandACK();
 
     /**
     * @brief Response with a DONE status to cloud back-end for a specific sequence number
-    * @param[in] sequenceNumber Command sequnce number
+    * @return true if the command was notified without error, false otherwise
+    */
+    bool responseCommandDONE();
+
+    /**
+    * @brief Set sequence number that must be notified as done to cloud
+    * @param[in] sequenceNumberDONE Last executed device command
     * @return none
     */
-    void ResponseCommandDONE(const uint32_t sequenceNumber);
+    inline void setSequenceNumberDONE(const uint32_t sequenceNumber) { sequenceNumberDONE_ = sequenceNumber; }
+
+    /**
+    * @brief Get status of the scheduling window for DONE messages 
+    * @return msgDONEScheduled_
+    */
+    inline bool getMsgDONEScheduled() const { return msgDONEScheduled_; }
 
     AtlasApprove(const AtlasApprove &) = delete;
     AtlasApprove& operator=(const AtlasApprove &) = delete;
@@ -64,11 +75,44 @@ private:
      */
     void alarmCallback();
 
+    /**
+     * @brief Cloud sync ACK status alarm callback
+     * @return none
+     */
+    void statusACKCallback();
+
+    /**
+     * @brief Cloud sync DONE status alarm callback
+     * @return none
+     */
+    void statusDONECallback();
+
     /* Push top-command alarm */
     AtlasAlarm pushCommandAlarm_;
 
+    /* Cloud sync ACK status alarm */
+    AtlasAlarm statusACKAlarm_;
+
+    /* Cloud sync DONE status alarm */
+    AtlasAlarm statusDONEAlarm_;
+
     /* Sequence number of the last command */
-    static uint32_t sequenceNumber_;
+    uint32_t sequenceNumber_;
+
+    /* Sequence number of the last executed device command */
+    uint32_t sequenceNumberDONE_;
+
+    /* status for ACK alarm scheduling */
+    bool msgACKScheduled_;
+
+    /* status for DONE alarm scheduling */
+    bool msgDONEScheduled_;
+
+    /* counter for resending ACK messages */
+    uint8_t counterACK_;
+
+    /* counter for resending DONE messages */
+    uint8_t counterDONE_;
     
 };
 

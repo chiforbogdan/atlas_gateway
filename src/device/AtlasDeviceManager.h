@@ -131,6 +131,13 @@ private:
    */
     void initDataReputation(AtlasDevice &device);
 
+   /**
+   * @brief Init device commands from database
+   * @param[in] device Client device
+   * @return none
+   */
+    void initDeviceCommands(AtlasDevice &device);
+
     /**
     * @brief Update reputation order to deliver the most trusted
     *        device within a category

@@ -4,9 +4,12 @@
 #include <stdio.h>
 #include <sqlite3.h>
 #include <string>
+#include <queue>
 #include "../logger/AtlasLogger.h"
 #include "../reputation_impl/AtlasDeviceFeatureManager.h"
 #include "../statistics/AtlasFirewallStats.h"
+#include "../commands/AtlasCommandDevice.h"
+#include "../claim_approve/AtlasApprove.h"
 
 namespace atlas {
 
@@ -160,14 +163,50 @@ public:
      * @param[in] sequenceNumber Command sequence number
      * @return true on success, false on error
      */
-    bool checkDeviceCommand(const uint32_t sequenceNumber);
+    bool checkDeviceCommandBySeqNo(const uint32_t sequenceNumber);
 
     /**
-     * @brief Execute query on database: set field 'executed' to 1
+    * @brief Check if a device has related device commands in db
+    * @param[in] identity Device identity
+    * @return true if features exist, false on error or not exist
+    */
+    bool checkDeviceCommandByIdentity(const std::string &identity);
+
+    /**
+    * @brief Check if a device command is executed
+    * @param[in] sequenceNumber Command sequence number
+    * @return true if it is executed, false on error or not executed
+    */
+    bool checkDeviceCommandForExecution(const uint32_t sequenceNumber);
+
+    /**
+     * @brief Execute query on database: set field 'IsExecuted' to 1
      * @param[in] sequenceNumber Command sequence number
      * @return true on success, false on error
      */
-    bool updateDeviceCommand(const uint32_t sequenceNumber);
+    bool markExecutedDeviceCommand(const uint32_t sequenceNumber);
+
+    /**
+     * @brief Execute query on database: set field 'IsDone' to 1
+     * @param[in] sequenceNumber Command sequence number
+     * @return true on success, false on error
+     */
+    bool markDoneDeviceCommand(const uint32_t sequenceNumber);
+
+    /**
+    * @brief Execute query on database: select, get device commands based on device identity
+    * @param[in] identity Device identity
+    * @param[in] cmds priority_queue<AtlasCommandDevice>
+    * @return true on success, false on error
+    */
+    bool selectDeviceCommand(const std::string &identity, std::priority_queue<AtlasCommandDevice> &cmds);
+
+    /**
+    * @brief Execute query on database: select top 1 sequence number for an executed but undone device commmand
+    * @param[in] identity Device identity
+    * @return true on success, false on error
+    */
+    bool selectSeqNoForUndoneDeviceCommand(const std::string &identity);
 
     AtlasSQLite(const AtlasSQLite&) = delete;
     AtlasSQLite& operator=(const AtlasSQLite&) = delete;

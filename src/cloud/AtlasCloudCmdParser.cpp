@@ -33,7 +33,12 @@ void AtlasCloudCmdParser::reqRegisterCmd()
 void AtlasCloudCmdParser::deviceApprovedCmd(const std::string &cmdPayload)
 {
     ATLAS_LOGGER_INFO("ATLAS_CMD_IOT_CLIENT command was sent by cloud back-end");
-    AtlasApprove::getInstance().checkCommandPayload(cmdPayload);
+    
+    bool result = AtlasApprove::getInstance().checkCommandPayload(cmdPayload);
+    if(!result) {
+        ATLAS_LOGGER_ERROR("ATLAS_CMD_IOT_CLIENT command returned an error");
+    }
+
 }
 
 void AtlasCloudCmdParser::start()

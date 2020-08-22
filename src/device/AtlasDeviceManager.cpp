@@ -327,6 +327,24 @@ void AtlasDeviceManager::initDataReputation(AtlasDevice &device)
     }
 }
 
+void AtlasDeviceManager::initDeviceCommands(AtlasDevice &device)
+{     
+    bool result = AtlasSQLite::getInstance().checkDeviceCommandByIdentity(device.getIdentity());
+    if (result) {
+        /* Get from db*/
+        ATLAS_LOGGER_INFO("Get data from local.db");
+        
+        result = AtlasSQLite::getInstance().selectDeviceCommand(device.getIdentity(), device.GetQCommands());
+        if (result) {
+            ATLAS_LOGGER_INFO("Device commands for device with identity " + device.getIdentity() + " are in memory");
+        } else {
+            ATLAS_LOGGER_ERROR("Uncommited select on device commands");
+        }
+    } else {
+        ATLAS_LOGGER_INFO("Device with identity " + device.getIdentity() + " has no device commands in local database");
+    }
+}
+
 AtlasDevice* AtlasDeviceManager::getDevice(const std::string& identity)
 {
     if (devices_.find(identity) == devices_.end()) {
@@ -346,6 +364,7 @@ AtlasDevice* AtlasDeviceManager::getDevice(const std::string& identity)
         initSystemReputation(devices_[identity]);
         initDataReputation(devices_[identity]);
         initSystemStatistics(devices_[identity]);
+        initDeviceCommands(devices_[identity]);
     }
 
     return &devices_[identity];

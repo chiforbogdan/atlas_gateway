@@ -63,6 +63,8 @@ private:
     uint16_t commandTypeDevice_;
     /* Command payload */
     std::string commandPayload_;
+    /* Counter for timeouts*/
+    uint8_t counterTimeouts_;
 };
 
 } // namespace atlas

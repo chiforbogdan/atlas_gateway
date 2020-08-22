@@ -156,6 +156,9 @@ enum AtlasCommandType {
 
     /* Shutdown command: payload is empty*/
     ATLAS_CMD_DEVICE_SHUTDOWN,
+
+    /* Unknown command: payload is empty*/
+    ATLAS_CMD_DEVICE_UNKNOWN,
 };
 
 } // namespace atlas

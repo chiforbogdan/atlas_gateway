@@ -43,7 +43,7 @@ include_directories(${NGHTTP2_ASIO_INCLUDE_DIRS})
 file(GLOB ATLAS_GATEWAY_SOURCES "src/*.cpp" "src/sql/AtlasSQLite.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp" "src/pubsub_agent/*.cpp" "src/device/*.cpp" "src/telemetry/*.cpp" "src/policy/*.cpp" "src/mqtt_client/*.cpp" "src/identity/*.cpp" "src/cloud/*.cpp" "src/statistics/*.cpp" "src/reputation/*.cpp" "src/reputation_impl/*cpp" "src/device/reputation_feedback/*.cpp" "src/http/*.cpp" "src/claim_approve/*.cpp")
 
 # Atlas_gateway_cli files
-file(GLOB ATLAS_GATEWAY_CLI_SOURCES "src/sql/cli/*.cpp" "src/sql/*.cpp" "src/logger/*.cpp" "src/reputation_impl/*cpp")
+file(GLOB ATLAS_GATEWAY_CLI_SOURCES "src/sql/cli/*.cpp" "src/sql/*.cpp" "src/scheduler/*.cpp" "src/coap/*.cpp" "src/logger/*.cpp" "src/alarm/*.cpp" "src/register/*.cpp" "src/commands/*.cpp" "src/pubsub_agent/*.cpp" "src/device/*.cpp" "src/telemetry/*.cpp" "src/policy/*.cpp" "src/mqtt_client/*.cpp" "src/identity/*.cpp" "src/cloud/*.cpp" "src/statistics/*.cpp" "src/reputation/*.cpp" "src/reputation_impl/*cpp" "src/device/reputation_feedback/*.cpp" "src/http/*.cpp" "src/claim_approve/*.cpp")
 
 # Atlas_gateway_reputation_test files
 file(GLOB ATLAS_GATEWAY_REPUTATION_TEST_SOURCES "src/reputation_impl/*.cpp" "src/reputation_impl/tester/*.cpp" "src/logger/*.cpp")
@@ -56,11 +56,11 @@ add_executable(atlas_gateway_cli ${ATLAS_GATEWAY_CLI_SOURCES})
 add_executable(atlas_gateway_reputation_test ${ATLAS_GATEWAY_REPUTATION_TEST_SOURCES})
 
 target_link_libraries(${PROJECT_NAME} paho-mqtt3as paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto OpenSSL::SSL -lstdc++fs ${JSONCPP_LIBRARIES})
-target_link_libraries(atlas_gateway_cli paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto -lstdc++fs)
+target_link_libraries(atlas_gateway_cli paho-mqtt3a paho-mqttpp3 ${UUID_LIBRARIES} OpenSSL::Crypto OpenSSL::SSL -lstdc++fs ${JSONCPP_LIBRARIES})
 
 #Add CoAP, Boost, NGHTTP2 library
 target_link_libraries(${PROJECT_NAME} ${SQLITE_LIBRARIES} ${COAP_LIBRARIES} ${Boost_LIBRARIES} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${NGHTTP2_ASIO_LIBRARIES})
-target_link_libraries(atlas_gateway_cli ${SQLITE_LIBRARIES} ${COAP_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(atlas_gateway_cli ${SQLITE_LIBRARIES} ${COAP_LIBRARIES} ${Boost_LIBRARIES} ${NGHTTP2_ASIO_LIBRARIES})
 target_link_libraries(atlas_gateway_reputation_test ${Boost_LIBRARIES})
 
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wno-psabi)
