@@ -3,6 +3,7 @@
 
 #include "../alarm/AtlasAlarm.h"
 #include "../mqtt_client/IAtlasMqttState.h"
+#include "../sql/AtlasSQLite.h"
 #include <boost/function.hpp>
 #include <json/json.h>
 #include <unordered_map>
@@ -72,11 +73,18 @@ private:
     void reqRegisterCmd();
 
     /**
-    * @brief Callback for ATLAS_CMD_IOT_CLIENT command
+    * @brief Callback for ATLAS_CMD_GATEWAY_CLIENT command
     * @param[in] cmdPayload Command payload
     * @return none
     */
     void deviceApprovedCmd(const std::string &cmdPayload);
+
+    /**
+    * @brief Callback for ATLAS_CMD_GATEWAY_ACK_FOR_DONE_COMMAND command
+    * @param[in] cmdPayload Command payload
+    * @return none
+    */
+    void rcvACKForDONEDeviceCommand(const std::string &cmdPayload);
 
     /* Indicates if the cloud module is connected */
     bool connected_;

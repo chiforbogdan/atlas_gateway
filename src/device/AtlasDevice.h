@@ -215,10 +215,16 @@ public:
     void syncFirewallStatistics();
 
     /**
-    * @brief Get priority q with commands
-    * @return Reference to cmds_
+    * @brief Get priority Q with received commands
+    * @return Reference to recvCmds_
     */
-    inline std::priority_queue<AtlasCommandDevice>& GetQCommands() {return cmds_;};
+    inline std::priority_queue<AtlasCommandDevice>& GetQRecvCommands() {return recvCmds_;};
+
+    /**
+    * @brief Get priority Q with executed commands
+    * @return Reference to execCmds_
+    */
+    inline std::priority_queue<AtlasCommandDevice>& GetQExecCommands() {return execCmds_;};
 
 
 private:
@@ -306,8 +312,11 @@ private:
     /* System reputation */
     std::unordered_map<AtlasDeviceNetworkType, AtlasDeviceFeatureManager> deviceReputation_;
 
-    /* Priority Q (sequence number) to store the device commands*/
-    std::priority_queue<AtlasCommandDevice> cmds_;
+    /* Priority Q (sequence number) to store the device commands that will be sent to client*/
+    std::priority_queue<AtlasCommandDevice> recvCmds_;
+
+    /* Priority Q (sequence number) to store the executed device commands and notify(DONE) them to cloud*/
+    std::priority_queue<AtlasCommandDevice> execCmds_;
 
 };
 

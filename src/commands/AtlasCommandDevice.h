@@ -35,6 +35,12 @@ public:
     void pushCommand();
 
     /**
+    * @brief Get command device sequence number
+    * @return sequenceNumber_
+    */
+    inline uint32_t getSequenceNumber() const { return sequenceNumber_; }
+
+    /**
     * @brief Dtor for command
     * @return none
     */

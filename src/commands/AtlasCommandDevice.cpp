@@ -102,10 +102,11 @@ void AtlasCommandDevice::respCallback(AtlasCoapResponse respStatus, const uint8_
             counterTimeouts_ = 0;
         }
         
-
-        /* Pop from Q */
-        if(!AtlasDeviceManager::getInstance().getDevice(deviceIdentity_)->GetQCommands().empty()) {
-            AtlasDeviceManager::getInstance().getDevice(deviceIdentity_)->GetQCommands().pop();
+        if(!AtlasDeviceManager::getInstance().getDevice(deviceIdentity_)->GetQRecvCommands().empty()) {
+            /* Transfer the device command from recv to exec Q */
+            AtlasCommandDevice cmd = AtlasDeviceManager::getInstance().getDevice(deviceIdentity_)->GetQRecvCommands().top();
+            AtlasDeviceManager::getInstance().getDevice(deviceIdentity_)->GetQRecvCommands().pop();
+            AtlasDeviceManager::getInstance().getDevice(deviceIdentity_)->GetQExecCommands().push(std::move(cmd));
         }
 
         bool result = AtlasSQLite::getInstance().markExecutedDeviceCommand(sequenceNumber_);

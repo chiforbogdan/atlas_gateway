@@ -130,9 +130,11 @@ namespace {
                                                                      "WHERE Device.Identity=? AND DeviceCommand.IsExecuted=1 AND DeviceCommand.IsDone=0"\
                                                                      "ORDE BY DeviceCommand.SequenceNumber ASC"\
                                                                      "LIMIT 1;";
-    const char *SQL_GET_DEVICE_COMMAND_BY_IDENTITY = "SELECT DeviceCommand.SequenceNumber, DeviceCommand.CommandType, DeviceCommand.CommandPayload FROM DeviceCommand "\
+    const char *SQL_GET_DEVICE_COMMAND_BY_IDENTITY = "SELECT DeviceCommand.SequenceNumber, DeviceCommand.CommandType, DeviceCommand.CommandPayload, DeviceCommand.IsExecuted FROM DeviceCommand "\
                                                      "INNER JOIN Device ON Device.Id == DeviceCommand.DeviceId "\
                                                      "WHERE Device.Identity=?;";
+    const char *SQL_DELETE_DEVICE_COMMAND_BY_SEQ_NO = "DELETE FROM DeviceCommand "\
+                                                      "WHERE DeviceCommand.SequenceNumber=?;";
 
 } // anonymous namespace
 
@@ -1151,7 +1153,7 @@ bool AtlasSQLite::selectSeqNoForUndoneDeviceCommand(const std::string &identity)
     return true;
 }
 
-bool AtlasSQLite::selectDeviceCommand(const std::string &identity, std::priority_queue<AtlasCommandDevice> &cmds)
+bool AtlasSQLite::selectDeviceCommand(const std::string &identity, std::priority_queue<AtlasCommandDevice> &recvCmds, std::priority_queue<AtlasCommandDevice> &execCmds)
 {
     sqlite3_stmt *stmt = nullptr;
     int stat = -1;
@@ -1189,10 +1191,50 @@ bool AtlasSQLite::selectDeviceCommand(const std::string &identity, std::priority
         AtlasCommandDevice cmd(identity, sqlite3_column_int(stmt, 0), 
                                std::string((const char *) sqlite3_column_text(stmt, 1)), 
                                std::string((const char *) sqlite3_column_text(stmt, 2)));
-        cmds.push(std::move(cmd));
+
+        if(sqlite3_column_int(stmt, 3) == 0) {
+            recvCmds.push(std::move(cmd));
+        } else {
+            execCmds.push(std::move(cmd));
+        }
+            
     }
     
     return true;
 }
+
+bool AtlasSQLite::deleteDeviceCommand(const uint32_t sequenceNumber) 
+{
+
+    sqlite3_stmt *stmt = nullptr;
+    int stat = -1;
+
+    BOOST_SCOPE_EXIT(&stmt) {
+        sqlite3_finalize(stmt);
+    } BOOST_SCOPE_EXIT_END
+    
+    if(!isConnected_)
+        return false;
+
+    /*update features for given identity*/
+    if(sqlite3_prepare_v2(pCon_, SQL_DELETE_DEVICE_COMMAND_BY_SEQ_NO,-1, &stmt, 0) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not prepare, fct:deleteDeviceCommand, stmt:SQL_DELETE_DEVICE_COMMAND_BY_SEQ_NO, error:" + std::string(sqlite3_errmsg(pCon_)));
+	    return false;
+    }
+
+    if (sqlite3_bind_int(stmt, 1, sequenceNumber) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not bind, fct:deleteDeviceCommand, stmt:SQL_DELETE_DEVICE_COMMAND_BY_SEQ_NO, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    stat = sqlite3_step(stmt);
+    if (stat != SQLITE_DONE && stat != SQLITE_ROW) {
+        ATLAS_LOGGER_ERROR("Could not step, fct:deleteDeviceCommand, stmt:SQL_MARK_AS_DONE_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    return true;
+}
+
 
 } // namespace atlas

@@ -328,13 +328,14 @@ void AtlasDeviceManager::initDataReputation(AtlasDevice &device)
 }
 
 void AtlasDeviceManager::initDeviceCommands(AtlasDevice &device)
-{     
+{
+    /* Load device commands from database that have not been executed on client */
     bool result = AtlasSQLite::getInstance().checkDeviceCommandByIdentity(device.getIdentity());
     if (result) {
         /* Get from db*/
         ATLAS_LOGGER_INFO("Get data from local.db");
         
-        result = AtlasSQLite::getInstance().selectDeviceCommand(device.getIdentity(), device.GetQCommands());
+        result = AtlasSQLite::getInstance().selectDeviceCommand(device.getIdentity(), device.GetQRecvCommands(), device.GetQExecCommands());
         if (result) {
             ATLAS_LOGGER_INFO("Device commands for device with identity " + device.getIdentity() + " are in memory");
         } else {
