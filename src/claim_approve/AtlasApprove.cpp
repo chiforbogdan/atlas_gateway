@@ -230,18 +230,20 @@ bool AtlasApprove::checkCommandPayload(const Json::Value &payload)
 
 bool AtlasApprove::responseCommandACK()
 {
-    /* ACK response is sent after each command is received */
-    std::string cmd = "{\n";
+    Json::FastWriter fastWriter;
+    Json::Value cmd;
     
-    ATLAS_LOGGER_INFO("Send ACK response to cloud back-end");
+    /* Set command type */
+    cmd[ATLAS_CMD_TYPE_JSON_KEY] = ATLAS_CMD_GATEWAY_CLIENT_ACK;
+    /* Set command payload (sequence number) */
+    cmd[ATLAS_CMD_PAYLOAD_JSON_KEY][ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY] = sequenceNumber_;
 
-    /* Add header */
-    cmd += "\"" + ATLAS_CMD_TYPE_JSON_KEY + "\": \"" + ATLAS_CMD_GATEWAY_CLIENT_ACK + "\"";
-    cmd += "\n\"" + ATLAS_CMD_PAYLOAD_JSON_KEY + "\": \"" + std::to_string(sequenceNumber_) + "\"";
-    cmd += "\n}";
+    std::string ackCmd = fastWriter.write(cmd);
+    
+    ATLAS_LOGGER_INFO("Send ACK response to cloud back-end for command with sequence number: " + std::to_string(sequenceNumber_));
 
     /* Send ACK message */
-    bool delivered = AtlasMqttClient::getInstance().tryPublishMessage(AtlasIdentity::getInstance().getPsk() + ATLAS_TO_CLOUD_TOPIC, cmd);
+    bool delivered = AtlasMqttClient::getInstance().tryPublishMessage(AtlasIdentity::getInstance().getPsk() + ATLAS_TO_CLOUD_TOPIC, ackCmd);
     
     /* If message is not delivered, then schedule an ACK message */
     if (!delivered) {
