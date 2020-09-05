@@ -193,8 +193,6 @@ bool AtlasApprove::checkCommandPayload(const std::string &payload)
 
         return false;
     } 
-
-    sequenceNumber_ = obj[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt();
     
     if (obj[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString() == "") {
         ATLAS_LOGGER_ERROR("Received a command with an empty device id field!");
@@ -230,6 +228,7 @@ bool AtlasApprove::checkCommandPayload(const std::string &payload)
 	    return false;
     }
 
+    sequenceNumber_ = obj[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt();
     result = responseCommandACK();
     if(!result) {
         ATLAS_LOGGER_ERROR("ACK message was not sent to cloud back-end");
