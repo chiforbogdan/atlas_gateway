@@ -18,7 +18,7 @@ const std::string ATLAS_CLAIM_REQUEST_PATH = "/gateway/claim";
 const std::string ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY = "clientIdentity";
 const std::string ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY = "type";
 const std::string ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY = "payload";
-const std::string ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY = "identifier";
+const std::string ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY = "seqNo";
 
 /* Check Q at every 5 minute */
 const int ATLAS_PUSH_COMMAND_ALARM_PERIOD_MS = 300000;
