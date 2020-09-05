@@ -196,10 +196,11 @@ public:
     /**
     * @brief Execute query on database: select, get device commands based on device identity
     * @param[in] identity Device identity
-    * @param[in] cmds priority_queue<AtlasCommandDevice>
+    * @param[in] recvCmds priority_queue<AtlasCommandDevice>
+    * @param[in] execCmds priority_queue<AtlasCommandDevice>
     * @return true on success, false on error
     */
-    bool selectDeviceCommand(const std::string &identity, std::priority_queue<AtlasCommandDevice> &cmds);
+    bool selectDeviceCommand(const std::string &identity, std::priority_queue<AtlasCommandDevice> &recvCmds, std::priority_queue<AtlasCommandDevice> &execCmds);
 
     /**
     * @brief Execute query on database: select top 1 sequence number for an executed but undone device commmand
@@ -207,6 +208,13 @@ public:
     * @return true on success, false on error
     */
     bool selectSeqNoForUndoneDeviceCommand(const std::string &identity);
+
+    /**
+     * @brief Execute query on database: delete a device command by sequence number
+     * @param[in] sequenceNumber Command sequence number
+     * @return true on success, false on error
+     */
+    bool deleteDeviceCommand(const uint32_t sequenceNumber);
 
     AtlasSQLite(const AtlasSQLite&) = delete;
     AtlasSQLite& operator=(const AtlasSQLite&) = delete;

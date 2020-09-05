@@ -68,21 +68,20 @@ void AtlasApprove::alarmCallback()
     /* Push top command for each device */
     AtlasDeviceManager::getInstance().forEachDevice([] (AtlasDevice& device)
                                                     {
-                                                        /* Event for sending to client device commands to be executed by client*/ 
-                                                        if(!device.GetQCommands().empty()) {
-                                                            AtlasCommandDevice cmd = device.GetQCommands().top();
+                                                        /* Event for sending device commands to client*/ 
+                                                        if(!device.GetQRecvCommands().empty()) {
+                                                            AtlasCommandDevice cmd = device.GetQRecvCommands().top();
                                                             cmd.pushCommand();
                                                         }
 
-                                                        /* Event for sending to cloud DONE messages for device commands that got notified by client in a scheduled DONE window*/
-                                                        if(!AtlasApprove::getInstance().getMsgDONEScheduled()) {
-                                                            bool result = AtlasSQLite::getInstance().selectSeqNoForUndoneDeviceCommand(device.getIdentity());
-                                                            if(result) {
-                                                                result = AtlasApprove::getInstance().responseCommandDONE();
-                                                                if(!result) {
-                                                                    ATLAS_LOGGER_ERROR("DONE message was not sent to cloud back-end");
-                                                                    return;
-                                                                }
+                                                        /* Event for sending DONE notification for executed device commands to cloud (got notified by client in a scheduled DONE window) */
+                                                        if(!AtlasApprove::getInstance().getMsgDONEScheduled() && !device.GetQExecCommands().empty()) {
+                                                            AtlasCommandDevice cmd = device.GetQExecCommands().top();
+                                                            AtlasApprove::getInstance().setSequenceNumberDONE(cmd.getSequenceNumber());
+                                                            bool result = AtlasApprove::getInstance().responseCommandDONE();
+                                                            if(!result) {
+                                                                ATLAS_LOGGER_ERROR("DONE message was not sent to cloud back-end");
+                                                                return;
                                                             }
                                                         }
                                                     });
@@ -207,7 +206,7 @@ bool AtlasApprove::checkCommandPayload(const Json::Value &payload)
                            payload[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString(),
                            payload[ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY].asString());
 
-    device->GetQCommands().push(std::move(cmd));
+    device->GetQRecvCommands().push(std::move(cmd));
 
     /* Save command into the database */
     bool result = AtlasSQLite::getInstance().insertDeviceCommand(payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt(),
@@ -219,6 +218,7 @@ bool AtlasApprove::checkCommandPayload(const Json::Value &payload)
 	    return false;
     }
 
+    sequenceNumber_ = payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt();
     result = responseCommandACK();
     if(!result) {
         ATLAS_LOGGER_ERROR("ACK message was not sent to cloud back-end");
