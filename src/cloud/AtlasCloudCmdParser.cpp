@@ -30,10 +30,10 @@ void AtlasCloudCmdParser::reqRegisterCmd()
     AtlasRegisterCloud::getInstance().sendRegisterCmd();
 }
 
-void AtlasCloudCmdParser::deviceApprovedCmd(const std::string &cmdPayload)
+void AtlasCloudCmdParser::deviceApprovedCmd(const Json::Value &cmdPayload)
 {
     ATLAS_LOGGER_INFO("ATLAS_CMD_IOT_CLIENT command was sent by cloud back-end");
-    
+   
     bool result = AtlasApprove::getInstance().checkCommandPayload(cmdPayload);
     if(!result) {
         ATLAS_LOGGER_ERROR("ATLAS_CMD_IOT_CLIENT command returned an error");
@@ -54,12 +54,13 @@ void AtlasCloudCmdParser::parseCmd(const std::string &cmd)
     Json::Value obj;
 
     reader.parse(cmd, obj);
+
     if(obj[ATLAS_CMD_TYPE_JSON_KEY].asString() == ATLAS_CMD_GATEWAY_GET_ALL_DEVICES)
         getAllDevicesCmd();
     else if (obj[ATLAS_CMD_TYPE_JSON_KEY].asString() == ATLAS_CMD_GATEWAY_REGISTER_REQUEST)
         reqRegisterCmd();
     else if (obj[ATLAS_CMD_TYPE_JSON_KEY].asString() == ATLAS_CMD_GATEWAY_CLIENT)
-        deviceApprovedCmd(obj[ATLAS_CMD_PAYLOAD_JSON_KEY].asString());
+        deviceApprovedCmd(obj[ATLAS_CMD_PAYLOAD_JSON_KEY]);
 }
 
 void AtlasCloudCmdParser::onConnect()

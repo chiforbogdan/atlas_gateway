@@ -1,6 +1,5 @@
 #include "AtlasApprove.h"
 #include "AtlasClaim.h"
-#include <json/json.h>
 #include "../sql/AtlasSQLite.h"
 #include "../logger/AtlasLogger.h"
 #include "../device/AtlasDeviceManager.h"
@@ -130,7 +129,7 @@ void AtlasApprove::statusDONECallback()
     return;
 }
 
-bool AtlasApprove::checkCommandPayload(const std::string &payload)
+bool AtlasApprove::checkCommandPayload(const Json::Value &payload)
 {
     
     if(!AtlasClaim::getInstance().isClaimed()) {
@@ -143,33 +142,23 @@ bool AtlasApprove::checkCommandPayload(const std::string &payload)
         //TODO - check HMAC
     }
 
-    if(payload == "") {
-        ATLAS_LOGGER_ERROR("Received a command with an empty payload!");
-        return false;
-    }
-
-    Json::Reader reader;
-    Json::Value obj;
-
-    reader.parse(payload, obj);
-
-    if (obj[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asString() == "") {
+    if (payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asString() == "") {
         ATLAS_LOGGER_ERROR("Received a command with an empty sequence number field!");
         return false;
     }
 
-    if (obj[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt() <= sequenceNumber_) {
+    if (payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt() <= sequenceNumber_) {
         ATLAS_LOGGER_ERROR("Received a command in which the sequence number is less or equal than current sequence number!");
         /*  Check if the received command is already in db 
             This is a case when the back-end cloud did not recevied the ACK for first sending of this command */
 
-        bool result = AtlasSQLite::getInstance().checkDeviceCommandBySeqNo(obj[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt());
+        bool result = AtlasSQLite::getInstance().checkDeviceCommandBySeqNo(payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt());
         if(result) {
-            sequenceNumber_ = obj[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt();
-            result = AtlasSQLite::getInstance().checkDeviceCommandForExecution(obj[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt());
+            sequenceNumber_ = payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt();
+            result = AtlasSQLite::getInstance().checkDeviceCommandForExecution(payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt());
 
             if(result) {
-                sequenceNumberDONE_ = obj[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt();
+                sequenceNumberDONE_ = payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt();
 
                 /* Send directly DONE status if the command is already executed and the cloud did not received the ACK status until now*/
                 result = responseCommandDONE();
@@ -194,37 +183,37 @@ bool AtlasApprove::checkCommandPayload(const std::string &payload)
         return false;
     } 
 
-    sequenceNumber_ = obj[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt();
+    sequenceNumber_ = payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt();
     
-    if (obj[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString() == "") {
+    if (payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString() == "") {
         ATLAS_LOGGER_ERROR("Received a command with an empty device id field!");
         return false;	
     }
 
-    if (obj[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString() == "") {
+    if (payload[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString() == "") {
         ATLAS_LOGGER_ERROR("Received a command with an command type field!");
         return false;
     } 
 
-    AtlasDevice *device = AtlasDeviceManager::getInstance().getDevice(obj[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString());
+    AtlasDevice *device = AtlasDeviceManager::getInstance().getDevice(payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString());
     if(!device) {
-        ATLAS_LOGGER_ERROR("No client device exists with identity " + obj[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString());
+        ATLAS_LOGGER_ERROR("No client device exists with identity " + payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString());
         return false;
     }
 
     /* Save command into device Q */
-    AtlasCommandDevice cmd(obj[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString(),
-                           obj[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt(),
-                           obj[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString(),
-                           obj[ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY].asString());
+    AtlasCommandDevice cmd(payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString(),
+                           payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt(),
+                           payload[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString(),
+                           payload[ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY].asString());
 
     device->GetQCommands().push(std::move(cmd));
 
     /* Save command into the database */
-    bool result = AtlasSQLite::getInstance().insertDeviceCommand(obj[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt(),
-                                                                 obj[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString(),
-                                                                 obj[ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY].asString(),
-                                                                 obj[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString());
+    bool result = AtlasSQLite::getInstance().insertDeviceCommand(payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt(),
+                                                                 payload[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString(),
+                                                                 payload[ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY].asString(),
+                                                                 payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString());
     if(!result) {
         ATLAS_LOGGER_ERROR("Cannot save device command into the database!");
 	    return false;

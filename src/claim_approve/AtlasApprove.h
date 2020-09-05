@@ -2,6 +2,7 @@
 #define __ATLAS_APPROVE_H__
 
 #include <string>
+#include <json/json.h>
 #include "../alarm/AtlasAlarm.h"
 
 namespace atlas {
@@ -32,7 +33,7 @@ public:
     * @param[in] payload Command payload
     * @return true if the command was handled without error, false otherwise
     */
-    bool checkCommandPayload(const std::string &payload);
+    bool checkCommandPayload(const Json::Value &payload);
 
     /**
     * @brief Response with an ACK status to cloud back-end for a specific sequence number

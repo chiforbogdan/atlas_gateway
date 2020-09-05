@@ -76,7 +76,7 @@ private:
     * @param[in] cmdPayload Command payload
     * @return none
     */
-    void deviceApprovedCmd(const std::string &cmdPayload);
+    void deviceApprovedCmd(const Json::Value &cmdPayload);
 
     /* Indicates if the cloud module is connected */
     bool connected_;
