@@ -32,13 +32,19 @@ public:
     * @brief Push command to device
     * @return none
     */
-    void pushCommand();
+    void pushCommand() const;
 
     /**
     * @brief Get command device sequence number
     * @return sequenceNumber_
     */
     inline uint32_t getSequenceNumber() const { return sequenceNumber_; }
+
+    /**
+     * @brief Get device identity
+     * @return Device identity
+     */
+    std::string getDeviceIdentity() const { return deviceIdentity_; }
 
     /**
     * @brief Dtor for command
@@ -55,10 +61,16 @@ private:
     * @param[in] resp_payload_len CoAP response payload length
     * @return none
     */
-    void respCallback(AtlasCoapResponse respStatus, const uint8_t *resp_payload, size_t resp_payload_len);
-   
+    void respCallback(AtlasCoapResponse respStatus, const uint8_t *resp_payload, size_t resp_payload_len) const;
+  
+    /**
+     * @brief Mark command as DONE (executed by the client)
+     * @return none
+     */
+    void markCommandAsDone() const;
+
     /* CoAP context*/
-    void *coapToken_;
+    mutable void *coapToken_;
     /* Client device identity */
     std::string deviceIdentity_;
     /* Command sequence number */
@@ -70,7 +82,7 @@ private:
     /* Command payload */
     std::string commandPayload_;
     /* Counter for timeouts*/
-    uint8_t counterTimeouts_;
+    mutable uint8_t counterTimeouts_;
 };
 
 } // namespace atlas

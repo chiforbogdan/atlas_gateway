@@ -1148,7 +1148,8 @@ bool AtlasSQLite::selectSeqNoForUndoneDeviceCommand(const std::string &identity)
         return false;
     }
 
-    AtlasApprove::getInstance().setSequenceNumberDONE(sqlite3_column_int(stmt, 0));
+    // TODO remove this?
+    //AtlasApprove::getInstance().setSequenceNumberDONE(sqlite3_column_int(stmt, 0));
     
     return true;
 }

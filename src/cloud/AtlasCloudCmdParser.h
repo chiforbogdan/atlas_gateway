@@ -84,7 +84,7 @@ private:
     * @param[in] cmdPayload Command payload
     * @return none
     */
-    void rcvACKForDONEDeviceCommand(const std::string &cmdPayload);
+    void rcvACKForDONEDeviceCommand(const Json::Value &cmdPayload);
 
     /* Indicates if the cloud module is connected */
     bool connected_;

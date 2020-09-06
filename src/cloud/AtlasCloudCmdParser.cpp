@@ -41,28 +41,10 @@ void AtlasCloudCmdParser::deviceApprovedCmd(const Json::Value &cmdPayload)
 
 }
 
-void AtlasCloudCmdParser::rcvACKForDONEDeviceCommand(const std::string &cmdPayload)
+void AtlasCloudCmdParser::rcvACKForDONEDeviceCommand(const Json::Value &cmdPayload)
 {
     ATLAS_LOGGER_INFO("ATLAS_CMD_GATEWAY_ACK_FOR_DONE_COMMAND command was sent by cloud back-end");
-    
-    /* the command payload contains only the client identity */
-    AtlasDevice *device = AtlasDeviceManager::getInstance().getDevice(cmdPayload);
-    if(!device) {
-        ATLAS_LOGGER_ERROR("No client device exists with identity " + cmdPayload);
-        return;
-    }
-
-    if(!device->GetQExecCommands().empty()) {
-        AtlasCommandDevice cmd = device->GetQExecCommands().top();
-        device->GetQExecCommands().pop();
-
-        bool result = AtlasSQLite::getInstance().deleteDeviceCommand(cmd.getSequenceNumber());
-        if(!result) {
-            ATLAS_LOGGER_ERROR("ATLAS_CMD_GATEWAY_ACK_FOR_DONE_COMMAND error on delete a device command in database");
-        }
-    } else {
-        ATLAS_LOGGER_ERROR("ATLAS_CMD_GATEWAY_ACK_FOR_DONE_COMMAND Q of executed device commands is empty");
-    }
+    AtlasApprove::getInstance().handleCommandDoneAck(cmdPayload);
 }
 
 void AtlasCloudCmdParser::start()
@@ -79,6 +61,8 @@ void AtlasCloudCmdParser::parseCmd(const std::string &cmd)
 
     reader.parse(cmd, obj);
 
+    std::cout << cmd << std::endl;
+
     if(obj[ATLAS_CMD_TYPE_JSON_KEY].asString() == ATLAS_CMD_GATEWAY_GET_ALL_DEVICES)
         getAllDevicesCmd();
     else if (obj[ATLAS_CMD_TYPE_JSON_KEY].asString() == ATLAS_CMD_GATEWAY_REGISTER_REQUEST)
@@ -86,7 +70,7 @@ void AtlasCloudCmdParser::parseCmd(const std::string &cmd)
     else if (obj[ATLAS_CMD_TYPE_JSON_KEY].asString() == ATLAS_CMD_GATEWAY_CLIENT)
         deviceApprovedCmd(obj[ATLAS_CMD_PAYLOAD_JSON_KEY]);
     else if (obj[ATLAS_CMD_TYPE_JSON_KEY].asString() == ATLAS_CMD_GATEWAY_ACK_FOR_DONE_COMMAND)
-        rcvACKForDONEDeviceCommand(obj[ATLAS_CMD_PAYLOAD_JSON_KEY].asString());
+        rcvACKForDONEDeviceCommand(obj[ATLAS_CMD_PAYLOAD_JSON_KEY]);
 }
 
 void AtlasCloudCmdParser::onConnect()
