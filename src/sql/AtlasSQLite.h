@@ -187,13 +187,6 @@ public:
     bool markExecutedDeviceCommand(const uint32_t sequenceNumber);
 
     /**
-     * @brief Execute query on database: set field 'IsDone' to 1
-     * @param[in] sequenceNumber Command sequence number
-     * @return true on success, false on error
-     */
-    bool markDoneDeviceCommand(const uint32_t sequenceNumber);
-
-    /**
     * @brief Execute query on database: select, get device commands based on device identity
     * @param[in] identity Device identity
     * @param[in] recvCmds priority_queue<AtlasCommandDevice>
@@ -201,13 +194,6 @@ public:
     * @return true on success, false on error
     */
     bool selectDeviceCommand(const std::string &identity, std::priority_queue<AtlasCommandDevice> &recvCmds, std::priority_queue<AtlasCommandDevice> &execCmds);
-
-    /**
-    * @brief Execute query on database: select top 1 sequence number for an executed but undone device commmand
-    * @param[in] identity Device identity
-    * @return true on success, false on error
-    */
-    bool selectSeqNoForUndoneDeviceCommand(const std::string &identity);
 
     /**
      * @brief Execute query on database: delete a device command by sequence number

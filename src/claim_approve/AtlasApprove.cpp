@@ -268,13 +268,6 @@ bool AtlasApprove::responseCommandDONE(uint32_t cmdSeqNo, const std::string &dev
         ATLAS_LOGGER_ERROR("DONE message was not sent to cloud back-end");
     } else {
         ATLAS_LOGGER_INFO("DONE message was sent to cloud back-end");
-
-        // TODO remove this????/
-        //bool result = AtlasSQLite::getInstance().markDoneDeviceCommand(sequenceNumberDONE_);
-        //if(!result) {
-        //    ATLAS_LOGGER_ERROR("Cannot update device command as DONE into the database!");
-        //    return false;
-        //}
     }
 
     return delivered;

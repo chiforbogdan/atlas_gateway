@@ -50,7 +50,6 @@ namespace {
                                     "CommandType TEXT NOT NULL," \
                                     "CommandPayload TEXT NULL," \
                                     "IsExecuted INTEGER DEFAULT 0," \
-                                    "IsDone INTEGER DEFAULT 0," \
                                     "FOREIGN KEY (DeviceId) REFERENCES Device(Id));" \
 
                                     "CREATE UNIQUE INDEX IF NOT EXISTS idxDeviceIdentity "\
@@ -124,12 +123,6 @@ namespace {
                                                         "WHERE Device.Identity=?;";
     const char *SQL_CHECK_DEVICE_COMMAND_EXECUTION_BY_SEQ_NO =  "SELECT 1 FROM DeviceCommand WHERE SequenceNumber=? AND IsExecuted=1;";
     const char *SQL_MARK_AS_EXECUTED_DEVICE_COMMAND =  "UPDATE DeviceCommand SET IsExecuted=1 WHERE SequenceNumber=?;";
-    const char *SQL_MARK_AS_DONE_DEVICE_COMMAND =  "UPDATE DeviceCommand SET IsDone=1 WHERE SequenceNumber=?;";
-    const char *SQL_GET_SEQ_NO_FOR_EXECUTED_UNDONE_DEVICE_COMMAND =  "SELECT DeviceCommand.SequenceNumber FROM DeviceCommand "\
-                                                                     "INNER JOIN Device ON Device.Id == DeviceCommand.DeviceId "\
-                                                                     "WHERE Device.Identity=? AND DeviceCommand.IsExecuted=1 AND DeviceCommand.IsDone=0"\
-                                                                     "ORDE BY DeviceCommand.SequenceNumber ASC"\
-                                                                     "LIMIT 1;";
     const char *SQL_GET_DEVICE_COMMAND_BY_IDENTITY = "SELECT DeviceCommand.SequenceNumber, DeviceCommand.CommandType, DeviceCommand.CommandPayload, DeviceCommand.IsExecuted FROM DeviceCommand "\
                                                      "INNER JOIN Device ON Device.Id == DeviceCommand.DeviceId "\
                                                      "WHERE Device.Identity=?;";
@@ -1077,80 +1070,6 @@ bool AtlasSQLite::markExecutedDeviceCommand(const uint32_t sequenceNumber)
         return false;
     }
 
-    return true;
-}
-
-bool AtlasSQLite::markDoneDeviceCommand(const uint32_t sequenceNumber) 
-{
-
-    sqlite3_stmt *stmt = nullptr;
-    int stat = -1;
-
-    BOOST_SCOPE_EXIT(&stmt) {
-        sqlite3_finalize(stmt);
-    } BOOST_SCOPE_EXIT_END
-    
-    if(!isConnected_)
-        return false;
-
-    /*update features for given identity*/
-    if(sqlite3_prepare_v2(pCon_, SQL_MARK_AS_DONE_DEVICE_COMMAND,-1, &stmt, 0) != SQLITE_OK) {
-        ATLAS_LOGGER_ERROR("Could not prepare, fct:markDoneDeviceCommand, stmt:SQL_MARK_AS_DONE_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
-	    return false;
-    }
-
-    if (sqlite3_bind_int(stmt, 1, sequenceNumber) != SQLITE_OK) {
-        ATLAS_LOGGER_ERROR("Could not bind, fct:markDoneDeviceCommand, stmt:SQL_MARK_AS_DONE_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
-        return false;
-    }
-
-    stat = sqlite3_step(stmt);
-    if (stat != SQLITE_DONE && stat != SQLITE_ROW) {
-        ATLAS_LOGGER_ERROR("Could not step, fct:markDoneDeviceCommand, stmt:SQL_MARK_AS_DONE_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
-        return false;
-    }
-
-    return true;
-}
-
-bool AtlasSQLite::selectSeqNoForUndoneDeviceCommand(const std::string &identity)
-{
-    sqlite3_stmt *stmt = nullptr;
-    int stat = -1;
-    
-    BOOST_SCOPE_EXIT(&stmt) {
-        sqlite3_finalize(stmt);
-    } BOOST_SCOPE_EXIT_END
-
-    if(!isConnected())
-        return false;
-
-    /*select device commands for given identity*/
-    if(sqlite3_prepare_v2(pCon_, SQL_GET_SEQ_NO_FOR_EXECUTED_UNDONE_DEVICE_COMMAND,-1, &stmt, 0) != SQLITE_OK) {
-        ATLAS_LOGGER_ERROR("Could not prepare, fct:selectSeqNoForUndoneDeviceCommand, stmt:SQL_GET_SEQ_NO_FOR_EXECUTED_UNDONE_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
-	    return false;
-    }
-
-    if (sqlite3_bind_text(stmt, 1, identity.c_str(), identity.length(),	SQLITE_STATIC) != SQLITE_OK) {
-        ATLAS_LOGGER_ERROR("Could not bind, fct:selectSeqNoForUndoneDeviceCommand, stmt:SQL_GET_SEQ_NO_FOR_EXECUTED_UNDONE_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
-        return false;
-    }
-
-    stat = sqlite3_step(stmt);
-
-    if(stat != SQLITE_ROW || stat != SQLITE_DONE) {
-        ATLAS_LOGGER_ERROR("Could not step, fct:selectSeqNoForUndoneDeviceCommand, stmt:SQL_GET_SEQ_NO_FOR_EXECUTED_UNDONE_DEVICE_COMMAND, error:" + std::string(sqlite3_errmsg(pCon_)));
-        return false;
-    }
-
-    if(stat == SQLITE_DONE) {
-        ATLAS_LOGGER_ERROR("No device command found in undone state, fct:selectSeqNoForUndoneDeviceCommand, stmt:SQL_GET_SEQ_NO_FOR_EXECUTED_UNDONE_DEVICE_COMMAND");
-        return false;
-    }
-
-    // TODO remove this?
-    //AtlasApprove::getInstance().setSequenceNumberDONE(sqlite3_column_int(stmt, 0));
-    
     return true;
 }
 
