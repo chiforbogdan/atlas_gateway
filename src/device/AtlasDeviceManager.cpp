@@ -337,9 +337,11 @@ void AtlasDeviceManager::initDeviceCommands(AtlasDevice &device)
         
         result = AtlasSQLite::getInstance().selectDeviceCommand(device.getIdentity(), device.GetQRecvCommands(), device.GetQExecCommands());
         if (result) {
+
             ATLAS_LOGGER_INFO("Device commands for device with identity " + device.getIdentity() + " are in memory");
         } else {
-            ATLAS_LOGGER_ERROR("Uncommited select on device commands");
+
+            ATLAS_LOGGER_ERROR("Uncommited select on device commands in selectDeviceCommand function");
         }
     } else {
         ATLAS_LOGGER_INFO("Device with identity " + device.getIdentity() + " has no device commands in local database");

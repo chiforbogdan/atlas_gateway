@@ -128,6 +128,10 @@ namespace {
                                                      "WHERE Device.Identity=?;";
     const char *SQL_DELETE_DEVICE_COMMAND_BY_SEQ_NO = "DELETE FROM DeviceCommand "\
                                                       "WHERE DeviceCommand.SequenceNumber=?;";
+    const char *SQL_GET_MAX_SEQ_NO =    "SELECT DeviceCommand.SequenceNumber FROM DeviceCommand "\
+                                        "WHERE DeviceCommand.IsExecuted=0 "\
+                                        "ORDER BY DeviceCommand.SequenceNumber DESC "\
+                                        "LIMIT 1;";
 
 } // anonymous namespace
 
@@ -1155,6 +1159,37 @@ bool AtlasSQLite::deleteDeviceCommand(const uint32_t sequenceNumber)
 
     return true;
 }
+bool AtlasSQLite::getMaxSequenceNumber() 
+{
+    sqlite3_stmt *stmt = nullptr;
+    int stat = -1;
 
+    BOOST_SCOPE_EXIT(&stmt) {
+        sqlite3_finalize(stmt);
+    } BOOST_SCOPE_EXIT_END
+    
+    if(!isConnected_)
+        return false;
+
+    if(sqlite3_prepare_v2(pCon_, SQL_GET_MAX_SEQ_NO,-1, &stmt, 0) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not prepare, fct:getMaxSequenceNumber, stmt:SQL_GET_MAX_SEQ_NO, error:" + std::string(sqlite3_errmsg(pCon_)));
+	    return false;
+    }
+
+    stat = sqlite3_step(stmt);
+    if (stat != SQLITE_DONE && stat != SQLITE_ROW) {
+        ATLAS_LOGGER_ERROR("Could not step, fct:getMaxSequenceNumber, stmt:SQL_GET_MAX_SEQ_NO, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    if (stat == SQLITE_DONE) {
+        ATLAS_LOGGER_INFO("No device commands in database. No sequence number initialization!");
+        return true;
+    }
+
+    AtlasApprove::getInstance().setSequenceNumber(sqlite3_column_int(stmt, 0));
+    
+    return true;
+}
 
 } // namespace atlas

@@ -35,7 +35,7 @@ AtlasApprove::AtlasApprove(): pushCommandAlarm_("AtlasApprove", ATLAS_PUSH_COMMA
                                                 boost::bind(&AtlasApprove::alarmCallback, this)),
                               statusACKAlarm_("AtlasApprove", ATLAS_STATUS_COMMAND_ALARM_PERIOD_MS, false,
                                                 boost::bind(&AtlasApprove::statusACKCallback, this)),
-                              sequenceNumber_(0), msgACKScheduled_(false), counterACK_(0) {}
+                              msgACKScheduled_(false), counterACK_(0) {}
 
 AtlasApprove& AtlasApprove::getInstance()
 {
@@ -47,6 +47,15 @@ AtlasApprove& AtlasApprove::getInstance()
 void AtlasApprove::start()
 {
     ATLAS_LOGGER_DEBUG("Start device approved command module");
+
+    bool result = AtlasSQLite::getInstance().getMaxSequenceNumber();
+    if(result) {
+
+        ATLAS_LOGGER_INFO("Sequence number set from database!");
+    } else {
+
+        ATLAS_LOGGER_ERROR("Uncommited select on device commands in getMaxSequenceNumber function");
+    }
     pushCommandAlarm_.start();
 }
 
@@ -162,8 +171,6 @@ bool AtlasApprove::checkCommandPayload(const Json::Value &payload)
 
         return false;
     } 
-
-    sequenceNumber_ = payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt();
     
     AtlasDevice *device = AtlasDeviceManager::getInstance().getDevice(payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString());
     if(!device) {
@@ -172,14 +179,6 @@ bool AtlasApprove::checkCommandPayload(const Json::Value &payload)
     }
 
     std::cout << "Insert command with type " << payload[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString() << std::endl;
-
-    /* Save command into device Q */
-    AtlasCommandDevice cmd(payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString(),
-                           payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt(),
-                           payload[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString(),
-                           payload[ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY].asString());
-
-    device->GetQRecvCommands().push(std::move(cmd));
 
     /* Save command into the database */
     bool result = AtlasSQLite::getInstance().insertDeviceCommand(payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt(),
@@ -190,6 +189,14 @@ bool AtlasApprove::checkCommandPayload(const Json::Value &payload)
         ATLAS_LOGGER_ERROR("Cannot save device command into the database!");
 	    return false;
     }
+
+    /* Save command into received device commands Q */
+    AtlasCommandDevice cmd(payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString(),
+                           payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt(),
+                           payload[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString(),
+                           payload[ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY].asString());
+
+    device->GetQRecvCommands().push(std::move(cmd));
 
     sequenceNumber_ = payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt();
     result = responseCommandACK();

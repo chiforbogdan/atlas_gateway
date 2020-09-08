@@ -202,6 +202,13 @@ public:
      */
     bool deleteDeviceCommand(const uint32_t sequenceNumber);
 
+    /**
+     * @brief Execute query on database: get max sequence number from deviceCommand table
+     * @param[in] sequenceNumber Command sequence number
+     * @return true on success, false on error
+     */
+    bool getMaxSequenceNumber();
+
     AtlasSQLite(const AtlasSQLite&) = delete;
     AtlasSQLite& operator=(const AtlasSQLite&) = delete;
 

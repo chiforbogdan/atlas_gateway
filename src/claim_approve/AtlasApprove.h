@@ -56,6 +56,13 @@ public:
     */
     bool responseCommandDONE(uint32_t cmdSeqNo, const std::string &deviceIdentity);
 
+    /**
+    * @brief Set sequenceNumber on this gateway
+    * @param[in] cmdSeqNo Sequence number
+    * @return none
+    */
+    inline void setSequenceNumber(uint32_t cmdSeqNo) { sequenceNumber_ = cmdSeqNo; }
+
     AtlasApprove(const AtlasApprove &) = delete;
     AtlasApprove& operator=(const AtlasApprove &) = delete;
 
