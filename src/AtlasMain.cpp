@@ -194,9 +194,6 @@ int main(int argc, char **argv)
     /* Start cloud command parser module*/
     atlas::AtlasCloudCmdParser::getInstance().start();
 
-    /* Start device approved command module*/
-    atlas::AtlasApprove::getInstance().start();
-
     /*open local.db connection*/
     if(!atlas::AtlasSQLite::getInstance().openConnection(atlas::ATLAS_DB_PATH)) {
         ATLAS_LOGGER_ERROR("Error opening database!");
@@ -211,6 +208,9 @@ int main(int argc, char **argv)
         ATLAS_LOGGER_ERROR("Error in starting the gateway claim protocol");
 	return 1;
     }
+
+    /* Start device approved command module*/
+    atlas::AtlasApprove::getInstance().start();
 
     /* Start internal HTTP server */
     atlas::AtlasHttpServer::getInstance().start(httpCertFile, httpPrivKeyFile, httpPort);

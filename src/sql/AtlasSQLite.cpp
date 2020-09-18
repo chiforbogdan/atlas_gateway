@@ -876,7 +876,7 @@ bool AtlasSQLite::selectOwnerInfo(std::string &secretKey, std::string &identity)
     stat = sqlite3_step(stmt);
 
     if(stat != SQLITE_ROW) {
-        ATLAS_LOGGER_ERROR("Could not step, fct:selectFeatures, stmt:SQL_GET_FEATURE, error:" + std::string(sqlite3_errmsg(pCon_)));
+        ATLAS_LOGGER_ERROR("Could not step, fct:selectOwnerInfo, stmt:SQL_GET_OWNER, error:" + std::string(sqlite3_errmsg(pCon_)));
         return false;
     }
 

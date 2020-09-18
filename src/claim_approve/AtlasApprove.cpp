@@ -20,7 +20,7 @@ const std::string ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY = "type";
 const std::string ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY = "payload";
 const std::string ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY = "seqNo";
 
-/* Check Q at every 5 minute */
+/* Check Q at every 30 sec */
 const int ATLAS_PUSH_COMMAND_ALARM_PERIOD_MS = 30000;
 
 /* Resend status at each 10 sec */
@@ -31,9 +31,9 @@ const uint8_t ATLAS_STATUS_COMMAND_RETRY_NO = 3;
 
 } // anonymous namespace
 
-AtlasApprove::AtlasApprove(): pushCommandAlarm_("AtlasApprove", ATLAS_PUSH_COMMAND_ALARM_PERIOD_MS, false,
+AtlasApprove::AtlasApprove(): pushCommandAlarm_("AtlasApprovePushCommand", ATLAS_PUSH_COMMAND_ALARM_PERIOD_MS, false,
                                                 boost::bind(&AtlasApprove::alarmCallback, this)),
-                              statusACKAlarm_("AtlasApprove", ATLAS_STATUS_COMMAND_ALARM_PERIOD_MS, false,
+                              statusACKAlarm_("AtlasApproveACK", ATLAS_STATUS_COMMAND_ALARM_PERIOD_MS, false,
                                                 boost::bind(&AtlasApprove::statusACKCallback, this)),
                               msgACKScheduled_(false), counterACK_(0) {}
 
@@ -47,16 +47,18 @@ AtlasApprove& AtlasApprove::getInstance()
 void AtlasApprove::start()
 {
     ATLAS_LOGGER_DEBUG("Start device approved command module");
+    sequenceNumber_ = 0;
 
     bool result = AtlasSQLite::getInstance().getMaxSequenceNumber();
     if(result) {
 
-        ATLAS_LOGGER_INFO("Sequence number set from database!");
+        ATLAS_LOGGER_INFO("Initialize sequence number from database!");
     } else {
 
-        ATLAS_LOGGER_ERROR("Uncommited select on device commands in getMaxSequenceNumber function");
+        ATLAS_LOGGER_INFO("Uncommited select on device commands in getMaxSequenceNumber function");
+        
     }
-    pushCommandAlarm_.start();
+    //pushCommandAlarm_.start();
 }
 
 
@@ -76,7 +78,7 @@ void AtlasApprove::alarmCallback()
                                                         /* Event for sending device commands to client*/ 
                                                         if (!device.GetQRecvCommands().empty()) {
                                                             std::cout << "Sending command to client\n";
-                                                            device.GetQRecvCommands().top().pushCommand();
+                                                            device.pushCommand();
                                                         }
 
                                                         /* Event for sending DONE notification for executed device commands to cloud (got notified by client in a scheduled DONE window) */

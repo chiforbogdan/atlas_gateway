@@ -9,7 +9,7 @@ echo "******************* Step 1 finished! ********************"
 # Building project
 echo "******* Step 2. Building ATLAS_GATEWAY components *******"
 cd build/
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
 echo "******************* Step 2 finished! ********************"
 

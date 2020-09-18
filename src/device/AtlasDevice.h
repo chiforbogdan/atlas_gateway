@@ -14,6 +14,7 @@
 #include "../statistics/AtlasFirewallStats.h"
 #include "../reputation_impl/AtlasDeviceFeatureManager.h"
 #include "../commands/AtlasCommandDevice.h"
+#include "../coap/AtlasCoapResponse.h"
 
 namespace atlas {
 
@@ -226,6 +227,24 @@ public:
     */
     inline std::priority_queue<AtlasCommandDevice>& GetQExecCommands() {return execCmds_;};
 
+    /**
+    * @brief Push command to client
+    * @return none
+    */
+    void pushCommand();
+
+    /**
+    * @brief Copy assignment operator for device
+    * @return none
+    */
+    AtlasDevice& operator = (const AtlasDevice&); 
+
+    /**
+    * @brief Dtor for device
+    * @return none
+    */
+    ~AtlasDevice();
+
 
 private:
     /**
@@ -257,6 +276,22 @@ private:
     * @return JSON serialized IP and port
     */
     std::string ipPortToJSON();
+
+    /**
+    * @brief CoAP response callback from client
+    * @param[in] respStatus CoAP response status
+    * @param[in] resp_payload CoAP response payload
+    * @param[in] resp_payload_len CoAP response payload length
+    * @return none
+    */
+    void respCallback(AtlasCoapResponse respStatus, const uint8_t *resp_payload, size_t resp_payload_len);
+  
+    /**
+     * @brief Mark command as DONE (executed by client)
+     * @return none
+     */
+    void markCommandAsDone();
+
 
     /* IoT client identity */
     std::string identity_;
@@ -317,6 +352,11 @@ private:
 
     /* Priority Q (sequence number) to store the executed device commands and notify(DONE) them to cloud*/
     std::priority_queue<AtlasCommandDevice> execCmds_;
+
+    /* CoAP context*/
+    void *coapToken_;
+    /* Counter for timeouts*/
+    uint8_t counterTimeouts_;
 
 };
 

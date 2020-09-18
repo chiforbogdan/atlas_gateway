@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <string>
-#include "../coap/AtlasCoapResponse.h"
+
 
 namespace atlas {
 
@@ -29,12 +29,6 @@ public:
     inline bool operator<(const AtlasCommandDevice& c) const { return sequenceNumber_ > c.sequenceNumber_; }
 
     /**
-    * @brief Push command to device
-    * @return none
-    */
-    void pushCommand() const;
-
-    /**
     * @brief Get command device sequence number
     * @return sequenceNumber_
     */
@@ -44,33 +38,15 @@ public:
      * @brief Get device identity
      * @return Device identity
      */
-    std::string getDeviceIdentity() const { return deviceIdentity_; }
+    inline std::string getDeviceIdentity() const { return deviceIdentity_; }
 
     /**
-    * @brief Dtor for command
-    * @return none
-    */
-    ~AtlasCommandDevice();
+     * @brief Get command type for client
+     * @return command type device
+     */
+    inline uint16_t getCommandTypeDevice() const { return commandTypeDevice_; }
 
 private:
-
-    /**
-    * @brief CoAP response callback
-    * @param[in] respStatus CoAP response status
-    * @param[in] resp_payload CoAP response payload
-    * @param[in] resp_payload_len CoAP response payload length
-    * @return none
-    */
-    void respCallback(AtlasCoapResponse respStatus, const uint8_t *resp_payload, size_t resp_payload_len) const;
-  
-    /**
-     * @brief Mark command as DONE (executed by the client)
-     * @return none
-     */
-    void markCommandAsDone() const;
-
-    /* CoAP context*/
-    mutable void *coapToken_;
     /* Client device identity */
     std::string deviceIdentity_;
     /* Command sequence number */
@@ -81,8 +57,6 @@ private:
     uint16_t commandTypeDevice_;
     /* Command payload */
     std::string commandPayload_;
-    /* Counter for timeouts*/
-    mutable uint8_t counterTimeouts_;
 };
 
 } // namespace atlas

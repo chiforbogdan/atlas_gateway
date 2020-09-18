@@ -8,6 +8,8 @@
 #include "../pubsub_agent/AtlasPubSubAgent.h"
 #include "../reputation_impl/AtlasDeviceFeatureType.h"
 #include "../sql/AtlasSQLite.h"
+#include "../commands/AtlasCommandBatch.h"
+#include "../coap/AtlasCoapClient.h"
 
 namespace atlas {
 
@@ -31,6 +33,12 @@ const std::string ATLAS_FIREWALLSTAT_PASSEDPKTS_JSON_KEY = "passedPkts";
 const std::string ATLAS_SYSTEM_REPUTATION_JSON_KEY = "systemReputation";
 /* JSON data reputation key */
 const std::string ATLAS_DATA_REPUTATION_JSON_KEY = "temperatureReputation";
+/* device commmand default path on client */
+const std::string ATLAS_PUSH_APPROVED_COMMAND = "client/approved/command/push";
+/* Number of accepted timeouts before stop sending device command */
+const uint8_t ATLAS_PUSH_COMMAND_RETRY_NO = 3;
+
+const uint16_t ATLAS_APPROVED_COMMAND_COAP_TIMEOUT_MS = 5000;
 
 } // anonymous namespace
 
@@ -41,7 +49,9 @@ AtlasDevice::AtlasDevice(const std::string &identity,
                                                                           deviceCloud_(deviceCloud),
                                                                           registered_(false),
                                                                           regIntervalSec_(0),
-                                                                          keepAlivePkts_(0)
+                                                                          keepAlivePkts_(0),
+                                                                          coapToken_(nullptr),
+                                                                          counterTimeouts_(0)
 {
     /* Install default alerts */
     installDefaultAlerts();
@@ -49,7 +59,8 @@ AtlasDevice::AtlasDevice(const std::string &identity,
     stats_.setClientId(identity);
 }
 
-AtlasDevice::AtlasDevice() : identity_(""), registered_(false), regIntervalSec_(0), keepAlivePkts_(0) {}
+AtlasDevice::AtlasDevice() : identity_(""), registered_(false), regIntervalSec_(0), keepAlivePkts_(0),
+                             coapToken_(nullptr), counterTimeouts_(0) {}
 
 void AtlasDevice::uninstallPolicy()
 {
@@ -324,6 +335,143 @@ void AtlasDevice::setFeature(const std::string &featureType, const std::string &
         telemetryInfo_.setFeature(featureType, featureValue);
         deviceCloud_->updateDevice(identity_, telemetryInfo_.toJSON(featureType));
     }
+}
+
+void AtlasDevice::markCommandAsDone()
+{
+    //ATLAS_LOGGER_INFO1("Mark command as done on device with identity ", identity_);
+
+    if(!recvCmds_.empty()) {
+        /* The value from top is stored into cmdDevice once, and never changed afterwards. */
+        const AtlasCommandDevice cmdDevice = recvCmds_.top();
+
+        bool result = AtlasSQLite::getInstance().markExecutedDeviceCommand(cmdDevice.getSequenceNumber());
+        if (!result) {
+            ATLAS_LOGGER_ERROR("Cannot update executed status for device command table!");
+            return;
+        }
+   
+        /* Transfer the device command from recv to exec Q */
+        recvCmds_.pop();
+        execCmds_.push(cmdDevice);
+
+        /* Send command DONE status to cloud back-end */
+        result = AtlasApprove::getInstance().responseCommandDONE(cmdDevice.getSequenceNumber(), identity_);
+        if (!result)
+            ATLAS_LOGGER_ERROR("DONE message was not sent to cloud back-end");
+    } else {
+        ATLAS_LOGGER_ERROR("Q received commands is empty! Mark command as done failed!");
+    }
+}
+
+void AtlasDevice::respCallback(AtlasCoapResponse respStatus, const uint8_t *resp_payload, size_t resp_payload_len)
+{
+    //ATLAS_LOGGER_INFO1("Command CoAP response for client with identity ", identity_);
+
+    /* If request is successful, the command need to be marked */
+    if (respStatus == ATLAS_COAP_RESP_OK) {
+        //ATLAS_LOGGER_INFO1("Command executed on device with identity ", identity_);
+        /* Reset number of timeouts */
+        counterTimeouts_ = 0;
+        /* Mark command as DONE (executed by the client) */
+        markCommandAsDone();   
+    } else if (respStatus == ATLAS_COAP_RESP_TIMEOUT) {
+        //ATLAS_LOGGER_INFO1("Command timeout on device with identity ", identity_);
+        if (counterTimeouts_ == ATLAS_PUSH_COMMAND_RETRY_NO) {
+            ATLAS_LOGGER_ERROR("Client is in an error state. Abort resending command");
+            /* Reset number of timeouts */
+            counterTimeouts_ = 0;
+        } else {
+            counterTimeouts_++;
+            /* Try to push again the command to device*/
+            pushCommand();
+        }
+    } else {
+        /* If client processed this request and returned an error */
+        //ATLAS_LOGGER_INFO1("Command error on device with identity ", identity_);
+        counterTimeouts_ = 0;
+        markCommandAsDone();
+    } 
+}
+
+void AtlasDevice::pushCommand()
+{
+    if(recvCmds_.empty()) {
+        //ATLAS_LOGGER_INFO1("Empty Q received commands for device " + identity_);
+        return;
+    }
+
+    const AtlasCommandDevice &cmdDevice = recvCmds_.top();
+
+    std::string url = getUrl() + "/" + ATLAS_PUSH_APPROVED_COMMAND;
+
+    ATLAS_LOGGER_DEBUG("Creating command for device");
+
+    if (!isRegistered()) {
+        //ATLAS_LOGGER_INFO1("Cannot push command for OFFLINE device with identity ", identity_);
+        return;
+    }
+
+    if (cmdDevice.getCommandTypeDevice() == ATLAS_CMD_DEVICE_UNKNOWN) {
+        ATLAS_LOGGER_ERROR("Unknown commmand type received from cloud for device with identity " + identity_);
+        return;
+    }
+
+    /* Set DTLS information for this client device */
+    AtlasCoapClient::getInstance().setDtlsInfo(identity_, psk_);
+
+    AtlasCommandBatch cmdBatch;
+    std::pair<const uint8_t*, size_t> cmdBuf;
+
+    ATLAS_LOGGER_DEBUG("Sending command to device...");
+
+    /* Add command */
+    AtlasCommand cmd(cmdDevice.getCommandTypeDevice(), 0, nullptr);
+
+    cmdBatch.addCommand(cmd);
+    cmdBuf = cmdBatch.getSerializedAddedCommands();
+
+    try
+    {
+        /* Send CoAP request */
+        coapToken_ = AtlasCoapClient::getInstance().sendRequest(url, ATLAS_COAP_METHOD_PUT, cmdBuf.first, cmdBuf.second,
+                                                                ATLAS_APPROVED_COMMAND_COAP_TIMEOUT_MS,
+                                                                boost::bind(&AtlasDevice::respCallback, this, _1, _2, _3));
+        std::cout << "CMD WAS SENT " << coapToken_ << std::endl;
+    }
+    catch(const char *e)
+    {
+        ATLAS_LOGGER_ERROR(e);
+    }
+}
+AtlasDevice& AtlasDevice::operator= (const AtlasDevice& other)
+{
+    // check for self-assignment
+    if(&other == this)
+        return *this;
+
+    identity_ = other.identity_;
+    psk_ = other.psk_;
+    deviceCloud_ = other.deviceCloud_;
+    registered_ = false;
+    regIntervalSec_ = 0;
+    keepAlivePkts_ = 0;
+    coapToken_ = nullptr;
+    counterTimeouts_ = 0;
+
+    /* Install default alerts */
+    installDefaultAlerts();
+    /* Init publish-subscribe client id */
+    stats_.setClientId(identity_);
+
+    return *this;
+}
+
+AtlasDevice::~AtlasDevice()
+{
+    /* Destroy reference callbacks to this instance*/
+    AtlasCoapClient::getInstance().cancelRequest(coapToken_);
+    policy_.reset();
 }
 
 } // namespace atlas
