@@ -33,7 +33,7 @@ public:
     * @param[in] payload Command payload
     * @return true if the command was handled without error, false otherwise
     */
-    bool checkCommandPayload(const Json::Value &payload);
+    bool handleClientCommand(const Json::Value &payload);
     
     /**
     * @brief Handle command DONE ACK message
@@ -72,6 +72,13 @@ private:
     * @return none
     */
     AtlasApprove();
+
+    /**
+     * @brief Handle old command
+     * @param[in] payload Cloud command payload
+     * @return True if command was handled successfully, false otherwise
+     */
+    bool handleOldCommand(const Json::Value &payload);
 
     /**
      * @brief Push top-command alarm callback

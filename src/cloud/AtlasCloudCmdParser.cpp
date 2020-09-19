@@ -34,11 +34,9 @@ void AtlasCloudCmdParser::deviceApprovedCmd(const Json::Value &cmdPayload)
 {
     ATLAS_LOGGER_INFO("ATLAS_CMD_GATEWAY_CLIENT command was sent by cloud back-end");
     
-    bool result = AtlasApprove::getInstance().checkCommandPayload(cmdPayload);
-    if(!result) {
+    bool result = AtlasApprove::getInstance().handleClientCommand(cmdPayload);
+    if(!result)
         ATLAS_LOGGER_ERROR("ATLAS_CMD_GATEWAY_CLIENT command returned an error");
-    }
-
 }
 
 void AtlasCloudCmdParser::rcvACKForDONEDeviceCommand(const Json::Value &cmdPayload)
@@ -60,8 +58,6 @@ void AtlasCloudCmdParser::parseCmd(const std::string &cmd)
     Json::Value obj;
 
     reader.parse(cmd, obj);
-
-    std::cout << cmd << std::endl;
 
     if(obj[ATLAS_CMD_TYPE_JSON_KEY].asString() == ATLAS_CMD_GATEWAY_GET_ALL_DEVICES)
         getAllDevicesCmd();

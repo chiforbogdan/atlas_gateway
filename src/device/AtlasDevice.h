@@ -284,7 +284,7 @@ private:
     * @param[in] resp_payload_len CoAP response payload length
     * @return none
     */
-    void respCallback(AtlasCoapResponse respStatus, const uint8_t *resp_payload, size_t resp_payload_len);
+    void deviceCmdRespCallback(AtlasCoapResponse respStatus, const uint8_t *resp_payload, size_t resp_payload_len);
   
     /**
      * @brief Mark command as DONE (executed by client)
@@ -354,10 +354,9 @@ private:
     std::priority_queue<AtlasCommandDevice> execCmds_;
 
     /* CoAP context*/
-    void *coapToken_;
+    void *coapDeviceCmdToken_;
     /* Counter for timeouts*/
-    uint8_t counterTimeouts_;
-
+    uint8_t deviceCmdTimeouts_;
 };
 
 } // namespace atlas

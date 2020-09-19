@@ -44,6 +44,7 @@ public:
      * @brief Get command type for client
      * @return command type device
      */
+
     inline uint16_t getCommandTypeDevice() const { return commandTypeDevice_; }
 
 private:
@@ -54,6 +55,7 @@ private:
     /* Command type from cloud*/
     std::string commandTypeCloud_;
     /* Command type to device*/
+    // TODO set this to enum type!
     uint16_t commandTypeDevice_;
     /* Command payload */
     std::string commandPayload_;
