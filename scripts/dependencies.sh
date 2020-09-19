@@ -99,6 +99,24 @@ echo "*********************************************************"
 echo "****************** JSON support added *******************"
 echo "*********************************************************"
 
+# Add support for nghttp2
+echo "*********************************************************"
+echo "**************** Adding support for nghttp2 *************"
+echo "*********************************************************"
+git clone https://github.com/nghttp2/nghttp2.git
+cd nghttp2
+git submodule update --init
+autoreconf -i
+automake
+autoconf
+./configure --enable-asio-lib
+make
+sudo make install
+cd ..
+echo "*********************************************************"
+echo "****************** nghttp2 support added ****************"
+echo "*********************************************************"
+
 # Install and build customized Eclipse Mosquitto
 echo "*********************************************************"
 echo "************* Installing Eclipse Mosquitto **************"

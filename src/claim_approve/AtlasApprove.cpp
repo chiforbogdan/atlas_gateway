@@ -58,7 +58,7 @@ void AtlasApprove::start()
         ATLAS_LOGGER_INFO("Uncommited select on device commands in getMaxSequenceNumber function");
         
     }
-    //pushCommandAlarm_.start();
+    pushCommandAlarm_.start();
 }
 
 

@@ -29,7 +29,7 @@ AtlasHttpServer::AtlasHttpServer() : tls_(boost::asio::ssl::context::tlsv13)
 
 bool AtlasHttpServer::start(const std::string &certFile, const std::string &privKeyFile, int port)
 {
-    boost::system::error_code ec;
+    static boost::system::error_code ec;
 
     tls_.use_private_key_file(privKeyFile, boost::asio::ssl::context::pem);
     tls_.use_certificate_chain_file(certFile);
@@ -133,6 +133,11 @@ bool AtlasHttpServer::addCallback(const AtlasHttpCallback &httpCallback)
         callbacks_[httpCallback.getPath()] = httpCallback;
     
     return ret;
+}
+
+AtlasHttpServer::~AtlasHttpServer()
+{
+    std::cout<<"Http server dtor!\n";
 }
 
 } // namespace atlas

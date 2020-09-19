@@ -45,6 +45,12 @@ public:
      */
     inline boost::asio::io_service& getService() { assert(server_.io_services().size() == 1); return *server_.io_services()[0]; }
 
+    /**
+     * @brief Default dtor
+     * @return none
+     */
+    ~AtlasHttpServer();
+
 private:
     /**
      * @brief Default ctor

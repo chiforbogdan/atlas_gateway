@@ -401,6 +401,13 @@ void AtlasDevice::pushCommand()
         return;
     }
 
+    //FOR TEST PURPOSE
+    counterTimeouts_ = 0;
+    /* Mark command as DONE (executed by the client) */
+    markCommandAsDone(); 
+    return;
+    //////////////////
+
     const AtlasCommandDevice &cmdDevice = recvCmds_.top();
 
     std::string url = getUrl() + "/" + ATLAS_PUSH_APPROVED_COMMAND;
