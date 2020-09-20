@@ -41,6 +41,7 @@ void AtlasRegisterCloud::sendRegisterCmd()
         ATLAS_LOGGER_INFO("REGISTER command was sent to cloud back-end. Sync all devices...");
         registered_ = true;
         AtlasDeviceManager::getInstance().getDeviceCloud()->allDevicesUpdate();
+        AtlasDeviceManager::getInstance().getDeviceCloud()->gatewayFullUpdate();
     }
 }
 

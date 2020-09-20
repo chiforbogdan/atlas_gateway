@@ -81,23 +81,23 @@ void AtlasHttpServer::handleRequest(const request &req, const response &res)
         method = AtlasHttpMethod::ATLAS_HTTP_DEL;
     else {
         ATLAS_LOGGER_ERROR("Unsupported HTTP method " + req.method() + " for path: " + req.uri().path);
-	res.write_head(404);
-	res.end();
-	return;
+	    res.write_head(404);
+        res.end();
+        return;
     }
 
     if (method != callback.getMethod()) {
         ATLAS_LOGGER_ERROR("HTTP method " + req.method() + " unavailable for path: " + req.uri().path);
         res.write_head(404);
-	res.end();
-	return;
+        res.end();
+        return;
     }
 
     if (!callback.getHandler()) {
         ATLAS_LOGGER_ERROR("Handler method unavailbale for path: " + req.uri().path);
-	res.write_head(404);
+        res.write_head(404);
         res.end();
-	return;
+        return;
     }
 
     req.on_data([method, callback, &res] (const uint8_t *data, std::size_t len) { 
@@ -106,13 +106,13 @@ void AtlasHttpServer::handleRequest(const request &req, const response &res)
 
         std::string reqPayload((const char*) data, len);
         
-	/* Execute high layer application callback (post the operation on the main scheduler thread) */
-	AtlasScheduler::getInstance().getService().post([method, callback, reqPayload, &res] () {
+        /* Execute high layer application callback (post the operation on the main scheduler thread) */
+        AtlasScheduler::getInstance().getService().post([method, callback, reqPayload, &res] () {
             ATLAS_LOGGER_INFO("Execute HTTP callback handler for path: " + callback.getPath());
-	    AtlasHttpResponse httpResp = callback.getHandler()(method, callback.getPath(), reqPayload);
+            AtlasHttpResponse httpResp = callback.getHandler()(method, callback.getPath(), reqPayload);
 
             /* Post response back on the HTTP server thread */
-	    AtlasHttpServer::getInstance().getService().post([httpResp, &res]() {
+            AtlasHttpServer::getInstance().getService().post([httpResp, &res]() {
                 /* Set response status */
                 res.write_head(httpResp.getStatusCode());
                 /* Set response payload */

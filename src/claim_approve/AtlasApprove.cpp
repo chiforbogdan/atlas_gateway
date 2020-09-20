@@ -166,7 +166,7 @@ bool AtlasApprove::handleClientCommand(const Json::Value &payload)
     }
 
 
-    if(!AtlasClaim::getInstance().isClaimed()) {
+    if(!AtlasDeviceManager::getInstance().getGateway().isClaimed()) {
         ATLAS_LOGGER_INFO("Received a command for an unclaimed gateway!");
         /* If gateway is unclaimed, the received command does not need to be authorized*/
     } else {

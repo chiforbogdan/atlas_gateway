@@ -21,24 +21,6 @@ public:
      */
     bool start();
 
-    /**
-     * @brief Indicates if the gateway is claimed
-     * @return true if gateway is claimed, false otherwise
-     */
-    bool isClaimed() const { return claimed_; }
-
-    /**
-     * @brief Get owner secret key
-     * @return Owner secret key
-     */
-    std::string getOwnerSecretKey() const { return ownerSecretKey_; }
-
-    /**
-     * @brief Get owner identity
-     * @return Owner identity 
-     */
-    std::string getOwnerIdentity() const { return ownerIdentity_; }
-
 private:
 
     /**
@@ -79,15 +61,6 @@ private:
 
     /* Short code used for authenticating claim requests */
     std::string shortCode_;
-
-    /* Indicates if gateway is claimed by an owner */
-    bool claimed_;
-
-    /* Holds the owner secret key */
-    std::string ownerSecretKey_;
-    
-    /* Holds the owner identity */
-    std::string ownerIdentity_;
 };
 
 } // namespace atlas

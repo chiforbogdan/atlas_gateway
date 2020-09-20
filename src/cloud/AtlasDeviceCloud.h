@@ -29,6 +29,19 @@ public:
     */
     void allDevicesUpdate();
 
+    /**
+     * @brief Update gateway information to the cloud back-end
+     * @param[in] jsonInfo Information to be updated (JSON serialized)
+     * @return none
+     */
+    void updateGateway(const std::string &jsonInfo);
+
+    /**
+     * @brief Execute a full gateway update to the cloud back-end
+     * @return none
+     */
+    void gatewayFullUpdate();
+
 private:
     /**
     * @brief Sync alarm callback

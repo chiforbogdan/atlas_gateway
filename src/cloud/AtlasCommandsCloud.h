@@ -12,6 +12,7 @@ const std::string ATLAS_CMD_TYPE_JSON_KEY = "commandType";
 const std::string ATLAS_CMD_PAYLOAD_JSON_KEY = "commandPayload";
 
 /* Cloud command type sent from gateway to cloud */
+const std::string ATLAS_CMD_GATEWAY_INFO_UPDATE = "ATLAS_CMD_GATEWAY_INFO_UPDATE";
 const std::string ATLAS_CMD_GATEWAY_CLIENT_INFO_UPDATE = "ATLAS_CMD_GATEWAY_CLIENT_INFO_UPDATE";
 const std::string ATLAS_CMD_GATEWAY_REGISTER = "ATLAS_CMD_GATEWAY_REGISTER";
 const std::string ATLAS_CMD_GATEWAY_KEEPALIVE = "ATLAS_CMD_GATEWAY_KEEPALIVE";
