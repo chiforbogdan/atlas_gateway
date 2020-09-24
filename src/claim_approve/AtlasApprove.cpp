@@ -7,6 +7,7 @@
 #include "../cloud/AtlasCommandsCloud.h"
 #include "../mqtt_client/AtlasMqttClient.h"
 #include "../identity/AtlasIdentity.h"
+#include <openssl/hmac.h>
 
 namespace atlas {
 
@@ -19,6 +20,7 @@ const std::string ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY = "clientIdentity";
 const std::string ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY = "type";
 const std::string ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY = "payload";
 const std::string ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY = "seqNo";
+const std::string ATLAS_CMD_PAYLOAD_HMAC_KEY = "hmac";
 
 /* Check Q at every 30 sec */
 const int ATLAS_PUSH_COMMAND_ALARM_PERIOD_MS = 30000;
@@ -134,6 +136,7 @@ bool AtlasApprove::handleOldCommand(const Json::Value &payload)
         }
 
         return true;
+
     } else {
         /* Command is not executed by client, but was previously acknowledged by gateway */
         result = responseCommandACK();
@@ -172,7 +175,19 @@ bool AtlasApprove::handleClientCommand(const Json::Value &payload)
     } else {
         ATLAS_LOGGER_INFO("Received an approved command for a claimed gateway!");
         /* If gateway is claimed, the received command need to be authorized(HMAC)*/
-        //TODO - check HMAC SHA256: (gatewayId + clientId + clientCommandType + clientCommandPayload + seqNo)
+        //HMAC SHA256: (gatewayId + clientId + clientCommandType + clientCommandPayload + seqNo)
+        std::string input = AtlasIdentity::getInstance().getIdentity() + 
+                            payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString() +
+                            payload[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString() +
+                            payload[ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY].asString() +
+                            payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asString();
+
+        std::string digest = hmacSha256OnRcvData(AtlasDeviceManager::getInstance().getGateway().getOwnerSecretKey(), input);
+
+        if(digest != payload[ATLAS_CMD_PAYLOAD_HMAC_KEY].asString()) {
+            ATLAS_LOGGER_ERROR("The received data was changed in transit!");
+            return false;
+        }
     }
 
     /* Handle commands with an old sequence number */
@@ -340,6 +355,27 @@ void AtlasApprove::handleCommandDoneAck(const Json::Value &payload)
     device->GetQExecCommands().pop();
 
     // TODO call responseCommandDONE again to send additional commands in the done list (drain list)!!!
+}
+
+std::string AtlasApprove::hmacSha256OnRcvData(const std::string &key, const std::string &msg)
+{
+    unsigned int len = 32;
+    unsigned char hash[len];
+
+    HMAC_CTX *ctx = HMAC_CTX_new();
+    HMAC_Init_ex(ctx, &key[0], key.length(), EVP_sha256(), NULL);
+    HMAC_Update(ctx, (unsigned char*)&msg[0], msg.length());
+    HMAC_Final(ctx, hash, &len);
+    HMAC_CTX_free(ctx);
+
+    std::stringstream ss;
+    ss << std::setfill('0');
+    for (uint8_t i = 0; i < len; i++)
+    {
+        ss  << hash[i];
+    }
+
+    return (ss.str());
 }
 
 } // namespace atlas

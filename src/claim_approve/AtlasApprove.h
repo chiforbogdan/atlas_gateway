@@ -63,6 +63,14 @@ public:
     */
     inline void setSequenceNumber(uint32_t cmdSeqNo) { sequenceNumber_ = cmdSeqNo; }
 
+    /**
+    * @brief Keyed hash function used for message authentication (HMAC-SHA256)
+    * @param[in] key Hmac key
+    * @param[in] msg Hmac message
+    * @return digest
+    */
+    std::string hmacSha256OnRcvData(const std::string &key, const std::string &msg);
+
     AtlasApprove(const AtlasApprove &) = delete;
     AtlasApprove& operator=(const AtlasApprove &) = delete;
 
