@@ -224,7 +224,6 @@ bool AtlasApprove::handleClientCommand(const Json::Value &payload)
     /* TODO Replace this with a method called addClientCommand */
     device->GetQRecvCommands().push(std::move(cmd));
 
-    /* TODO Save seq no in database in the owner table */
     sequenceNumber_ = payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt();
     result = responseCommandACK();
     if(!result) {

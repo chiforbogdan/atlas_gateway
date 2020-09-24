@@ -40,6 +40,7 @@ namespace {
 
                                     "CREATE TABLE IF NOT EXISTS Owner("  \
                                     "Id INTEGER PRIMARY KEY AUTOINCREMENT," \
+                                    "MaxSequenceNumber INTEGER DEFAULT 0," \
                                     "SecretKey TEXT NOT NULL," \
                                     "Identity TEXT NOT NULL );" \
 
@@ -128,10 +129,8 @@ namespace {
                                                      "WHERE Device.Identity=?;";
     const char *SQL_DELETE_DEVICE_COMMAND_BY_SEQ_NO = "DELETE FROM DeviceCommand "\
                                                       "WHERE DeviceCommand.SequenceNumber=?;";
-    const char *SQL_GET_MAX_SEQ_NO =    "SELECT DeviceCommand.SequenceNumber FROM DeviceCommand "\
-                                        "WHERE DeviceCommand.IsExecuted=0 "\
-                                        "ORDER BY DeviceCommand.SequenceNumber DESC "\
-                                        "LIMIT 1;";
+    const char *SQL_GET_MAX_SEQ_NO =    "SELECT Owner.MaxSequenceNumber FROM Owner;";
+    const char *SQL_UPDATE_MAX_SEQ_NO =    "UPDATE Owner SET MaxSequenceNumber=?;";
 
 } // anonymous namespace
 
@@ -939,6 +938,12 @@ bool AtlasSQLite::insertDeviceCommand(const uint32_t sequenceNumber, const std::
         return false;
     }
 
+    /*insert current sequence number in owner table*/
+    bool ret = updateMaxSequenceNumber(sequenceNumber);
+    if (!ret) {
+        ATLAS_LOGGER_ERROR("Error in updateMaxSequenceNumber call");
+        return false;
+    }
     return true;
 }
 
@@ -1183,12 +1188,43 @@ bool AtlasSQLite::getMaxSequenceNumber()
     }
 
     if (stat == SQLITE_DONE) {
-        ATLAS_LOGGER_INFO("No device commands in database. No sequence number initialization!");
+        ATLAS_LOGGER_INFO("No owner entry in database. No sequence number initialization!");
         return true;
     }
 
     AtlasApprove::getInstance().setSequenceNumber(sqlite3_column_int(stmt, 0));
     
+    return true;
+}
+
+bool AtlasSQLite::updateMaxSequenceNumber(const uint32_t sequenceNumber) 
+{
+    sqlite3_stmt *stmt = nullptr;
+    int stat = -1;
+
+    BOOST_SCOPE_EXIT(&stmt) {
+        sqlite3_finalize(stmt);
+    } BOOST_SCOPE_EXIT_END
+    
+    if(!isConnected_)
+        return false;
+
+    if(sqlite3_prepare_v2(pCon_, SQL_UPDATE_MAX_SEQ_NO,-1, &stmt, 0) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not prepare, fct:updateMaxSequenceNumber, stmt:SQL_UPDATE_MAX_SEQ_NO, error:" + std::string(sqlite3_errmsg(pCon_)));
+	    return false;
+    }
+
+    if (sqlite3_bind_int(stmt, 1, sequenceNumber) != SQLITE_OK) {
+        ATLAS_LOGGER_ERROR("Could not bind, fct:updateMaxSequenceNumber, stmt:SQL_UPDATE_MAX_SEQ_NO, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
+    stat = sqlite3_step(stmt);
+    if (stat != SQLITE_DONE && stat != SQLITE_ROW) {
+        ATLAS_LOGGER_ERROR("Could not step, fct:updateMaxSequenceNumber, stmt:SQL_UPDATE_MAX_SEQ_NO, error:" + std::string(sqlite3_errmsg(pCon_)));
+        return false;
+    }
+
     return true;
 }
 

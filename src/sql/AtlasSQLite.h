@@ -281,6 +281,13 @@ private:
     */
     bool updateFeatures(const std::string &identity, int networkTypeId, AtlasDeviceFeatureManager &manager);
 
+    /**
+     * @brief Execute query on database: update global sequence number
+     * @param[in] sequenceNumber Command sequence number
+     * @return true on success, false on error
+     */
+    bool updateMaxSequenceNumber(const uint32_t sequenceNumber);
+
     /*status of the connection*/
     bool isConnected_;	 
 
