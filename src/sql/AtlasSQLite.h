@@ -10,6 +10,7 @@
 #include "../statistics/AtlasFirewallStats.h"
 #include "../commands/AtlasCommandDevice.h"
 #include "../claim_approve/AtlasApprove.h"
+#include "../device/AtlasDevice.h"
 
 namespace atlas {
 
@@ -188,12 +189,10 @@ public:
 
     /**
     * @brief Execute query on database: select, get device commands based on device identity
-    * @param[in] identity Device identity
-    * @param[in] recvCmds priority_queue<AtlasCommandDevice>
-    * @param[in] execCmds priority_queue<AtlasCommandDevice>
+    * @param[in] device Device client
     * @return true on success, false on error
     */
-    bool selectDeviceCommand(const std::string &identity, std::priority_queue<AtlasCommandDevice> &recvCmds, std::priority_queue<AtlasCommandDevice> &execCmds);
+    bool selectDeviceCommand(AtlasDevice &device);
 
     /**
      * @brief Execute query on database: delete a device command by sequence number

@@ -7,6 +7,19 @@
 
 namespace atlas {
 
+enum AtlasCommandDeviceType
+{
+    /* Approved commands for devices*/
+    /* Restart command: payload is empty*/
+    ATLAS_CMD_DEVICE_RESTART = 0,
+
+    /* Shutdown command: payload is empty*/
+    ATLAS_CMD_DEVICE_SHUTDOWN,
+
+    /* Unknown command: payload is empty*/
+    ATLAS_CMD_DEVICE_UNKNOWN
+};
+
 class AtlasCommandDevice
 {
 
@@ -44,8 +57,19 @@ public:
      * @brief Get command type for client
      * @return command type device
      */
+    inline AtlasCommandDeviceType getCommandTypeDevice() const { return commandTypeDevice_; }
 
-    inline uint16_t getCommandTypeDevice() const { return commandTypeDevice_; }
+    /**
+     * @brief Get command type for client
+     * @return command type device
+     */
+    inline bool isInProgress() const { return inProgress; }
+
+    /**
+     * @brief Get command type for client
+     * @return command type device
+     */
+    inline void setInProgress(bool inProgressParam) const { inProgress = inProgressParam; }
 
 private:
     /* Client device identity */
@@ -55,10 +79,11 @@ private:
     /* Command type from cloud*/
     std::string commandTypeCloud_;
     /* Command type to device*/
-    // TODO set this to enum type!
-    uint16_t commandTypeDevice_;
+    AtlasCommandDeviceType commandTypeDevice_;
     /* Command payload */
     std::string commandPayload_;
+    /* if true, the command was sent to client*/
+    mutable bool inProgress;
 };
 
 } // namespace atlas

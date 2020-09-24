@@ -50,11 +50,10 @@ public:
 
     /**
     * @brief Response with a DONE status to cloud back-end for a specific sequence number
-    * @param[in] cmdSeqNo Command sequence number
     * @param[in] deviceIdentity Client device identity associated with this command
     * @return true if the command was notified without error, false otherwise
     */
-    bool responseCommandDONE(uint32_t cmdSeqNo, const std::string &deviceIdentity);
+    bool responseCommandDONE(const std::string &deviceIdentity);
 
     /**
     * @brief Set sequenceNumber on this gateway

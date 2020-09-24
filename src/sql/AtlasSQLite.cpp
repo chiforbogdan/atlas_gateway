@@ -1082,7 +1082,7 @@ bool AtlasSQLite::markExecutedDeviceCommand(const uint32_t sequenceNumber)
     return true;
 }
 
-bool AtlasSQLite::selectDeviceCommand(const std::string &identity, std::priority_queue<AtlasCommandDevice> &recvCmds, std::priority_queue<AtlasCommandDevice> &execCmds)
+bool AtlasSQLite::selectDeviceCommand(AtlasDevice &device)
 {
     sqlite3_stmt *stmt = nullptr;
     int stat = -1;
@@ -1100,7 +1100,7 @@ bool AtlasSQLite::selectDeviceCommand(const std::string &identity, std::priority
 	    return false;
     }
 
-    if (sqlite3_bind_text(stmt, 1, identity.c_str(), identity.length(),	SQLITE_STATIC) != SQLITE_OK) {
+    if (sqlite3_bind_text(stmt, 1, device.getIdentity().c_str(), device.getIdentity().length(),	SQLITE_STATIC) != SQLITE_OK) {
         ATLAS_LOGGER_ERROR("Could not bind, fct:selectDeviceCommand, stmt:SQL_GET_DEVICE_COMMAND_BY_IDENTITY, error:" + std::string(sqlite3_errmsg(pCon_)));
         return false;
     }
@@ -1117,14 +1117,14 @@ bool AtlasSQLite::selectDeviceCommand(const std::string &identity, std::priority
             return false;
         }
 
-        AtlasCommandDevice cmd(identity, sqlite3_column_int(stmt, 0), 
+        AtlasCommandDevice cmd(device.getIdentity(), sqlite3_column_int(stmt, 0), 
                                std::string((const char *) sqlite3_column_text(stmt, 1)), 
                                std::string((const char *) sqlite3_column_text(stmt, 2)));
 
         if(sqlite3_column_int(stmt, 3) == 0) {
-            recvCmds.push(std::move(cmd));
+            device.addRecvDeviceCommand(std::move(cmd));
         } else {
-            execCmds.push(std::move(cmd));
+            device.addExecDeviceCommand(std::move(cmd));
         }
             
     }

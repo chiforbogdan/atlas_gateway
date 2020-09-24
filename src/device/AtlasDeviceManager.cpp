@@ -336,7 +336,7 @@ void AtlasDeviceManager::initDeviceCommands(AtlasDevice &device)
         /* Get from db*/
         ATLAS_LOGGER_INFO("Get data from local.db");
         
-        result = AtlasSQLite::getInstance().selectDeviceCommand(device.getIdentity(), device.GetQRecvCommands(), device.GetQExecCommands());
+        result = AtlasSQLite::getInstance().selectDeviceCommand(device);
         if (result) {
 
             ATLAS_LOGGER_INFO("Device commands for device with identity " + device.getIdentity() + " are in memory");

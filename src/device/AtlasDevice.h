@@ -216,16 +216,34 @@ public:
     void syncFirewallStatistics();
 
     /**
-    * @brief Get priority Q with received commands
-    * @return Reference to recvCmds_
+    * @brief Add device command in recv Q
+    * @return none
     */
-    inline std::priority_queue<AtlasCommandDevice>& GetQRecvCommands() {return recvCmds_;};
+    void addRecvDeviceCommand(const AtlasCommandDevice &cmd) {recvCmds_.push(cmd);}
 
     /**
-    * @brief Get priority Q with executed commands
-    * @return Reference to execCmds_
+    * @brief Add device command in exec Q
+    * @return none
     */
-    inline std::priority_queue<AtlasCommandDevice>& GetQExecCommands() {return execCmds_;};
+    void addExecDeviceCommand(const AtlasCommandDevice &cmd) {execCmds_.push(cmd);}
+
+    /**
+    * @brief Check if exec Q is empty
+    * @return true if exec Q is not empty, false otherwise
+    */
+    inline bool isExecCommandAvailable() {return !execCmds_.empty();}
+
+    /**
+    * @brief Get top command from exec Q
+    * @return AtlasCommandDevice reference for top Q
+    */
+    inline const AtlasCommandDevice& getExecutedCommand() const {return execCmds_.top();}
+
+    /**
+    * @brief Remove top command from exec Q (pop)
+    * @return none
+    */
+    inline void removeExecutedCommand() {execCmds_.pop();}
 
     /**
     * @brief Push command to client

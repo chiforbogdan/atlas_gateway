@@ -21,16 +21,17 @@ const std::string ATLAS_CMD_DEVICE_SHUTDOWN_CLOUD = "ATLAS_CMD_CLIENT_DEVICE_SHU
 
 
 AtlasCommandDevice::AtlasCommandDevice( const std::string &deviceIdentity, const uint32_t sequenceNumber, 
-                                        const std::string &commandType, const std::string &commandPayload) : 
+                                        const std::string &commandType, const std::string &commandPayload): 
                                         deviceIdentity_(deviceIdentity), sequenceNumber_(sequenceNumber), 
-                                        commandTypeCloud_(commandType), commandPayload_(commandPayload)
+                                        commandTypeCloud_(commandType), commandPayload_(commandPayload),
+                                        inProgress(false)
 {
     if(commandType == ATLAS_CMD_DEVICE_RESTART_CLOUD)
-        commandTypeDevice_ = ATLAS_CMD_DEVICE_RESTART;
+        commandTypeDevice_ = AtlasCommandDeviceType::ATLAS_CMD_DEVICE_RESTART;
     else if(commandType == ATLAS_CMD_DEVICE_SHUTDOWN_CLOUD)
-        commandTypeDevice_ = ATLAS_CMD_DEVICE_SHUTDOWN;
+        commandTypeDevice_ = AtlasCommandDeviceType::ATLAS_CMD_DEVICE_SHUTDOWN;
     else
-        commandTypeDevice_ = ATLAS_CMD_DEVICE_UNKNOWN;
+        commandTypeDevice_ = AtlasCommandDeviceType::ATLAS_CMD_DEVICE_UNKNOWN;
 }
 
 } // namespace atlas

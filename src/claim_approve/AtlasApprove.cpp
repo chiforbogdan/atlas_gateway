@@ -81,11 +81,9 @@ void AtlasApprove::alarmCallback()
                                                         device.pushCommand();
 
                                                         /* Event for sending DONE notification for executed device commands to cloud (got notified by client in a scheduled DONE window) */
-                                                        // TODO encapsulate this: isExecCommandAvailable() -> bool, getExecutedCommand() -> AtlasCommandDevice&
-                                                        if (!device.GetQExecCommands().empty()) {
-                                                            const AtlasCommandDevice &cmd = device.GetQExecCommands().top();
-                                                            bool result = AtlasApprove::getInstance().responseCommandDONE(cmd.getSequenceNumber(),
-                                                                                                                          cmd.getDeviceIdentity());
+                                                        if (device.isExecCommandAvailable()) {
+                                                            const AtlasCommandDevice &cmd = device.getExecutedCommand();
+                                                            bool result = AtlasApprove::getInstance().responseCommandDONE(cmd.getDeviceIdentity());
                                                             if(!result) {
                                                                 ATLAS_LOGGER_ERROR("DONE message was not sent to cloud back-end");
                                                                 return;
@@ -127,8 +125,7 @@ bool AtlasApprove::handleOldCommand(const Json::Value &payload)
     /* If command is already executed */
     if(result) {
         /* Send directly DONE status if the command is already executed and the cloud did not received the ACK status until now*/
-        result = responseCommandDONE(payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt(),
-                                     payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString());
+        result = responseCommandDONE(payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString());
 
         if(!result) {
             ATLAS_LOGGER_ERROR("DONE message was not sent to cloud back-end");
@@ -221,8 +218,7 @@ bool AtlasApprove::handleClientCommand(const Json::Value &payload)
                            payload[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString(),
                            payload[ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY].asString());
 
-    /* TODO Replace this with a method called addClientCommand */
-    device->GetQRecvCommands().push(std::move(cmd));
+    device->addRecvDeviceCommand(std::move(cmd));
 
     sequenceNumber_ = payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt();
     result = responseCommandACK();
@@ -277,19 +273,24 @@ bool AtlasApprove::responseCommandACK()
     return delivered;
 }
 
-bool AtlasApprove::responseCommandDONE(uint32_t cmdSeqNo, const std::string &deviceIdentity)
+bool AtlasApprove::responseCommandDONE(const std::string &deviceIdentity)
 {
     Json::FastWriter fastWriter;
     Json::Value cmd;
 
-    // TODO get top cmd from AtlasDevice (exec q). Remove cmdSeqNo as param
+    AtlasDevice *device = AtlasDeviceManager::getInstance().getDevice(deviceIdentity);
+    if(!device) {
+        ATLAS_LOGGER_ERROR("No client device exists with identity " + deviceIdentity);
+        return false;
+    }
+    const AtlasCommandDevice &cmdDevice = device->getExecutedCommand();
 
     ATLAS_LOGGER_INFO("Send DONE response to cloud back-end");
     
     /* Set command type */
     cmd[ATLAS_CMD_TYPE_JSON_KEY] = ATLAS_CMD_GATEWAY_CLIENT_DONE;
     /* Set command payload */
-    cmd[ATLAS_CMD_PAYLOAD_JSON_KEY][ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY] = cmdSeqNo;
+    cmd[ATLAS_CMD_PAYLOAD_JSON_KEY][ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY] = cmdDevice.getSequenceNumber();
     /* Set client identity */
     cmd[ATLAS_CMD_PAYLOAD_JSON_KEY][ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY] = deviceIdentity;
 
@@ -323,13 +324,13 @@ void AtlasApprove::handleCommandDoneAck(const Json::Value &payload)
 
     std::cout << "Step1\n";
 
-    if (device->GetQExecCommands().empty()) {
+    if (!device->isExecCommandAvailable()) {
         ATLAS_LOGGER_ERROR("ATLAS_CMD_GATEWAY_ACK_FOR_DONE_COMMAND Q of executed device commands is empty");
         return;
     }
 
 
-    const AtlasCommandDevice &cmd = device->GetQExecCommands().top();    
+    const AtlasCommandDevice &cmd = device->getExecutedCommand();    
     std::cout << "Step2 " << cmd.getSequenceNumber() << " vs " << payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt() << std::endl;
     if (cmd.getSequenceNumber() != payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt()) {
         ATLAS_LOGGER_ERROR("Client command sequence number mismatch when processing ACK message for a DONE command");
@@ -351,9 +352,10 @@ void AtlasApprove::handleCommandDoneAck(const Json::Value &payload)
         return;
     }
 
-    device->GetQExecCommands().pop();
+    device->removeExecutedCommand();
 
-    // TODO call responseCommandDONE again to send additional commands in the done list (drain list)!!!
+    /* send additional commands in the done list (drain list)! */
+    responseCommandDONE(device->getIdentity());
 }
 
 std::string AtlasApprove::hmacSha256OnRcvData(const std::string &key, const std::string &msg)
