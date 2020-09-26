@@ -40,9 +40,15 @@ namespace {
 
                                     "CREATE TABLE IF NOT EXISTS Owner("  \
                                     "Id INTEGER PRIMARY KEY AUTOINCREMENT," \
-                                    "MaxSequenceNumber INTEGER DEFAULT 0," \
                                     "SecretKey TEXT NOT NULL," \
                                     "Identity TEXT NOT NULL );" \
+
+                                    "CREATE TABLE IF NOT EXISTS GatewayMisc("  \
+                                    "Id INTEGER PRIMARY KEY AUTOINCREMENT," \
+                                    "MaxSequenceNumber INTEGER NOT NULL);" \
+
+                                    "INSERT INTO GatewayMisc(MaxSequenceNumber)" \
+                                    "SELECT 0 WHERE NOT EXISTS(SELECT 1 FROM GatewayMisc WHERE Id = 1);" \
 
                                     "CREATE TABLE IF NOT EXISTS DeviceCommand("  \
                                     "Id INTEGER PRIMARY KEY AUTOINCREMENT," \
@@ -129,8 +135,9 @@ namespace {
                                                      "WHERE Device.Identity=?;";
     const char *SQL_DELETE_DEVICE_COMMAND_BY_SEQ_NO = "DELETE FROM DeviceCommand "\
                                                       "WHERE DeviceCommand.SequenceNumber=?;";
-    const char *SQL_GET_MAX_SEQ_NO =    "SELECT Owner.MaxSequenceNumber FROM Owner;";
-    const char *SQL_UPDATE_MAX_SEQ_NO =    "UPDATE Owner SET MaxSequenceNumber=?;";
+
+    const char *SQL_GET_MAX_SEQ_NO =    "SELECT GatewayMisc.MaxSequenceNumber FROM GatewayMisc;";
+    const char *SQL_UPDATE_MAX_SEQ_NO =    "UPDATE GatewayMisc SET MaxSequenceNumber=?;";
 
 } // anonymous namespace
 
