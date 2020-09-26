@@ -339,15 +339,15 @@ void AtlasDevice::setFeature(const std::string &featureType, const std::string &
 
 void AtlasDevice::markCommandAsDone()
 {
-    //ATLAS_LOGGER_INFO1("Mark command as done on device with identity ", identity_);
+    ATLAS_LOGGER_INFO("Mark command as done on device with identity " + identity_);
 
     if (recvCmds_.empty()) {
-        ATLAS_LOGGER_ERROR("Q received commands is empty! Mark command as done failed!");
+        ATLAS_LOGGER_ERROR("List with received commands is empty!");
         return;
     }
 
-    /* The value from top is stored into cmdDevice once, and never changed afterwards. */
-    const AtlasCommandDevice &cmdDevice = recvCmds_.top();
+    /* The value from head is stored into cmdDevice once, and never changed afterwards. */
+    const AtlasCommandDevice &cmdDevice = recvCmds_.front();
 
     bool result = AtlasSQLite::getInstance().markExecutedDeviceCommand(cmdDevice.getSequenceNumber());
     if (!result) {
@@ -355,20 +355,26 @@ void AtlasDevice::markCommandAsDone()
         return;
     }
    
-    /* Transfer the device command from recv to exec Q */
-    execCmds_.push(cmdDevice);
+    /* Transfer the device command from recv to the end of exec container */
+    execCmds_.push_back(cmdDevice);
  
     /* Send command DONE status to cloud back-end */
     result = AtlasApprove::getInstance().responseCommandDONE(identity_);
     if (!result)
         ATLAS_LOGGER_ERROR("DONE message was not sent to cloud back-end");
  
-    recvCmds_.pop();
+    /* Removes the first element of the container */
+    recvCmds_.pop_front();
 }
 
 void AtlasDevice::deviceCmdRespCallback(AtlasCoapResponse respStatus, const uint8_t *resp_payload, size_t resp_payload_len)
 {
     ATLAS_LOGGER_INFO("Command CoAP response for client with identity " + identity_);
+
+    if(recvCmds_.empty()) {
+        ATLAS_LOGGER_ERROR("Container recv is empty for client with identity " + identity_);
+        return;
+    }
 
     /* If request is successful, the command need to be marked */
     if (respStatus == ATLAS_COAP_RESP_OK) {
@@ -377,11 +383,11 @@ void AtlasDevice::deviceCmdRespCallback(AtlasCoapResponse respStatus, const uint
         deviceCmdTimeouts_ = 0;
         /* Mark command as DONE (executed by the client) */
         markCommandAsDone(); 
-        /* Drain the recv q (TODO : transform q to list)! */
+        /* Drain the recv container */
         pushCommand(); 
     } else if (respStatus == ATLAS_COAP_RESP_TIMEOUT) {
         ATLAS_LOGGER_INFO("Command timeout on device with identity " + identity_);
-        recvCmds_.top().setInProgress(false);
+        recvCmds_.front().setInProgress(false);
 
         if (deviceCmdTimeouts_ == ATLAS_PUSH_COMMAND_RETRY_NO) {
             ATLAS_LOGGER_ERROR("Client is in an error state. Abort resending command");
@@ -397,14 +403,14 @@ void AtlasDevice::deviceCmdRespCallback(AtlasCoapResponse respStatus, const uint
         ATLAS_LOGGER_INFO("Command error on device with identity " + identity_);
         deviceCmdTimeouts_ = 0;
 
-        recvCmds_.top().setInProgress(false);
+        recvCmds_.front().setInProgress(false);
     } 
 }
 
 void AtlasDevice::pushCommand()
 {
     if(recvCmds_.empty()) {
-        ATLAS_LOGGER_INFO("Empty rcv Q for device " + identity_);
+        ATLAS_LOGGER_INFO("Empty rcv container for device " + identity_);
         return;
     }
 
@@ -420,10 +426,10 @@ void AtlasDevice::pushCommand()
         return;
     }
 
-    const AtlasCommandDevice &cmdDevice = recvCmds_.top();
+    const AtlasCommandDevice &cmdDevice = recvCmds_.front();
 
     if(cmdDevice.isInProgress()) {
-        ATLAS_LOGGER_INFO("The top command [seq no:" +std::to_string(cmdDevice.getSequenceNumber())+ "] from recv Q is already on client side! Waitting for reply ...");
+        ATLAS_LOGGER_INFO("The top command [seq no:" +std::to_string(cmdDevice.getSequenceNumber())+ "] from recv container is already on client side! Waitting for reply ...");
         return;
     }
 
@@ -452,7 +458,7 @@ void AtlasDevice::pushCommand()
                                                                          ATLAS_APPROVED_COMMAND_COAP_TIMEOUT_MS,
                                                                          boost::bind(&AtlasDevice::deviceCmdRespCallback, this, _1, _2, _3));
         std::cout << "CMD WAS SENT " << coapDeviceCmdToken_ << std::endl;
-        recvCmds_.top().setInProgress(true);
+        recvCmds_.front().setInProgress(true);
     }
     catch(const char *e)
     {

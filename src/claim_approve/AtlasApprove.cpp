@@ -22,7 +22,7 @@ const std::string ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY = "payload";
 const std::string ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY = "seqNo";
 const std::string ATLAS_CMD_PAYLOAD_HMAC_KEY = "hmac";
 
-/* Check Q at every 30 sec */
+/* Check container at every 30 sec */
 const int ATLAS_PUSH_COMMAND_ALARM_PERIOD_MS = 30000;
 
 /* Resend status at each 10 sec */
@@ -212,7 +212,7 @@ bool AtlasApprove::handleClientCommand(const Json::Value &payload)
 	    return false;
     }
 
-    /* Save command into received device commands Q */
+    /* Insert command into received device commands container (list) */
     AtlasCommandDevice cmd(payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString(),
                            payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt(),
                            payload[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString(),
@@ -227,6 +227,9 @@ bool AtlasApprove::handleClientCommand(const Json::Value &payload)
         return false;
     }
     
+    /* Send the device command to client as soon as I received it */
+    device->pushCommand();
+
     return true;
 }
 
@@ -242,7 +245,7 @@ bool AtlasApprove::responseCommandACK()
 
     std::string ackCmd = fastWriter.write(cmd);
     
-    ATLAS_LOGGER_INFO("Send ACK response to cloud back-end for command with sequence number: " + std::to_string(sequenceNumber_));
+    ATLAS_LOGGER_INFO("Send ACK response to cloud back-end for command with sequence number " + std::to_string(sequenceNumber_));
 
     /* Send ACK message */
     bool delivered = AtlasMqttClient::getInstance().tryPublishMessage(AtlasIdentity::getInstance().getPsk() + ATLAS_TO_CLOUD_TOPIC, ackCmd);
@@ -325,7 +328,7 @@ void AtlasApprove::handleCommandDoneAck(const Json::Value &payload)
     std::cout << "Step1\n";
 
     if (!device->isExecCommandAvailable()) {
-        ATLAS_LOGGER_ERROR("ATLAS_CMD_GATEWAY_ACK_FOR_DONE_COMMAND Q of executed device commands is empty");
+        ATLAS_LOGGER_ERROR("ATLAS_CMD_GATEWAY_ACK_FOR_DONE_COMMAND: container of executed device commands is empty");
         return;
     }
 
@@ -353,7 +356,6 @@ void AtlasApprove::handleCommandDoneAck(const Json::Value &payload)
     }
 
     device->removeExecutedCommand();
-
     /* send additional commands in the done list (drain list)! */
     responseCommandDONE(device->getIdentity());
 }

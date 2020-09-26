@@ -5,7 +5,7 @@
 #include <memory>
 #include <boost/optional.hpp>
 #include <unordered_map>
-#include <queue>
+#include <list>
 #include "../telemetry/AtlasTelemetryInfo.h"
 #include "../telemetry/AtlasAlert.h"
 #include "../commands/AtlasCommandType.h"
@@ -216,34 +216,34 @@ public:
     void syncFirewallStatistics();
 
     /**
-    * @brief Add device command in recv Q
+    * @brief Add device command in recv container
     * @return none
     */
-    void addRecvDeviceCommand(const AtlasCommandDevice &cmd) {recvCmds_.push(cmd);}
+    void addRecvDeviceCommand(const AtlasCommandDevice &cmd) {recvCmds_.push_back(cmd);}
 
     /**
-    * @brief Add device command in exec Q
+    * @brief Add device command in exec container
     * @return none
     */
-    void addExecDeviceCommand(const AtlasCommandDevice &cmd) {execCmds_.push(cmd);}
+    void addExecDeviceCommand(const AtlasCommandDevice &cmd) {execCmds_.push_back(cmd);}
 
     /**
-    * @brief Check if exec Q is empty
-    * @return true if exec Q is not empty, false otherwise
+    * @brief Check if exec container is empty
+    * @return true if exec container is not empty, false otherwise
     */
     inline bool isExecCommandAvailable() {return !execCmds_.empty();}
 
     /**
-    * @brief Get top command from exec Q
-    * @return AtlasCommandDevice reference for top Q
+    * @brief Get front command from exec container
+    * @return AtlasCommandDevice reference for front element of the exec container
     */
-    inline const AtlasCommandDevice& getExecutedCommand() const {return execCmds_.top();}
+    inline const AtlasCommandDevice& getExecutedCommand() const {return execCmds_.front();}
 
     /**
-    * @brief Remove top command from exec Q (pop)
+    * @brief Remove front command from exec container
     * @return none
     */
-    inline void removeExecutedCommand() {execCmds_.pop();}
+    inline void removeExecutedCommand() {execCmds_.pop_front();}
 
     /**
     * @brief Push command to client
@@ -365,11 +365,11 @@ private:
     /* System reputation */
     std::unordered_map<AtlasDeviceNetworkType, AtlasDeviceFeatureManager> deviceReputation_;
 
-    /* Priority Q (sequence number) to store the device commands that will be sent to client*/
-    std::priority_queue<AtlasCommandDevice> recvCmds_;
+    /* Container recvCmds_ stores the device commands received from the cloud*/
+    std::list<AtlasCommandDevice> recvCmds_;
 
-    /* Priority Q (sequence number) to store the executed device commands and notify(DONE) them to cloud*/
-    std::priority_queue<AtlasCommandDevice> execCmds_;
+    /* Container execCmds_ stores the device commands executed by the client */
+    std::list<AtlasCommandDevice> execCmds_;
 
     /* CoAP context*/
     void *coapDeviceCmdToken_;

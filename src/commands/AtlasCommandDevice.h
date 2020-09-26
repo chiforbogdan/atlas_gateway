@@ -36,12 +36,6 @@ public:
                        const std::string &commandType, const std::string &commandPayload);
 
     /**
-    * @brief Used in priority Q tree
-    *        Top will contains the smallest sequence number value
-    */
-    inline bool operator<(const AtlasCommandDevice& c) const { return sequenceNumber_ > c.sequenceNumber_; }
-
-    /**
     * @brief Get command device sequence number
     * @return sequenceNumber_
     */
@@ -60,16 +54,16 @@ public:
     inline AtlasCommandDeviceType getCommandTypeDevice() const { return commandTypeDevice_; }
 
     /**
-     * @brief Get command type for client
-     * @return command type device
+     * @brief Get sending status for device command
+     * @return inProgress device cmd status
      */
     inline bool isInProgress() const { return inProgress; }
 
     /**
-     * @brief Get command type for client
-     * @return command type device
+     * @brief Set sending status for device command 
+     * @return none
      */
-    inline void setInProgress(bool inProgressParam) const { inProgress = inProgressParam; }
+    inline void setInProgress(bool inProgressParam) { inProgress = inProgressParam; }
 
 private:
     /* Client device identity */
@@ -83,7 +77,7 @@ private:
     /* Command payload */
     std::string commandPayload_;
     /* if true, the command was sent to client*/
-    mutable bool inProgress;
+    bool inProgress;
 };
 
 } // namespace atlas
