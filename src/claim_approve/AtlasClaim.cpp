@@ -3,8 +3,8 @@
 #include <json/json.h>
 #include "AtlasClaim.h"
 #include "../device/AtlasDeviceManager.h"
+#include "../identity/AtlasIdentity.h"
 #include "../logger/AtlasLogger.h"
-
 
 namespace atlas {
 
@@ -13,16 +13,13 @@ namespace {
 const std::string ATLAS_CLAIM_REQUEST_PATH = "/gateway/claim";
 
 /* JSON fields from the incoming claim request */
-const std::string ATLAS_CLAIM_SHORT_CODE_JSON_KEY = "short_code";
-const std::string ATLAS_CLAIM_SECRET_KEY_JSON_KEY = "secret_key";
-const std::string ATLAS_CLAIM_OWNER_IDENTITY_JSON_KEY = "owner_identity";
+const std::string ATLAS_CLAIM_SHORT_CODE_JSON_KEY = "shortCode";
+const std::string ATLAS_CLAIM_SECRET_KEY_JSON_KEY = "secretKey";
+const std::string ATLAS_CLAIM_OWNER_IDENTITY_JSON_KEY = "ownerIdentity";
 
 const std::string ATLAS_CLAIM_SHORT_CODE_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 int ATLAS_CLAIM_SHORT_CODE_LEN = 6;
 int ATLAS_CLAIM_ALARM_PERIOD_MS = 180000; // change short code every 3 minutes
-
-/* Success message */
-const std::string ATLAS_CLAIM_SUCCESS_MSG = "Gateway is claimed successfully by owner with identity: ";
 
 /* Error messages */
 const std::string ATLAS_CLAIM_ERR_ALREADY_CLAIMED = "Gateway is already claimed by an owner!";
@@ -31,6 +28,9 @@ const std::string ATLAS_CLAIM_ERR_SHORT_CODE = "Rejecting claim request because 
 const std::string ATLAS_CLAIM_ERR_EMPTY_SECRET_KEY = "Empty claim secret key";
 const std::string ATLAS_CLAIM_ERR_EMPTY_IDENTITY = "Empty owner identity";
 const std::string ATLAS_CLAIM_ERR_DATABASE = "Cannot save owner information into the database";
+
+/* JSON response (on success) */
+const std::string ATLAS_CLAIM_RESPONSE_IDENTITY_JSON_KEY = "identity";
 
 } // anonymous namespace
 
@@ -132,7 +132,12 @@ AtlasHttpResponse AtlasClaim::handleClaimReq(AtlasHttpMethod method, const std::
 
     shortCodeAlarm_.cancel();
 
-    return AtlasHttpResponse(200, ATLAS_CLAIM_SUCCESS_MSG + obj[ATLAS_CLAIM_OWNER_IDENTITY_JSON_KEY].asString());
+    Json::FastWriter fastWriter;
+    Json::Value cmd;
+    cmd[ATLAS_CLAIM_RESPONSE_IDENTITY_JSON_KEY] = AtlasIdentity::getInstance().getIdentity();
+    std::string claimResp = fastWriter.write(cmd);
+
+    return AtlasHttpResponse(200, claimResp);
 }
 
 } // namespace atlas
