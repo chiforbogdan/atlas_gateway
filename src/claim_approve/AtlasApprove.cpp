@@ -181,7 +181,7 @@ bool AtlasApprove::handleClientCommand(const Json::Value &payload)
 
         std::string digest = hmacSha256OnRcvData(AtlasDeviceManager::getInstance().getGateway().getOwnerSecretKey(), input);
 
-        if(digest != payload[ATLAS_CMD_PAYLOAD_HMAC_KEY].asString()) {
+        if(digest.compare(payload[ATLAS_CMD_PAYLOAD_HMAC_KEY].asString()) != 0) {
             ATLAS_LOGGER_ERROR("The received data was changed in transit!");
             return false;
         }
@@ -199,8 +199,6 @@ bool AtlasApprove::handleClientCommand(const Json::Value &payload)
         ATLAS_LOGGER_ERROR("No client device exists with identity " + payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString());
         return false;
     }
-
-    std::cout << "Insert command with type " << payload[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString() << std::endl;
 
     /* Save command into the database */
     bool result = AtlasSQLite::getInstance().insertDeviceCommand(payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt(),
@@ -299,8 +297,6 @@ bool AtlasApprove::responseCommandDONE(const std::string &deviceIdentity)
 
     std::string doneCmd = fastWriter.write(cmd);
 
-    std::cout << "Send DONE cmd: " << doneCmd << std::endl;
-
     /* Send DONE message */
     bool delivered = AtlasMqttClient::getInstance().tryPublishMessage(AtlasIdentity::getInstance().getPsk() + ATLAS_TO_CLOUD_TOPIC, doneCmd);
     if (!delivered) {
@@ -316,8 +312,6 @@ void AtlasApprove::handleCommandDoneAck(const Json::Value &payload)
 {
     ATLAS_LOGGER_INFO("Handle ACK message for client command");
 
-    std::cout << "Client identity is " << payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString() << std::endl;
-
     /* the command payload contains only the client identity */
     AtlasDevice *device = AtlasDeviceManager::getInstance().getDevice(payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString());
     if(!device) {
@@ -325,29 +319,19 @@ void AtlasApprove::handleCommandDoneAck(const Json::Value &payload)
         return;
     }
 
-    std::cout << "Step1\n";
-
     if (!device->isExecCommandAvailable()) {
         ATLAS_LOGGER_ERROR("ATLAS_CMD_GATEWAY_ACK_FOR_DONE_COMMAND: container of executed device commands is empty");
         return;
     }
 
-
     const AtlasCommandDevice &cmd = device->getExecutedCommand();    
-    std::cout << "Step2 " << cmd.getSequenceNumber() << " vs " << payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt() << std::endl;
     if (cmd.getSequenceNumber() != payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt()) {
         ATLAS_LOGGER_ERROR("Client command sequence number mismatch when processing ACK message for a DONE command");
         return;
     }
 
-    std::cout << "Step3\n";
-
     ATLAS_LOGGER_INFO("Handle ACK message for DONE command with sequence number: "
                       + std::to_string(cmd.getSequenceNumber()) + " for client device with identity: " + device->getIdentity());
-
-
-    std::cout << "Handle ACK message for DONE command with sequence number: "
-                      + std::to_string(cmd.getSequenceNumber()) + " for client device with identity: " + device->getIdentity() << std::endl;
 
     bool result = AtlasSQLite::getInstance().deleteDeviceCommand(cmd.getSequenceNumber());
     if(!result) {
@@ -361,7 +345,7 @@ void AtlasApprove::handleCommandDoneAck(const Json::Value &payload)
 }
 
 std::string AtlasApprove::hmacSha256OnRcvData(const std::string &key, const std::string &msg)
-{
+{ 
     unsigned int len = 32;
     unsigned char hash[len];
 
@@ -375,9 +359,8 @@ std::string AtlasApprove::hmacSha256OnRcvData(const std::string &key, const std:
     ss << std::setfill('0');
     for (uint8_t i = 0; i < len; i++)
     {
-        ss  << hash[i];
+        ss << hash[i];
     }
-
     return (ss.str());
 }
 

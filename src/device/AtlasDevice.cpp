@@ -457,7 +457,6 @@ void AtlasDevice::pushCommand()
         coapDeviceCmdToken_ = AtlasCoapClient::getInstance().sendRequest(url, ATLAS_COAP_METHOD_PUT, cmdBuf.first, cmdBuf.second,
                                                                          ATLAS_APPROVED_COMMAND_COAP_TIMEOUT_MS,
                                                                          boost::bind(&AtlasDevice::deviceCmdRespCallback, this, _1, _2, _3));
-        std::cout << "CMD WAS SENT " << coapDeviceCmdToken_ << std::endl;
         recvCmds_.front().setInProgress(true);
     }
     catch(const char *e)

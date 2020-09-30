@@ -137,7 +137,6 @@ bool AtlasHttpServer::addCallback(const AtlasHttpCallback &httpCallback)
 
 AtlasHttpServer::~AtlasHttpServer()
 {
-    std::cout<<"Http server dtor!\n";
 }
 
 } // namespace atlas

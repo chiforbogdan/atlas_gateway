@@ -208,7 +208,7 @@ int main(int argc, char **argv)
         ATLAS_LOGGER_ERROR("Error in starting the gateway claim protocol");
 	return 1;
     }
-
+    
     /* Start device approved command module*/
     atlas::AtlasApprove::getInstance().start();
 
