@@ -67,14 +67,7 @@ echo "*********************************************************"
 echo "*********************************************************"
 echo "*************** Addind support for BOOST ****************"
 echo "*********************************************************"
-#sudo apt-get install -y libboost-system-dev libboost-log-dev libboost-program-options-dev libboost-regex-dev
-wget https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.bz2
-tar xf boost_1_69_0.tar.bz2
-cd boost_1_69_0/
-./bootstrap.sh --with-libraries=system,log,program_options,regex,filesystem
-sudo ./b2 install --prefix=/usr
-cd ..
-rm boost_1_69_0.tar.bz2
+sudo apt-get install -y libboost-system-dev libboost-log-dev libboost-program-options-dev libboost-regex-dev
 echo "*********************************************************"
 echo "***************** BOOST support added *******************"
 echo "*********************************************************"

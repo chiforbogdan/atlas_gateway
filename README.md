@@ -22,6 +22,7 @@ Generally, there are two steps are involved:
 * Step 1. Install required dependencies by executing the __dependencies.sh__ script from the __scripts__ folder
 * Step 2. Execute the __build.sh__ script from __root__ folder
 
+We used ([Ubuntu_MATE_20.04.1LTS]) on an ODROID-XU4 platform to run this application.
 Depending on the platform you are using, minor adjustments might be necessary to be made. See the output messages shown during execution of the above mentioned scripts in case of errors.
 
 ----
@@ -95,3 +96,4 @@ See LICENSE file to read the full text.
 [ATLAS_Cloud]: https://github.com/chiforbogdan/atlas_cloud
 [ATLAS_Mosquitto]: https://github.com/chiforbogdan/mosquitto/tree/atlas_plugin
 [UEFISCDI]: https://uefiscdi.gov.ro/
+[Ubuntu_MATE_20.04.1LTS]: https://wiki.odroid.com/odroid-xu4/os_images/linux/ubuntu_5.4/mate/20200818

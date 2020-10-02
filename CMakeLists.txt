@@ -24,7 +24,7 @@ pkg_check_modules(NGHTTP2_ASIO libnghttp2_asio REQUIRED)
 # Link with dynamic version of Boost (for logging)
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 
-find_package(Boost 1.65.0 REQUIRED system log program_options regex)
+find_package(Boost 1.71.0 REQUIRED system log program_options regex)
 
 include_directories(include)
 # Add CoAP headers
