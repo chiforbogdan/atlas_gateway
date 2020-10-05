@@ -20,6 +20,9 @@ sudo apt-get install -y build-essential gcc make cmake cmake-gui cmake-curses-gu
 sudo apt-get install -y libssl-dev
 sudo apt-get install -y git
 sudo apt-get install -y libjsoncpp-dev
+sudo apt-get install -y python3-dev
+sudo apt-get install -y docbook-xsl
+sudo apt-get install -y xsltproc
 echo "******************* Step 1 finished! ********************"
 # __build Paho with support for C__
 echo "*** Step 2. Building Eclipse Paho with support for C ****"
@@ -53,10 +56,8 @@ git clone https://github.com/obgm/libcoap.git
 cd libcoap
 git checkout develop
 sudo sh ./autogen.sh
-#cp ../ltmain.sh .
-sudo sh ./autogen.sh
 sudo sh ./configure --with-openssl --enable-shared --disable-documentation --disable-examples
-make
+sudo make
 sudo make install
 cd ..
 echo "*********************************************************"
@@ -109,7 +110,7 @@ git submodule update --init
 autoreconf -i
 automake
 autoconf
-./configure --enable-asio-lib
+./configure --enable-asio-lib --with-boost-libdir=/usr/lib/arm-linux-gnueabihf
 make
 sudo make install
 cd ..
