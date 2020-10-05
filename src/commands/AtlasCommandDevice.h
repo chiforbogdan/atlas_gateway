@@ -54,6 +54,18 @@ public:
     inline AtlasCommandDeviceType getCommandTypeDevice() const { return commandTypeDevice_; }
 
     /**
+     * @brief Get command payload for client
+     * @return command payload device
+     */
+    inline char* getCommandPayload() const { return commandPayload_.empty() ? nullptr : commandPayload_.c_str(); }
+
+    /**
+     * @brief Get command payload length for client
+     * @return command payload length device
+     */
+    inline uint16_t getCommandPayloadLength() const { return commandPayload_.empty() ? 0 : commandPayload_.length(); }
+
+    /**
      * @brief Get sending status for device command
      * @return inProgress device cmd status
      */
