@@ -110,7 +110,7 @@ git submodule update --init
 autoreconf -i
 automake
 autoconf
-./configure --enable-asio-lib --with-boost-libdir=/usr/lib/arm-linux-gnueabihf
+./configure --enable-asio-lib --with-boost-libdir=$(whereis libboost_program_options.so.* | egrep -o '(\/.*\/)')
 make
 sudo make install
 cd ..
