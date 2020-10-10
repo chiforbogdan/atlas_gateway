@@ -446,7 +446,7 @@ void AtlasDevice::pushCommand()
     ATLAS_LOGGER_DEBUG("Sending command to device...");
 
     /* Add command */
-    AtlasCommand cmd(cmdDevice.getCommandTypeDevice(), cmdDevice.getCommandPayloadLen(), cmdDevice.getCommandPayload());
+    AtlasCommand cmd(cmdDevice.getCommandTypeDevice(), cmdDevice.getCommandPayloadLength(), cmdDevice.getCommandPayload());
 
     cmdBatch.addCommand(cmd);
     cmdBuf = cmdBatch.getSerializedAddedCommands();

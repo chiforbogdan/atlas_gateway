@@ -55,13 +55,13 @@ public:
 
     /**
      * @brief Get command payload for client
-     * @return command payload device
+     * @return command payload
      */
-    inline char* getCommandPayload() const { return commandPayload_.empty() ? nullptr : commandPayload_.c_str(); }
+    inline const uint8_t* getCommandPayload() const { return commandPayload_.empty() ? nullptr : (const uint8_t*)commandPayload_.c_str(); }
 
     /**
      * @brief Get command payload length for client
-     * @return command payload length device
+     * @return command payload length
      */
     inline uint16_t getCommandPayloadLength() const { return commandPayload_.empty() ? 0 : commandPayload_.length(); }
 
