@@ -10,7 +10,7 @@ echo "******************* Step 1 finished! ********************"
 echo "******* Step 2. Building ATLAS_GATEWAY components *******"
 cd build/
 cmake -DCMAKE_BUILD_TYPE=Debug ..
-make
+make -j `nproc`
 echo "******************* Step 2 finished! ********************"
 
 # Finishing ATLAS_GATEWAY configuration
