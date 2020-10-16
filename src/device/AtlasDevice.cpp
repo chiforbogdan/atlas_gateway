@@ -413,14 +413,7 @@ void AtlasDevice::pushCommand()
         ATLAS_LOGGER_INFO("Empty rcv container for device " + identity_);
         return;
     }
-
-    //FOR TEST PURPOSE
-    deviceCmdTimeouts_ = 0;
-    /* Mark command as DONE (executed by the client) */
-    markCommandAsDone(); 
-    return;
-    //////////////////
-    
+   
     if (!isRegistered()) {
         ATLAS_LOGGER_INFO("Cannot push command for an unregistered device with identity " + identity_);
         return;

@@ -246,6 +246,12 @@ public:
     inline void removeExecutedCommand() {execCmds_.pop_front();}
 
     /**
+    * @brief Get recv container size
+    * @return container size
+    */
+    inline size_t sizeRecvCommand() {return recvCmds_.size();}
+
+    /**
     * @brief Push command to client
     * @return none
     */

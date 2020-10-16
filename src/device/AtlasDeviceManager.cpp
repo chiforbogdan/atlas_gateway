@@ -334,12 +334,12 @@ void AtlasDeviceManager::initDeviceCommands(AtlasDevice &device)
     bool result = AtlasSQLite::getInstance().checkDeviceCommandByIdentity(device.getIdentity());
     if (result) {
         /* Get from db*/
-        ATLAS_LOGGER_INFO("Get data from local.db");
+        ATLAS_LOGGER_INFO("Get unexecuted device commands from local.db");
         
         result = AtlasSQLite::getInstance().selectDeviceCommand(device);
         if (result) {
 
-            ATLAS_LOGGER_INFO("Device commands for device with identity " + device.getIdentity() + " are in memory");
+            ATLAS_LOGGER_INFO(std::to_string(device.sizeRecvCommand()) + " device commands for device with identity " + device.getIdentity() + " are in memory");
         } else {
 
             ATLAS_LOGGER_ERROR("Uncommited select on device commands in selectDeviceCommand function");

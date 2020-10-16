@@ -1107,15 +1107,17 @@ bool AtlasSQLite::selectDeviceCommand(AtlasDevice &device)
 	    return false;
     }
 
-    if (sqlite3_bind_text(stmt, 1, device.getIdentity().c_str(), device.getIdentity().length(),	SQLITE_STATIC) != SQLITE_OK) {
+    const std::string &deviceIdentity = device.getIdentity();
+
+    if (sqlite3_bind_text(stmt, 1, deviceIdentity.c_str(), deviceIdentity.length(),	SQLITE_STATIC) != SQLITE_OK) {
         ATLAS_LOGGER_ERROR("Could not bind, fct:selectDeviceCommand, stmt:SQL_GET_DEVICE_COMMAND_BY_IDENTITY, error:" + std::string(sqlite3_errmsg(pCon_)));
         return false;
     }
-
+ 
     for (;;)
     {
-        stat = sqlite3_step(stmt);
-        if (stat == SQLITE_DONE) {
+	    stat = sqlite3_step(stmt);
+	    if (stat == SQLITE_DONE) {
             break;
         }
 
