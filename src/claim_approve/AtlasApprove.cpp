@@ -7,7 +7,7 @@
 #include "../cloud/AtlasCommandsCloud.h"
 #include "../mqtt_client/AtlasMqttClient.h"
 #include "../identity/AtlasIdentity.h"
-#include <openssl/hmac.h>
+#include "../utils/AtlasUtils.h"
 
 namespace atlas {
 
@@ -16,11 +16,11 @@ namespace {
 const std::string ATLAS_CLAIM_REQUEST_PATH = "/gateway/claim";
 
 /* JSON fields from the incoming approve messages */
-const std::string ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY = "clientIdentity";
-const std::string ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY = "type";
-const std::string ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY = "payload";
-const std::string ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY = "seqNo";
-const std::string ATLAS_CMD_PAYLOAD_HMAC_KEY = "hmac";
+const std::string ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY    = "clientIdentity";
+const std::string ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY      = "type";
+const std::string ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY   = "payload";
+const std::string ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY       = "seqNo";
+const std::string ATLAS_CMD_PAYLOAD_SIGNATURE_JSON_KEY = "signature";
 
 /* Check container at every 30 sec */
 const int ATLAS_PUSH_COMMAND_ALARM_PERIOD_MS = 30000;
@@ -165,26 +165,16 @@ bool AtlasApprove::handleClientCommand(const Json::Value &payload)
         return false;
     }
 
-
-    if(!AtlasDeviceManager::getInstance().getGateway().isClaimed()) {
-        ATLAS_LOGGER_INFO("Received a command for an unclaimed gateway!");
-        /* If gateway is unclaimed, the received command does not need to be authorized*/
-    } else {
+    if (AtlasDeviceManager::getInstance().getGateway().isClaimed()) {
         ATLAS_LOGGER_INFO("Received an approved command for a claimed gateway!");
-        /* If gateway is claimed, the received command need to be authorized(HMAC)*/
-        //HMAC SHA256: (gatewayId + clientId + clientCommandType + clientCommandPayload + seqNo)
-        std::string input = AtlasIdentity::getInstance().getIdentity() + 
-                            payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString() +
-                            payload[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString() +
-                            payload[ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY].asString() +
-                            payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asString();
-
-        std::string digest = hmacSha256OnRcvData(AtlasDeviceManager::getInstance().getGateway().getOwnerSecretKey(), input);
-
-        if(digest.compare(payload[ATLAS_CMD_PAYLOAD_HMAC_KEY].asString()) != 0) {
+        
+        if (!validateCommandSignature(payload)) {
             ATLAS_LOGGER_ERROR("The received data was changed in transit!");
             return false;
         }
+    } else {
+        /* If gateway is unclaimed, the received command does not need to be authorized*/
+        ATLAS_LOGGER_INFO("Received a command for an unclaimed gateway!");
     }
 
     /* Handle commands with an old sequence number */
@@ -195,7 +185,7 @@ bool AtlasApprove::handleClientCommand(const Json::Value &payload)
     } 
     
     AtlasDevice *device = AtlasDeviceManager::getInstance().getDevice(payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString());
-    if(!device) {
+    if (!device) {
         ATLAS_LOGGER_ERROR("No client device exists with identity " + payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString());
         return false;
     }
@@ -205,7 +195,7 @@ bool AtlasApprove::handleClientCommand(const Json::Value &payload)
                                                                  payload[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString(),
                                                                  payload[ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY].asString(),
                                                                  payload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString());
-    if(!result) {
+    if (!result) {
         ATLAS_LOGGER_ERROR("Cannot save device command into the database!");
 	    return false;
     }
@@ -220,7 +210,7 @@ bool AtlasApprove::handleClientCommand(const Json::Value &payload)
 
     sequenceNumber_ = payload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asUInt();
     result = responseCommandACK();
-    if(!result) {
+    if (!result) {
         ATLAS_LOGGER_ERROR("ACK message was not sent to cloud back-end");
         return false;
     }
@@ -344,24 +334,31 @@ void AtlasApprove::handleCommandDoneAck(const Json::Value &payload)
     responseCommandDONE(device->getIdentity());
 }
 
-std::string AtlasApprove::hmacSha256OnRcvData(const std::string &key, const std::string &msg)
-{ 
-    unsigned int len = 32;
-    unsigned char hash[len];
+bool AtlasApprove::validateCommandSignature(const Json::Value &commandPayload)
+{
+    std::vector<uint8_t> commandSignature;
 
-    HMAC_CTX *ctx = HMAC_CTX_new();
-    HMAC_Init_ex(ctx, &key[0], key.length(), EVP_sha256(), NULL);
-    HMAC_Update(ctx, (unsigned char*)&msg[0], msg.length());
-    HMAC_Final(ctx, hash, &len);
-    HMAC_CTX_free(ctx);
+    /* If gateway is claimed, the received command need to be authorized(HMAC)
+       HMAC SHA512: (gatewayId + clientId + clientCommandType + clientCommandPayload + seqNo) */
 
-    std::stringstream ss;
-    ss << std::setfill('0');
-    for (uint8_t i = 0; i < len; i++)
-    {
-        ss << hash[i];
+    std::vector<uint8_t> key = base64::decode(AtlasDeviceManager::getInstance().getGateway().getOwnerSecretKey());
+    std::string payload = AtlasIdentity::getInstance().getIdentity()
+                          + commandPayload[ATLAS_CMD_PAYLOAD_CLIENT_JSON_KEY].asString()
+                          + commandPayload[ATLAS_CMD_PAYLOAD_TYPE_JSON_KEY].asString()
+                          + commandPayload[ATLAS_CMD_PAYLOAD_PAYLOAD_JSON_KEY].asString()
+                          + commandPayload[ATLAS_CMD_PAYLOAD_SEQ_JSON_KEY].asString();
+
+    std::vector<uint8_t> hmacResult = crypto::hmacSHA512(key, std::vector<uint8_t>(reinterpret_cast<const uint8_t*>(payload.c_str()),
+                                                                          reinterpret_cast<const uint8_t*>(payload.c_str()) + payload.length()));
+    
+    try {
+        commandSignature = base64::decode(commandPayload[ATLAS_CMD_PAYLOAD_SIGNATURE_JSON_KEY].asString());
+    } catch(...) {
+        ATLAS_LOGGER_ERROR("An exception occured while trying to decode the command signature");
+        return false;
     }
-    return (ss.str());
+
+    return hmacResult == commandSignature;
 }
 
 } // namespace atlas
