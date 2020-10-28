@@ -38,6 +38,7 @@ echo "******************* Step 2 finished! ********************"
 echo "** Step 3. Building Eclipse Paho with support for C++ ***"
 git clone https://github.com/eclipse/paho.mqtt.cpp
 cd paho.mqtt.cpp
+git checkout v1.0.1
 cmake -Bbuild -H. -DPAHO_BUILD_DOCUMENTATION=FALSE -DPAHO_BUILD_SAMPLES=FALSE -DPAHO_WITH_SSL=TRUE -DPAHO_BUILD_TESTS=FALSE
 sudo cmake --build build/ --target install
 sudo ldconfig
