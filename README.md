@@ -80,7 +80,6 @@ ATLAS Gateway was developed by:
 * Stefan-Ciprian Arseni
 * Ioana Cismas
 * Mihai Coca
-* Mirabela Medvei
 
 ATLAS project is sponsored by [UEFISCDI].
 
