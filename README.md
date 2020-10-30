@@ -5,7 +5,7 @@ ATLAS consists in a 3-tier IoT security platform which offers the following modu
 * A lightweight software client which runs on the IoT device ([ATLAS_Client])
 * A gateway software which runs on the network edge and manages all the clients from the network ([ATLAS_Gateway])
 * A cloud platform which allows managing the gateways and the clients ([ATLAS_Cloud])
-An Android management application which allows IoT command authorization ([ATLAS_Android])
+* An Android management application which allows IoT command authorization ([ATLAS_Android])
 
 ATLAS provides security management for a fleet of IoT devices and enables a reputation based Sensing-as-a-service platform. It also offers the capability to inspect the IoT device telemetry values and supports the CoAP lightweight protocol for the communication between the IoT device and the gateway.
 On the IoT data plane layer, ATLAS provides an API which can be integrated with a user application and offers the following capabilities:
@@ -30,7 +30,8 @@ Depending on the platform you are using, minor adjustments might be necessary to
 
 ### How to use it
 ```
-./atlas_gateway ----cloudHostname <ATLAS_CLOUD_HOSTNAME_OR_IP> --cloudPort <ATLAS_CLOUD_PORT> --cloudCertFile <ATLAS_CLOUD_CERT_TRUSTSTORE_FILE> --coapPort <ATLAS_GATEWAY_COAP_LISTEN_PORT> --httpCertFile <ATLAS_GATEWAY_INTERNAL_HTTP_SERVER_CERT_FILE> --httpPrivKeyFile <ATLAS_GATEWAY_INTERNAL_HTTP_SERVER_PRIV_KEY_FILE> --httpPort <ATLAS_GATEWAY_INTERNAL_HTTP_SERVER_PORT>```
+./atlas_gateway --cloudHostname <ATLAS_CLOUD_HOSTNAME_OR_IP> --cloudPort <ATLAS_CLOUD_PORT> --cloudCertFile <ATLAS_CLOUD_CERT_TRUSTSTORE_FILE> --coapPort <ATLAS_GATEWAY_COAP_LISTEN_PORT> --httpCertFile <ATLAS_GATEWAY_INTERNAL_HTTP_SERVER_CERT_FILE> --httpPrivKeyFile <ATLAS_GATEWAY_INTERNAL_HTTP_SERVER_PRIV_KEY_FILE> --httpPort <ATLAS_GATEWAY_INTERNAL_HTTP_SERVER_PORT>
+```
 
 Arguments:
 * __--help__ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; _Display help message_
@@ -83,7 +84,6 @@ ATLAS Gateway was developed by:
 * Stefan-Ciprian Arseni
 * Ioana Cismas
 * Mihai Coca
-* Mirabela Medvei
 
 ATLAS project is sponsored by [UEFISCDI].
 
