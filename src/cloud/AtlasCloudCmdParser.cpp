@@ -6,6 +6,7 @@
 #include "../mqtt_client/AtlasMqttClient.h"
 #include "../device/AtlasDeviceManager.h"
 #include "../identity/AtlasIdentity.h"
+#include "../claim_approve/AtlasApprove.h"
 
 namespace atlas {
 
@@ -29,6 +30,20 @@ void AtlasCloudCmdParser::reqRegisterCmd()
     AtlasRegisterCloud::getInstance().sendRegisterCmd();
 }
 
+void AtlasCloudCmdParser::deviceApprovedCmd(const Json::Value &cmdPayload)
+{
+    ATLAS_LOGGER_INFO("ATLAS_CMD_GATEWAY_CLIENT command was sent by cloud back-end");
+    
+    bool result = AtlasApprove::getInstance().handleClientCommand(cmdPayload);
+    if(!result)
+        ATLAS_LOGGER_ERROR("ATLAS_CMD_GATEWAY_CLIENT command returned an error");
+}
+
+void AtlasCloudCmdParser::rcvACKForDONEDeviceCommand(const Json::Value &cmdPayload)
+{
+    ATLAS_LOGGER_INFO("ATLAS_CMD_GATEWAY_ACK_FOR_DONE_COMMAND command was sent by cloud back-end");
+    AtlasApprove::getInstance().handleCommandDoneAck(cmdPayload);
+}
 
 void AtlasCloudCmdParser::start()
 {
@@ -37,16 +52,21 @@ void AtlasCloudCmdParser::start()
     AtlasMqttClient::getInstance().addConnectionCb(this);
 }
 
-void AtlasCloudCmdParser::parseCmd(std::string const &cmd)
+void AtlasCloudCmdParser::parseCmd(const std::string &cmd)
 {
     Json::Reader reader;
     Json::Value obj;
 
     reader.parse(cmd, obj);
+
     if(obj[ATLAS_CMD_TYPE_JSON_KEY].asString() == ATLAS_CMD_GATEWAY_GET_ALL_DEVICES)
         getAllDevicesCmd();
     else if (obj[ATLAS_CMD_TYPE_JSON_KEY].asString() == ATLAS_CMD_GATEWAY_REGISTER_REQUEST)
         reqRegisterCmd();
+    else if (obj[ATLAS_CMD_TYPE_JSON_KEY].asString() == ATLAS_CMD_GATEWAY_CLIENT)
+        deviceApprovedCmd(obj[ATLAS_CMD_PAYLOAD_JSON_KEY]);
+    else if (obj[ATLAS_CMD_TYPE_JSON_KEY].asString() == ATLAS_CMD_GATEWAY_ACK_FOR_DONE_COMMAND)
+        rcvACKForDONEDeviceCommand(obj[ATLAS_CMD_PAYLOAD_JSON_KEY]);
 }
 
 void AtlasCloudCmdParser::onConnect()

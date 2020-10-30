@@ -15,8 +15,8 @@ const int ATLAS_KEEPALIVE_CLOUD_INTERVAL_MS = 60000;
 } // anonymous namespace
 
 AtlasRegisterCloud::AtlasRegisterCloud() : registered_(false),
-                                           kaAlarm_(ATLAS_KEEPALIVE_CLOUD_INTERVAL_MS, false,
-                                                    boost::bind(&AtlasRegisterCloud::keepaliveAlarmCb, this)) {}
+                                           kaAlarm_("AtlasRegisterCloud", ATLAS_KEEPALIVE_CLOUD_INTERVAL_MS,
+                                                    false, boost::bind(&AtlasRegisterCloud::keepaliveAlarmCb, this)) {}
 
 AtlasRegisterCloud& AtlasRegisterCloud::getInstance()
 {
@@ -41,6 +41,7 @@ void AtlasRegisterCloud::sendRegisterCmd()
         ATLAS_LOGGER_INFO("REGISTER command was sent to cloud back-end. Sync all devices...");
         registered_ = true;
         AtlasDeviceManager::getInstance().getDeviceCloud()->allDevicesUpdate();
+        AtlasDeviceManager::getInstance().getDeviceCloud()->gatewayFullUpdate();
     }
 }
 

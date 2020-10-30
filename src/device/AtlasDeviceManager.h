@@ -6,6 +6,7 @@
 #include <functional>
 #include <boost/asio.hpp>
 #include "AtlasDevice.h"
+#include "AtlasGateway.h"
 #include "reputation_feedback/IAtlasFeedback.h"
 #include "../cloud/AtlasDeviceCloud.h"
 #include "../telemetry/AtlasTelemetry.h"
@@ -42,6 +43,12 @@ public:
     * @return Instance to client device
     */
     AtlasDevice* getDevice(const std::string& identity);
+
+    /**
+     * @brief Get gateway device
+     * @return Gateway device
+     */
+    AtlasGateway& getGateway() { return gateway_; }
 
     /**
     * @brief Parse each device
@@ -131,6 +138,13 @@ private:
    */
     void initDataReputation(AtlasDevice &device);
 
+   /**
+   * @brief Init device commands from database
+   * @param[in] device Client device
+   * @return none
+   */
+    void initDeviceCommands(AtlasDevice &device);
+
     /**
     * @brief Update reputation order to deliver the most trusted
     *        device within a category
@@ -159,6 +173,9 @@ private:
 
     /* Holds the most trusted device within a sensor category */
     std::unordered_map<AtlasDeviceNetworkType, std::string> trustedDevices_;
+
+    /* Gateway device */
+    AtlasGateway gateway_;
 };
 
 } // namespace atlas

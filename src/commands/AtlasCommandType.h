@@ -148,7 +148,8 @@ enum AtlasCommandType {
     ATLAS_CMD_FEEDBACK_SENSOR,
 
     /* Feedbck response time command: payload is the feedback score for response time */
-    ATLAS_CMD_FEEDBACK_RESPONSE_TIME,
+    ATLAS_CMD_FEEDBACK_RESPONSE_TIME
+
 };
 
 } // namespace atlas

@@ -131,7 +131,7 @@ AtlasCoapServer::AtlasCoapServer() : ctx_(nullptr) {}
 
 void AtlasCoapServer::schedulerCallback()
 {
-    coap_io_process(ctx_, COAP_RUN_NONBLOCK);
+    coap_io_process(ctx_, COAP_IO_NO_WAIT);
 }
 
 void AtlasCoapServer::getDefaultIndexHandler(coap_context_t *ctx,

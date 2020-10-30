@@ -124,8 +124,8 @@ bool AtlasIdentity::initIdentity()
         std::stringstream strStream;
         strStream << fd.rdbuf();
         identity_ = strStream.str();
-	len = fd.tellg();
-	fd.close();
+        len = fd.tellg();
+        fd.close();
         if (len <= 0) {
             ATLAS_LOGGER_ERROR("Error encountered when reading from the identity file");
             goto ERR;
@@ -141,7 +141,7 @@ bool AtlasIdentity::initIdentity()
     } else {
         std::stringstream strStream;
         strStream << fd.rdbuf();
-	psk_ = strStream.str();
+        psk_ = strStream.str();
         len = fd.tellg();
         fd.close();
         if (len <= 0) {

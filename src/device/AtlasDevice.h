@@ -5,6 +5,7 @@
 #include <memory>
 #include <boost/optional.hpp>
 #include <unordered_map>
+#include <list>
 #include "../telemetry/AtlasTelemetryInfo.h"
 #include "../telemetry/AtlasAlert.h"
 #include "../commands/AtlasCommandType.h"
@@ -12,6 +13,8 @@
 #include "../policy/AtlasFirewallPolicy.h"
 #include "../statistics/AtlasFirewallStats.h"
 #include "../reputation_impl/AtlasDeviceFeatureManager.h"
+#include "../commands/AtlasCommandDevice.h"
+#include "../coap/AtlasCoapResponse.h"
 
 namespace atlas {
 
@@ -212,6 +215,61 @@ public:
     */
     void syncFirewallStatistics();
 
+    /**
+    * @brief Add device command in recv container
+    * @return none
+    */
+    void addRecvDeviceCommand(const AtlasCommandDevice &cmd) {recvCmds_.push_back(cmd);}
+
+    /**
+    * @brief Add device command in exec container
+    * @return none
+    */
+    void addExecDeviceCommand(const AtlasCommandDevice &cmd) {execCmds_.push_back(cmd);}
+
+    /**
+    * @brief Check if exec container is empty
+    * @return true if exec container is not empty, false otherwise
+    */
+    inline bool isExecCommandAvailable() {return !execCmds_.empty();}
+
+    /**
+    * @brief Get front command from exec container
+    * @return AtlasCommandDevice reference for front element of the exec container
+    */
+    inline const AtlasCommandDevice& getExecutedCommand() const {return execCmds_.front();}
+
+    /**
+    * @brief Remove front command from exec container
+    * @return none
+    */
+    inline void removeExecutedCommand() {execCmds_.pop_front();}
+
+    /**
+    * @brief Get recv container size
+    * @return container size
+    */
+    inline size_t sizeRecvCommand() {return recvCmds_.size();}
+
+    /**
+    * @brief Push command to client
+    * @return none
+    */
+    void pushCommand();
+
+    /**
+    * @brief Copy assignment operator for device
+    * @return none
+    */
+    AtlasDevice& operator = (const AtlasDevice&); 
+
+    /**
+    * @brief Dtor for device
+    * @return none
+    */
+    ~AtlasDevice();
+
+
 private:
     /**
     * @brief Install default telemetry alerts
@@ -242,6 +300,22 @@ private:
     * @return JSON serialized IP and port
     */
     std::string ipPortToJSON();
+
+    /**
+    * @brief CoAP response callback from client
+    * @param[in] respStatus CoAP response status
+    * @param[in] resp_payload CoAP response payload
+    * @param[in] resp_payload_len CoAP response payload length
+    * @return none
+    */
+    void deviceCmdRespCallback(AtlasCoapResponse respStatus, const uint8_t *resp_payload, size_t resp_payload_len);
+  
+    /**
+     * @brief Mark command as DONE (executed by client)
+     * @return none
+     */
+    void markCommandAsDone();
+
 
     /* IoT client identity */
     std::string identity_;
@@ -296,6 +370,17 @@ private:
 
     /* System reputation */
     std::unordered_map<AtlasDeviceNetworkType, AtlasDeviceFeatureManager> deviceReputation_;
+
+    /* Container recvCmds_ stores the device commands received from the cloud*/
+    std::list<AtlasCommandDevice> recvCmds_;
+
+    /* Container execCmds_ stores the device commands executed by the client */
+    std::list<AtlasCommandDevice> execCmds_;
+
+    /* CoAP context*/
+    void *coapDeviceCmdToken_;
+    /* Counter for timeouts*/
+    uint8_t deviceCmdTimeouts_;
 };
 
 } // namespace atlas

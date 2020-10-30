@@ -200,7 +200,7 @@ void AtlasCoapClient::scheduleCallback(coap_context_t *ctx, int fd)
 {
     ATLAS_LOGGER_DEBUG("CoAP request scheduler called");
 
-    coap_io_process(ctx, COAP_RUN_NONBLOCK);
+    coap_io_process(ctx, COAP_IO_NO_WAIT);
 
     /* Cancel scheduling entry if the requests does not exist anymore */
     if (requests_[ctx].getContext() != ctx)
@@ -235,7 +235,8 @@ void AtlasCoapClient::addRequest(coap_context_t *ctx, coap_session_t *session,
         throw "Cannot get CoAP file descriptor";
 
     /* Set alarm for the request */
-    timeouts_[ctx] = std::unique_ptr<AtlasAlarm>(new AtlasAlarm(timeout, true, boost::bind(&AtlasCoapClient::alarmCallback, this, ctx, fd)));
+    timeouts_[ctx] = std::unique_ptr<AtlasAlarm>(new AtlasAlarm("AtlasCoapClient", timeout, true,
+                                                 boost::bind(&AtlasCoapClient::alarmCallback, this, ctx, fd)));
     timeouts_[ctx]->start();
 
     /* Add CoAP request file descriptor to the scheduler */

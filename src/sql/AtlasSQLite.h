@@ -4,9 +4,13 @@
 #include <stdio.h>
 #include <sqlite3.h>
 #include <string>
+#include <queue>
 #include "../logger/AtlasLogger.h"
 #include "../reputation_impl/AtlasDeviceFeatureManager.h"
 #include "../statistics/AtlasFirewallStats.h"
+#include "../commands/AtlasCommandDevice.h"
+#include "../claim_approve/AtlasApprove.h"
+#include "../device/AtlasDevice.h"
 
 namespace atlas {
 
@@ -129,6 +133,81 @@ public:
     */
     bool checkDeviceForStats(const std::string &identity);
 
+    /**
+     * @brief Execute query on database: insert owner using secretKey and identity
+     * @param[in] secretKey Owner secret key
+     * @param[in] identity Owner identity
+     * @return true on success, false on error
+     */
+    bool insertOwner(const std::string &secretKey, const std::string &identity);
+
+    /**
+     * Execute query on database: select owner (gateway claim) information
+     * @param[out] secretKey Owner secret key
+     * @param[out] identity Owner identity
+     * @return true on success, false on error
+     */
+    bool selectOwnerInfo(std::string &secretKey, std::string &identity);
+
+    /**
+     * @brief Execute query on database: insert command device
+     * @param[in] sequenceNumber Command sequence number
+     * @param[in] commandType Command Type
+     * @param[in] commandPayload Command payload
+     * @param[in] deviceIdentity Device identity
+     * @return true on success, false on error
+     */
+    bool insertDeviceCommand(const uint32_t sequenceNumber, const std::string &commandType,
+                             const std::string &commandPayload, const std::string &deviceIdentity);
+    /**
+     * @brief Execute query on database: check if a command device exists
+     * @param[in] sequenceNumber Command sequence number
+     * @return true on success, false on error
+     */
+    bool checkDeviceCommandBySeqNo(const uint32_t sequenceNumber);
+
+    /**
+    * @brief Check if a device has related device commands in db
+    * @param[in] identity Device identity
+    * @return true if features exist, false on error or not exist
+    */
+    bool checkDeviceCommandByIdentity(const std::string &identity);
+
+    /**
+    * @brief Check if a device command is executed
+    * @param[in] sequenceNumber Command sequence number
+    * @return true if it is executed, false on error or not executed
+    */
+    bool checkDeviceCommandForExecution(const uint32_t sequenceNumber);
+
+    /**
+     * @brief Execute query on database: set field 'IsExecuted' to 1
+     * @param[in] sequenceNumber Command sequence number
+     * @return true on success, false on error
+     */
+    bool markExecutedDeviceCommand(const uint32_t sequenceNumber);
+
+    /**
+    * @brief Execute query on database: select, get device commands based on device identity
+    * @param[in] device Device client
+    * @return true on success, false on error
+    */
+    bool selectDeviceCommand(AtlasDevice &device);
+
+    /**
+     * @brief Execute query on database: delete a device command by sequence number
+     * @param[in] sequenceNumber Command sequence number
+     * @return true on success, false on error
+     */
+    bool deleteDeviceCommand(const uint32_t sequenceNumber);
+
+    /**
+     * @brief Execute query on database: get max sequence number from deviceCommand table
+     * @param[in] sequenceNumber Command sequence number
+     * @return true on success, false on error
+     */
+    bool getMaxSequenceNumber();
+
     AtlasSQLite(const AtlasSQLite&) = delete;
     AtlasSQLite& operator=(const AtlasSQLite&) = delete;
 
@@ -200,6 +279,13 @@ private:
     * @return true on success, false on error
     */
     bool updateFeatures(const std::string &identity, int networkTypeId, AtlasDeviceFeatureManager &manager);
+
+    /**
+     * @brief Execute query on database: update global sequence number
+     * @param[in] sequenceNumber Command sequence number
+     * @return true on success, false on error
+     */
+    bool updateMaxSequenceNumber(const uint32_t sequenceNumber);
 
     /*status of the connection*/
     bool isConnected_;	 
