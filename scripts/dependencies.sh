@@ -26,7 +26,8 @@ sudo apt-get install -y xsltproc
 echo "******************* Step 1 finished! ********************"
 # __build Paho with support for C__
 echo "*** Step 2. Building Eclipse Paho with support for C ****"
-git clone https://github.com/eclipse/paho.mqtt.c.git
+# Original repo is here: git clone https://github.com/eclipse/paho.mqtt.c.git
+git clone https://github.com/chiforbogdan/paho.mqtt.c.git
 cd paho.mqtt.c
 git checkout v1.3.1
 cmake -Bbuild -H. -DPAHO_WITH_SSL=ON -DPAHO_ENABLE_TESTING=OFF
@@ -36,8 +37,10 @@ cd ..
 echo "******************* Step 2 finished! ********************"
 # __build Paho with support for C++__
 echo "** Step 3. Building Eclipse Paho with support for C++ ***"
-git clone https://github.com/eclipse/paho.mqtt.cpp
+# Original repo is here: git clone https://github.com/eclipse/paho.mqtt.cpp
+git clone https://github.com/chiforbogdan/paho.mqtt.cpp
 cd paho.mqtt.cpp
+git checkout v1.0.1
 cmake -Bbuild -H. -DPAHO_BUILD_DOCUMENTATION=FALSE -DPAHO_BUILD_SAMPLES=FALSE -DPAHO_WITH_SSL=TRUE -DPAHO_BUILD_TESTS=FALSE
 sudo cmake --build build/ --target install
 sudo ldconfig
@@ -52,12 +55,13 @@ echo "*********************************************************"
 echo "***************** Adding suport for CoAP ****************"
 echo "*********************************************************"
 sudo apt-get install -y autotools-dev autoconf automake m4 libtool pkg-config
-git clone https://github.com/obgm/libcoap.git
+# Original repo is here: git clone https://github.com/obgm/libcoap.git
+git clone https://github.com/chiforbogdan/libcoap.git
 cd libcoap
 git checkout develop
 sudo sh ./autogen.sh
 sudo sh ./configure --with-openssl --enable-shared --disable-documentation --disable-examples
-sudo make
+sudo make -j `nproc`
 sudo make install
 cd ..
 echo "*********************************************************"
@@ -104,14 +108,15 @@ echo "*********************************************************"
 echo "*********************************************************"
 echo "**************** Adding support for nghttp2 *************"
 echo "*********************************************************"
-git clone https://github.com/nghttp2/nghttp2.git
+# Original repo is here: git clone https://github.com/nghttp2/nghttp2.git
+git clone https://github.com/chiforbogdan/nghttp2.git
 cd nghttp2
 git submodule update --init
 autoreconf -i
 automake
 autoconf
 ./configure --enable-asio-lib --with-boost-libdir=$(whereis libboost_program_options.so.* | egrep -o '(\/.*\/)')
-make
+make -j `nproc`
 sudo make install
 cd ..
 echo "*********************************************************"
@@ -127,7 +132,7 @@ echo "*********************************************************"
 git clone https://github.com/chiforbogdan/mosquitto.git
 cd mosquitto
 git checkout atlas_plugin
-make
+make -j `nproc`
 sudo make install
 cd ..
 echo "*********************************************************"
