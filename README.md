@@ -30,7 +30,7 @@ Depending on the platform you are using, minor adjustments might be necessary to
 
 ### How to use it
 ```
-./atlas_gateway ----cloudHostname <ATLAS_CLOUD_HOSTNAME_OR_IP> --cloudPort <ATLAS_CLOUD_PORT> --cloudCertFile <ATLAS_CLOUD_CERT_TRUSTSTORE_FILE> --coapPort <ATLAS_GATEWAY_COAP_LISTEN_PORT> --httpCertFile <ATLAS_GATEWAY_INTERNAL_HTTP_SERVER_CERT_FILE> --httpPrivKeyFile <ATLAS_GATEWAY_INTERNAL_HTTP_SERVER_PRIV_KEY_FILE> --httpPort <ATLAS_GATEWAY_INTERNAL_HTTP_SERVER_PORT>
+./atlas_gateway --cloudHostname <ATLAS_CLOUD_HOSTNAME_OR_IP> --cloudPort <ATLAS_CLOUD_PORT> --cloudCertFile <ATLAS_CLOUD_CERT_TRUSTSTORE_FILE> --coapPort <ATLAS_GATEWAY_COAP_LISTEN_PORT> --httpCertFile <ATLAS_GATEWAY_INTERNAL_HTTP_SERVER_CERT_FILE> --httpPrivKeyFile <ATLAS_GATEWAY_INTERNAL_HTTP_SERVER_PRIV_KEY_FILE> --httpPort <ATLAS_GATEWAY_INTERNAL_HTTP_SERVER_PORT>
 ```
 
 Arguments:
